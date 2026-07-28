@@ -1,0 +1,326 @@
+:root {
+  --font-brand: "Noto Serif TC Variable", "Noto Serif TC", serif;
+  --font-body: "Noto Sans TC Variable", "Noto Sans TC",
+    "PingFang TC", "Microsoft JhengHei", sans-serif;
+
+  --type-display: clamp(2.5rem, 3.2vw, 3rem);
+  --type-section: clamp(1.75rem, 2.2vw, 2rem);
+  --type-question: clamp(1.5rem, 2vw, 1.75rem);
+  --type-choice: clamp(1.125rem, 1.3vw, 1.25rem);
+  --type-body: clamp(1rem, 1.1vw, 1.125rem);
+  --type-button: clamp(1rem, 1.1vw, 1.125rem);
+  --type-support: clamp(.875rem, 1vw, 1rem);
+  --type-brand-quote: clamp(1.125rem, 1.25vw, 1.3125rem);
+}
+
+html,
+body {
+  font-family: var(--font-body);
+  font-synthesis: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: var(--font-body);
+}
+
+.font-brand {
+  font-family: var(--font-brand);
+  font-synthesis: none;
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
+
+.font-brand-quote {
+  font-family: var(--font-brand);
+  font-size: var(--type-brand-quote);
+  font-weight: 400;
+  line-height: 1.9;
+  font-synthesis: none;
+}
+
+/* Shared production experience: all six worlds use one Chinese type system. */
+.wx-flow {
+  font-family: var(--font-body);
+  font-size: var(--type-body);
+  line-height: 1.7;
+}
+
+.wx-page h1,
+.wx-intro h1,
+.wx-person h2,
+.wx-center h2,
+.wx-halls h2,
+.wx-ending blockquote,
+.wx-ending dd,
+.personality-card__hero h1,
+.personality-card__tagline,
+.personality-card h2 {
+  font-family: var(--font-brand);
+}
+
+.wx-intro h1,
+.wx-center > h1,
+.wx-venues > h1,
+.wx-ending > h1 {
+  font-size: var(--type-display);
+  font-weight: 400;
+  line-height: 1.48;
+}
+
+.wx-quiz {
+  overflow-wrap: break-word;
+}
+
+.wx-quiz > p {
+  margin: 1.5rem 0 .65rem;
+  font-family: var(--font-body);
+  font-size: var(--type-body);
+  font-weight: 400;
+  line-height: 1.7;
+}
+
+.wx-quiz > h1 {
+  max-width: 42rem;
+  margin: 0 0 2.25rem;
+  font-family: var(--font-brand);
+  font-size: var(--type-question);
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.78;
+  letter-spacing: .015em;
+  text-wrap: pretty;
+  color: #5B4B00 !important;
+}
+
+.wx-options {
+  align-items: stretch;
+}
+
+.wx-options button {
+  min-height: 7.25rem !important;
+  font-family: var(--font-body);
+  line-height: 1.6;
+  overflow: visible;
+}
+
+.wx-options button > i {
+  line-height: 1.3;
+}
+
+.wx-options button > b {
+  align-self: center;
+  font-family: var(--font-body);
+  font-size: var(--type-choice);
+  font-weight: 500;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.wx-options button > span:not(.wx-choice-scene) {
+  align-self: start;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.7;
+  text-align: left;
+}
+
+.wx-page button,
+.wx-primary,
+.wx-back,
+.wx-card-save button,
+.wx-actions button,
+.wx-page nav button {
+  min-height: 3rem;
+  font-family: var(--font-body);
+  font-size: var(--type-button);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.wx-intro p,
+.wx-center p,
+.wx-halls p,
+.wx-halls li,
+.personality-card__intro > p:last-child {
+  font-family: var(--font-body);
+  font-size: var(--type-body);
+  font-weight: 400;
+  line-height: 1.7;
+}
+
+.personality-card__hero h1 {
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.personality-card h2,
+.wx-halls h2 {
+  font-size: var(--type-section);
+  font-weight: 400;
+  line-height: 1.55;
+}
+
+.personality-card__intro > p:last-child,
+.personality-card__scene li,
+.personality-card__observations li,
+.personality-card__secret .font-body {
+  font-family: var(--font-body);
+  font-size: var(--type-body);
+  line-height: 1.7;
+}
+
+.personality-card__secret .font-brand-quote {
+  font-family: var(--font-brand);
+  font-size: var(--type-brand-quote);
+  font-weight: 400;
+  line-height: 1.9;
+  font-synthesis: none;
+}
+
+.wx-flow > header .wx-wordmark,
+.wx-flow > header > span:nth-child(2) {
+  font-family: var(--font-brand);
+  font-synthesis: none;
+}
+
+.question-content h1,
+.scenario-card h1,
+.quiz-step h1 {
+  color: #5B4B00 !important;
+}
+
+.personality-card__tagline,
+.personality-card__secret,
+.personality-card__secret *,
+.personality-ai-secret,
+.personality-ai-secret * {
+  font-family: var(--font-body) !important;
+}
+
+/* Legacy shared components retain the same readable hierarchy. */
+.question-content h1,
+.scenario-card h1,
+.quiz-step h1 {
+  font-family: var(--font-brand);
+  font-size: var(--type-question);
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.78;
+  text-wrap: pretty;
+}
+
+.answer-card,
+.option-list button {
+  min-height: 5.5rem;
+  font-family: var(--font-body);
+  text-align: left;
+}
+
+.answer-card strong,
+.option-list strong {
+  font-family: var(--font-body);
+  font-size: var(--type-choice);
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.answer-card small,
+.option-list small {
+  font-family: var(--font-body);
+  font-size: var(--type-support);
+  line-height: 1.6;
+}
+
+@media (max-width: 760px) {
+  :root {
+    --type-display: clamp(1.875rem, 9vw, 2.25rem);
+    --type-section: clamp(1.5rem, 7vw, 1.75rem);
+    --type-question: clamp(1.3125rem, 6vw, 1.5rem);
+    --type-choice: clamp(1.0625rem, 4.8vw, 1.125rem);
+    --type-body: 1rem;
+    --type-button: 1rem;
+    --type-support: .875rem;
+    --type-brand-quote: clamp(1.125rem, 4.8vw, 1.3125rem);
+  }
+
+  .wx-flow {
+    font-size: 1rem;
+    line-height: 1.82;
+  }
+
+  .wx-page {
+    overflow-x: clip;
+  }
+
+  .wx-quiz > h1 {
+    max-width: 100%;
+    margin-bottom: 1.75rem;
+    line-height: 1.7;
+    letter-spacing: .01em;
+    text-wrap: pretty;
+  }
+
+  .wx-options button {
+    min-height: 6rem !important;
+    padding: 1.125rem !important;
+    align-items: center;
+  }
+
+  .wx-options button > b {
+    font-size: var(--type-choice);
+    line-height: 1.65;
+  }
+
+  .wx-options button > span:not(.wx-choice-scene) {
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .wx-page button,
+  .wx-primary,
+  .wx-back,
+  .wx-actions button,
+  .wx-page nav button {
+    min-height: 3rem;
+    font-size: 1rem;
+  }
+
+  .personality-card__intro > p:last-child,
+  .personality-card__scene li,
+  .personality-card__observations li {
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .question-content h1,
+  .scenario-card h1,
+  .quiz-step h1 {
+    font-size: var(--type-question);
+    line-height: 1.7;
+  }
+
+  .answer-card strong,
+  .option-list strong {
+    font-size: var(--type-choice);
+    line-height: 1.65;
+  }
+
+  .answer-card small,
+  .option-list small {
+    font-size: .875rem;
+    line-height: 1.6;
+  }
+}
+
+@media (max-width: 760px) {
+  .wx-profile input:not([type="radio"]):not([type="checkbox"]),
+  .wx-profile select {
+    font-size: 1rem;
+  }
+}
