@@ -1,0 +1,2512 @@
+{
+  "version": "1.0.0",
+  "venue": {
+    "id": "denwell-xinzhuang",
+    "name": "新莊典華"
+  },
+  "halls": [
+    {
+      "id": "floral",
+      "displayName": "法蘿",
+      "englishName": "Floral",
+      "floor": "1F",
+      "capacity": {
+        "minimumTables": 10,
+        "maximumTables": 20,
+        "comfortableMinimumTables": 13,
+        "comfortableMaximumTables": 14
+      },
+      "equipment": {
+        "ledScreen": false,
+        "projector": true,
+        "projectionScreenCount": 2,
+        "tv": false,
+        "tvSizeInches": null,
+        "soundSystem": true,
+        "microphone": true,
+        "starLightAisle": false,
+        "aerialCableEntrance": false,
+        "hangingGiftDeviceCount": 0,
+        "loft": true,
+        "secondStage": true
+      },
+      "style": {
+        "primaryColors": [],
+        "designStyles": [],
+        "visualKeywords": []
+      },
+      "features": [
+        "空中閣樓",
+        "第二舞台",
+        "兩座投影幕"
+      ],
+      "sources": [
+        {
+          "type": "officialWebsite",
+          "url": "",
+          "note": ""
+        },
+        {
+          "type": "internalKnowledge",
+          "url": null,
+          "note": "內部資料：目前可承接10至20桌，舒適13至14桌。"
+        }
+      ],
+      "type": "single",
+      "status": "active",
+      "equipmentInheritance": {
+        "inheritFromCombinedHalls": false
+      },
+      "combinedHallIds": [],
+      "recommendedPersonalities": [],
+      "recommendedFor": {
+        "weddingStyles": [],
+        "customerPreferences": [],
+        "entranceMethods": [],
+        "timeSlots": [
+          "lunch",
+          "dinner"
+        ]
+      },
+      "notRecommendedFor": {
+        "customerPreferences": [],
+        "reasons": []
+      },
+      "emotionTags": {
+        "firstImpression": [],
+        "coupleFeeling": [],
+        "familyFeeling": [],
+        "guestFeeling": []
+      },
+      "salesNotes": {
+        "sellingPoints": [],
+        "commonComparisons": [],
+        "commonQuestions": [],
+        "internalNotes": []
+      },
+      "recommendationWeights": {
+        "romantic": 5,
+        "elegant": 4,
+        "modern": 2,
+        "luxurious": 3,
+        "warm": 4,
+        "party": 2,
+        "ceremony": 4,
+        "interactive": 3,
+        "photoFriendly": 5,
+        "familyOriented": 4
+      }
+    },
+    {
+      "id": "arthur",
+      "displayName": "亞瑟",
+      "englishName": "Arthur",
+      "floor": "3F",
+      "type": "single",
+      "status": "active",
+      "capacity": {
+        "minimumTables": 9,
+        "maximumTables": 29,
+        "comfortableMinimumTables": 13,
+        "comfortableMaximumTables": 15
+      },
+      "equipment": {
+        "ledScreen": true,
+        "projector": false,
+        "projectionScreenCount": 0,
+        "tv": false,
+        "tvSizeInches": null,
+        "soundSystem": true,
+        "microphone": true,
+        "starLightAisle": false,
+        "aerialCableEntrance": false,
+        "hangingGiftDeviceCount": 15,
+        "loft": false,
+        "secondStage": false
+      },
+      "style": {
+        "primaryColors": [
+          "古銅色",
+          "香檳金",
+          "暖金色"
+        ],
+        "designStyles": [
+          "歐式宮廷",
+          "內斂沉穩",
+          "英格蘭皇室風格",
+          "浪漫典雅"
+        ],
+        "visualKeywords": [
+          "亞瑟王",
+          "圓桌武士",
+          "古銅鏡面",
+          "香檳水晶燈",
+          "皇室殿堂",
+          "尊貴氣質",
+          "浪漫儀式感"
+        ]
+      },
+      "features": [
+        "無樑柱空間",
+        "視野開闊無遮擋",
+        "歐式皇室氛圍",
+        "空中鉛錘驚喜設計",
+        "適合婚宴及品牌活動",
+        "官方場地總覽標示100坪及5米挑高"
+      ],
+      "recommendedPersonalities": [],
+      "recommendedFor": {
+        "weddingStyles": [
+          "歐式婚禮",
+          "宮廷風婚禮",
+          "浪漫婚禮",
+          "典雅婚禮",
+          "中型婚禮"
+        ],
+        "customerPreferences": [
+          "喜歡沉穩歐式空間",
+          "重視婚禮儀式感",
+          "偏好無樑柱空間",
+          "需要LED播放婚禮影片",
+          "希望運用空中鉛錘製造驚喜",
+          "不偏好過度甜美的婚禮風格"
+        ],
+        "entranceMethods": [
+          "一般走道進場",
+          "搭配LED影片進場",
+          "搭配空中鉛錘安排驚喜流程"
+        ],
+        "timeSlots": [
+          "lunch",
+          "dinner"
+        ]
+      },
+      "notRecommendedFor": {
+        "customerPreferences": [
+          "需要升降星光走道",
+          "需要空中纜車進場",
+          "偏好自然森林風",
+          "偏好粉嫩甜美公主風"
+        ],
+        "reasons": [
+          "亞瑟沒有升降星光走道",
+          "亞瑟沒有空中纜車",
+          "空間主軸為沉穩歐式及皇室風格"
+        ]
+      },
+      "emotionTags": {
+        "firstImpression": [
+          "大器",
+          "沉穩",
+          "尊貴",
+          "浪漫"
+        ],
+        "coupleFeeling": [
+          "具有主角感",
+          "正式",
+          "充滿儀式感",
+          "成熟典雅"
+        ],
+        "familyFeeling": [
+          "氣派",
+          "穩重",
+          "正式",
+          "容易接受"
+        ],
+        "guestFeeling": [
+          "視野開闊",
+          "具有歐洲宮廷感",
+          "空間完整",
+          "婚禮氛圍濃厚"
+        ]
+      },
+      "salesNotes": {
+        "sellingPoints": [
+          "無樑柱空間讓賓客視線完整",
+          "古銅鏡面與香檳水晶燈具有明確歐式風格",
+          "可承接9至29桌，桌數彈性高",
+          "15組空中鉛錘可搭配婚禮驚喜流程",
+          "具備LED螢幕，可播放影片及搭配舞台流程",
+          "適合重視正式感與儀式感的新人"
+        ],
+        "commonComparisons": [
+          "可與伊麗莎白比較歐式沉穩風與甜美夢幻風",
+          "桌數較多或需要星光走道時可與愛丁堡比較"
+        ],
+        "commonQuestions": [
+          "亞瑟最多可以安排幾桌？",
+          "亞瑟是否有LED螢幕？",
+          "亞瑟是否有星光走道？",
+          "空中鉛錘共有幾組？"
+        ],
+        "internalNotes": [
+          "目前可承接桌數為9至29桌。",
+          "舒適桌數為13至15桌。",
+          "廳內設有LED螢幕、音響及麥克風。",
+          "廳內有15組空中鉛錘。",
+          "亞瑟沒有星光走道及空中纜車。",
+          "確認場地資料為5米挑高、100坪。"
+        ]
+      },
+      "recommendationWeights": {
+        "romantic": 4,
+        "elegant": 5,
+        "modern": 2,
+        "luxurious": 5,
+        "warm": 2,
+        "party": 3,
+        "ceremony": 5,
+        "interactive": 3,
+        "photoFriendly": 5,
+        "familyOriented": 3
+      },
+      "sources": [
+        {
+          "type": "officialWebsite",
+          "url": "https://www.denwell.com/%e4%ba%9e%e7%91%9f/",
+          "note": "官方資料：歐式風格、古銅鏡面、香檳水晶燈、無樑柱空間、最高29桌、5米挑高、100坪及空中鉛錘設計。"
+        },
+        {
+          "type": "officialWebsite",
+          "url": "https://www.denwell.com/%e6%96%b0%e8%8e%8a-%e5%a9%9a%e5%ae%b4%e5%a0%b4%e5%9c%b0/",
+          "note": "目前官方場地總覽：亞瑟為內斂沉穩風，最高29桌、5米挑高、100坪。"
+        },
+        {
+          "type": "internalKnowledge",
+          "note": "內部資料：目前可承接9至29桌，舒適13至15桌；設有LED、音響、麥克風及15組空中鉛錘。",
+          "url": null
+        }
+      ],
+      "equipmentInheritance": {
+        "inheritFromCombinedHalls": false
+      },
+      "combinedHallIds": []
+    },
+    {
+      "id": "purple-full",
+      "displayName": "紫艷盛事全",
+      "englishName": null,
+      "floor": "5F",
+      "type": "combined",
+      "status": "active",
+      "combinedHallIds": [
+        "purple-good",
+        "purple-happiness",
+        "purple-grand"
+      ],
+      "capacity": {
+        "minimumTables": 45,
+        "maximumTables": 100,
+        "comfortableMinimumTables": null,
+        "comfortableMaximumTables": null
+      },
+      "equipmentInheritance": {
+        "inheritFromCombinedHalls": true
+      },
+      "features": [
+        "紫艷好事、紫艷喜事與紫艷盛事三廳打通",
+        "整層無樑柱",
+        "344坪",
+        "官方工商場地規格為102桌",
+        "具備LED、星光走道、空中纜車與空中鉛錘",
+        "適合千人活動及超大型婚宴"
+      ],
+      "recommendedPersonalities": [],
+      "recommendedFor": {
+        "weddingStyles": [
+          "超大型婚禮",
+          "時尚派對婚禮",
+          "大型主題婚禮"
+        ],
+        "customerPreferences": [
+          "需要百桌規模",
+          "需要大型舞台及特殊進場",
+          "希望整層無樑柱"
+        ],
+        "entranceMethods": [
+          "升降星光大道進場",
+          "空中纜車進場",
+          "大型LED影片進場"
+        ],
+        "timeSlots": [
+          "lunch",
+          "dinner"
+        ]
+      },
+      "salesNotes": {
+        "sellingPoints": [
+          "三廳全打通",
+          "百桌無樑柱場地",
+          "適合千人婚宴及大型活動"
+        ],
+        "commonComparisons": [
+          "可與世紀盛典比較現代紫色派對風與歐洲皇家風"
+        ],
+        "commonQuestions": [
+          "三廳是否全部打通？",
+          "最大桌數是多少？"
+        ],
+        "internalNotes": [
+          "由紫艷好事、紫艷喜事及紫艷盛事三廳打通。",
+          "官方婚宴文字常以100桌描述，工商規格標示102桌。",
+          "舒適桌數及內部最小承接桌數尚未提供，因此使用null。",
+          "組合廳繼承三個單廳的設備資料。"
+        ]
+      },
+      "recommendationWeights": {
+        "romantic": 3,
+        "elegant": 4,
+        "modern": 5,
+        "luxurious": 5,
+        "warm": 1,
+        "party": 5,
+        "ceremony": 5,
+        "interactive": 5,
+        "photoFriendly": 5,
+        "familyOriented": 2
+      },
+      "sources": [
+        {
+          "type": "officialWebsite",
+          "url": "https://www.denwell.com/%e7%b4%ab%e8%89%b7%e7%9b%9b%e4%ba%8b%e5%85%a8/",
+          "note": "官方婚宴資料：紫艷好事、喜事與盛事三廳打通。"
+        },
+        {
+          "type": "officialWebsite",
+          "url": "https://www.denwell.com/%e7%b4%ab%e8%89%b7%e7%9b%9b%e4%ba%8b%e5%85%a8-2/",
+          "note": "官方工商資料：三廳打通、344坪、102桌、整層無柱，具LED、鉛錘、星光大道及空中纜車。"
+        },
+        {
+          "type": "internalKnowledge",
+          "note": "內部資料：紫艷好事、喜事、盛事三廳打通。",
+          "url": null
+        }
+      ],
+      "equipment": {
+        "ledScreen": null,
+        "ledScreenSizeInches": null,
+        "projector": null,
+        "projectionScreenCount": null,
+        "tv": null,
+        "tvSizeInches": null,
+        "soundSystem": null,
+        "microphone": null,
+        "starLightAisle": null,
+        "aerialCableEntrance": null,
+        "hangingGiftDeviceCount": null,
+        "loft": null,
+        "secondStage": null
+      },
+      "style": {
+        "primaryColors": [],
+        "designStyles": [],
+        "visualKeywords": []
+      },
+      "notRecommendedFor": {
+        "customerPreferences": [],
+        "reasons": []
+      },
+      "emotionTags": {
+        "firstImpression": [],
+        "coupleFeeling": [],
+        "familyFeeling": [],
+        "guestFeeling": []
+      }
+    },
+    {
+      "id": "yano",
+      "displayName": "雅諾",
+      "englishName": "Yano",
+      "floor": "2F",
+      "capacity": {
+        "minimumTables": 5,
+        "maximumTables": 13,
+        "comfortableMinimumTables": null,
+        "comfortableMaximumTables": null
+      },
+      "equipment": {
+        "ledScreen": false,
+        "projector": false,
+        "projectionScreenCount": 0,
+        "tv": true,
+        "tvSizeInches": 120,
+        "soundSystem": true,
+        "microphone": true,
+        "starLightAisle": false,
+        "aerialCableEntrance": false,
+        "hangingGiftDeviceCount": 0,
+        "loft": false,
+        "secondStage": false
+      },
+      "sources": [
+        {
+          "type": "officialWebsite",
+          "url": "",
+          "note": ""
+        },
+        {
+          "type": "internalKnowledge",
+          "url": null,
+          "note": "內部資料：目前可承接5至13桌，提供120吋電視，無LED螢幕。"
+        }
+      ],
+      "type": "single",
+      "status": "active",
+      "equipmentInheritance": {
+        "inheritFromCombinedHalls": false
+      },
+      "style": {
+        "primaryColors": [],
+        "designStyles": [],
+        "visualKeywords": []
+      },
+      "features": [],
+      "combinedHallIds": [],
+      "recommendedPersonalities": [],
+      "recommendedFor": {
+        "weddingStyles": [],
+        "customerPreferences": [],
+        "entranceMethods": [],
+        "timeSlots": [
+          "lunch",
+          "dinner"
+        ]
+      },
+      "notRecommendedFor": {
+        "customerPreferences": [],
+        "reasons": []
+      },
+      "emotionTags": {
+        "firstImpression": [],
+        "coupleFeeling": [],
+        "familyFeeling": [],
+        "guestFeeling": []
+      },
+      "salesNotes": {
+        "sellingPoints": [],
+        "commonComparisons": [],
+        "commonQuestions": [],
+        "internalNotes": []
+      },
+      "recommendationWeights": {
+        "romantic": 3,
+        "elegant": 3,
+        "modern": 3,
+        "luxurious": 2,
+        "warm": 5,
+        "party": 1,
+        "ceremony": 2,
+        "interactive": 4,
+        "photoFriendly": 3,
+        "familyOriented": 5
+      }
+    },
+    {
+      "id": "mushi",
+      "displayName": "沐曦",
+      "englishName": "Mushi",
+      "floor": "2F",
+      "capacity": {
+        "minimumTables": 6,
+        "maximumTables": 23,
+        "comfortableMinimumTables": null,
+        "comfortableMaximumTables": null
+      },
+      "equipment": {
+        "ledScreen": null,
+        "projector": null,
+        "projectionScreenCount": null,
+        "tv": null,
+        "tvSizeInches": null,
+        "soundSystem": null,
+        "microphone": null,
+        "starLightAisle": null,
+        "aerialCableEntrance": null,
+        "hangingGiftDeviceCount": null,
+        "loft": null,
+        "secondStage": null
+      },
+      "style": {
+        "primaryColors": [
+          "米白",
+          "奶茶色"
+        ],
+        "designStyles": [],
+        "visualKeywords": []
+      },
+      "sources": [
+        {
+          "type": "officialWebsite",
+          "url": "",
+          "note": ""
+        },
+        {
+          "type": "internalKnowledge",
+          "url": null,
+          "note": "內部資料：目前可承接6至23桌，米白奶茶色系。"
+        }
+      ],
+      "type": "single",
+      "status": "active",
+      "equipmentInheritance": {
+        "inheritFromCombinedHalls": false
+      },
+      "features": [],
+      "combinedHallIds": [],
+      "recommendedPersonalities": [],
+      "recommendedFor": {
+        "weddingStyles": [],
+        "customerPreferences": [],
+        "entranceMethods": [],
+        "timeSlots": [
+          "lunch",
+          "dinner"
+        ]
+      },
+      "notRecommendedFor": {
+        "customerPreferences": [],
+        "reasons": []
+      },
+      "emotionTags": {
+        "firstImpression": [],
+        "coupleFeeling": [],
+        "familyFeeling": [],
+        "guestFeeling": []
+      },
+      "salesNotes": {
+        "sellingPoints": [],
+        "commonComparisons": [],
+        "commonQuestions": [],
+        "internalNotes": []
+      },
+      "recommendationWeights": {
+        "romantic": 4,
+        "elegant": 4,
+        "modern": 3,
+        "luxurious": 2,
+        "warm": 5,
+        "party": 2,
+        "ceremony": 3,
+        "interactive": 3,
+        "photoFriendly": 4,
+        "familyOriented": 5
+      }
+    },
+    {
+      "id": "elizabeth",
+      "displayName": "伊麗莎白",
+      "englishName": "Elizabeth",
+      "floor": "3F",
+      "type": "single",
+      "status": "active",
+      "capacity": {
+        "minimumTables": 5,
+        "maximumTables": 20,
+        "comfortableMinimumTables": 9,
+        "comfortableMaximumTables": 11
+      },
+      "equipment": {
+        "ledScreen": true,
+        "projector": false,
+        "projectionScreenCount": 0,
+        "tv": false,
+        "tvSizeInches": null,
+        "soundSystem": true,
+        "microphone": true,
+        "starLightAisle": false,
+        "aerialCableEntrance": false,
+        "hangingGiftDeviceCount": 10,
+        "loft": false,
+        "secondStage": false
+      },
+      "style": {
+        "primaryColors": [
+          "奶油霜白",
+          "粉霧玫瑰色",
+          "暖金色"
+        ],
+        "designStyles": [
+          "夢幻童話",
+          "甜美女王",
+          "歐式宮廷",
+          "浪漫典雅"
+        ],
+        "visualKeywords": [
+          "奶油霜白牆面",
+          "粉霧玫瑰絨面",
+          "水晶串壁燈",
+          "宮廷長廊",
+          "女王氣息",
+          "夢幻",
+          "柔美光影"
+        ]
+      },
+      "features": [
+        "無樑柱空間",
+        "視覺軸線開闊",
+        "奶油霜白與粉霧玫瑰色設計",
+        "水晶串壁燈",
+        "空中鉛錘驚喜設計",
+        "適合婚宴及精品品牌活動",
+        "場地資料為66坪及5米挑高"
+      ],
+      "recommendedPersonalities": [],
+      "recommendedFor": {
+        "weddingStyles": [
+          "夢幻婚禮",
+          "公主風婚禮",
+          "甜美婚禮",
+          "歐式宮廷婚禮",
+          "小型婚禮",
+          "中小型婚禮"
+        ],
+        "customerPreferences": [
+          "喜歡粉嫩柔和色系",
+          "喜歡夢幻童話氛圍",
+          "重視拍照與空間細節",
+          "偏好無樑柱空間",
+          "需要LED播放婚禮影片",
+          "希望運用空中鉛錘製造驚喜"
+        ],
+        "entranceMethods": [
+          "一般走道進場",
+          "搭配LED影片進場",
+          "搭配空中鉛錘安排送禮或驚喜流程"
+        ],
+        "timeSlots": [
+          "lunch",
+          "dinner"
+        ]
+      },
+      "notRecommendedFor": {
+        "customerPreferences": [
+          "需要升降星光走道",
+          "需要空中纜車進場",
+          "偏好深色沉穩風格",
+          "偏好強烈都會派對感"
+        ],
+        "reasons": [
+          "伊麗莎白沒有升降星光走道",
+          "伊麗莎白沒有空中纜車",
+          "空間主軸為柔美、浪漫與夢幻童話風格"
+        ]
+      },
+      "emotionTags": {
+        "firstImpression": [
+          "甜美",
+          "夢幻",
+          "柔和",
+          "精緻"
+        ],
+        "coupleFeeling": [
+          "女王感",
+          "浪漫",
+          "被珍視",
+          "充滿童話感"
+        ],
+        "familyFeeling": [
+          "典雅",
+          "溫柔",
+          "喜氣",
+          "精緻"
+        ],
+        "guestFeeling": [
+          "適合拍照",
+          "空間柔美",
+          "具有宮廷婚禮感",
+          "距離新人較親近"
+        ]
+      },
+      "salesNotes": {
+        "sellingPoints": [
+          "奶油霜白與粉霧玫瑰色具有明確夢幻風格",
+          "無樑柱設計讓空間視線完整",
+          "可承接5至20桌，適合小型至中小型婚禮",
+          "10組空中鉛錘可設計婚禮驚喜",
+          "具備LED螢幕，可播放婚禮影片",
+          "適合偏好甜美、公主感及童話氛圍的新人"
+        ],
+        "commonComparisons": [
+          "可與亞瑟比較甜美夢幻風與沉穩歐式風",
+          "少桌數時可與雅諾及格林比較"
+        ],
+        "commonQuestions": [
+          "伊麗莎白最多可以安排幾桌？",
+          "伊麗莎白是否有LED螢幕？",
+          "空中鉛錘共有幾組？",
+          "伊麗莎白適合小型家宴嗎？"
+        ],
+        "internalNotes": [
+          "目前可承接桌數為5至20桌。",
+          "舒適桌數為9至11桌。",
+          "廳內設有LED螢幕、音響及麥克風。",
+          "廳內有10組空中鉛錘。",
+          "伊麗莎白沒有星光走道及空中纜車。",
+          "確認場地資料為5米挑高、66坪。"
+        ]
+      },
+      "recommendationWeights": {
+        "romantic": 5,
+        "elegant": 5,
+        "modern": 2,
+        "luxurious": 4,
+        "warm": 4,
+        "party": 2,
+        "ceremony": 4,
+        "interactive": 3,
+        "photoFriendly": 5,
+        "familyOriented": 4
+      },
+      "sources": [
+        {
+          "type": "officialWebsite",
+          "url": "https://www.denwell.com/%e4%bc%8a%e9%ba%97%e8%8e%8e%e7%99%bd/",
+          "note": "官方資料：奶油霜白牆面、粉霧玫瑰絨面、水晶串壁燈、無樑柱空間、最高20桌及空中鉛錘設計。"
+        },
+        {
+          "type": "officialWebsite",
+          "url": "https://www.denwell.com/%e6%96%b0%e8%8e%8a-%e5%a9%9a%e5%ae%b4%e5%a0%b4%e5%9c%b0/",
+          "note": "伊麗莎白為夢幻童話風，最高20桌；確認場地資料為5米挑高、66坪。"
+        },
+        {
+          "type": "internalKnowledge",
+          "note": "內部資料：目前可承接5至20桌，舒適9至11桌；設有LED、音響、麥克風及10組空中鉛錘。",
+          "url": null
+        }
+      ],
+      "equipmentInheritance": {
+        "inheritFromCombinedHalls": false
+      },
+      "combinedHallIds": []
+    },
+    {
+      "id": "edinburgh",
+      "displayName": "愛丁堡",
+      "englishName": "Edinburgh",
+      "floor": "3F",
+      "type": "single",
+      "status": "active",
+      "capacity": {
+        "minimumTables": 15,
+        "maximumTables": 37,
+        "comfortableMinimumTables": 22,
+        "comfortableMaximumTables": 30
+      },
+      "equipment": {
+        "ledScreen": true,
+        "projector": false,
+        "projectionScreenCount": 0,
+        "tv": false,
+        "tvSizeInches": null,
+        "soundSystem": true,
+        "microphone": true,
+        "starLightAisle": true,
+        "aerialCableEntrance": false,
+        "hangingGiftDeviceCount": 20,
+        "loft": false,
+        "secondStage": false
+      },
+      "style": {
+        "primaryColors": [
+          "淺木色",
+          "玫瑰金",
+          "暖金色"
+        ],
+        "designStyles": [
+          "英倫貴族",
+          "異國城堡",
+          "古典歐式",
+          "浪漫大器"
+        ],
+        "visualKeywords": [
+          "英倫氣息",
+          "淺色木紋",
+          "古典燈飾",
+          "玫瑰金鏡面",
+          "異國城堡",
+          "升降星光大道",
+          "婚禮主角"
+        ]
+      },
+      "features": [
+        "3F唯一設有升降星光大道的廳房",
+        "淺色木紋空間",
+        "古典燈飾",
+        "玫瑰金鏡面",
+        "空間獨立",
+        "專屬貴賓休息室",
+        "活動舞台",
+        "空中鉛錘驚喜設計",
+        "適合婚宴、品牌發表及大型活動",
+        "場地資料為115坪及5米挑高"
+      ],
+      "recommendedPersonalities": [],
+      "recommendedFor": {
+        "weddingStyles": [
+          "英倫風婚禮",
+          "城堡婚禮",
+          "歐式婚禮",
+          "大型婚禮",
+          "華麗婚禮",
+          "重視進場儀式的婚禮"
+        ],
+        "customerPreferences": [
+          "重視第一次進場效果",
+          "希望使用升降星光大道",
+          "喜歡英倫城堡氛圍",
+          "需要較大型宴會空間",
+          "需要LED播放婚禮影片",
+          "希望運用空中鉛錘製造驚喜",
+          "重視全場注目及主角感"
+        ],
+        "entranceMethods": [
+          "一般走道進場",
+          "升降星光大道進場",
+          "搭配LED影片進場",
+          "搭配空中鉛錘安排驚喜流程"
+        ],
+        "timeSlots": [
+          "lunch",
+          "dinner"
+        ]
+      },
+      "notRecommendedFor": {
+        "customerPreferences": [
+          "需要空中纜車進場",
+          "偏好極小型家宴",
+          "偏好自然森林風",
+          "不希望婚禮具有舞台感"
+        ],
+        "reasons": [
+          "愛丁堡沒有空中纜車",
+          "空間規模較大，小桌數可能無法呈現最佳空間比例",
+          "空間特色著重星光走道、舞台感及英倫城堡氛圍"
+        ]
+      },
+      "emotionTags": {
+        "firstImpression": [
+          "氣派",
+          "大器",
+          "浪漫",
+          "具有城堡感"
+        ],
+        "coupleFeeling": [
+          "主角感強烈",
+          "被全場注目",
+          "隆重",
+          "充滿儀式感"
+        ],
+        "familyFeeling": [
+          "正式",
+          "體面",
+          "氣派",
+          "具有大型婚宴感"
+        ],
+        "guestFeeling": [
+          "進場效果震撼",
+          "空間寬敞",
+          "像參加城堡婚禮",
+          "舞台效果完整"
+        ]
+      },
+      "salesNotes": {
+        "sellingPoints": [
+          "3F唯一設有升降星光大道的廳房",
+          "淺色木紋、古典燈飾及玫瑰金鏡面具有英倫風格",
+          "可承接15至37桌，適合中大型婚禮",
+          "舒適桌數22至30桌可呈現較完整的空間比例",
+          "20組空中鉛錘可搭配婚禮互動及送禮流程",
+          "具備LED、舞台、音響及麥克風",
+          "擁有專屬貴賓休息室"
+        ],
+        "commonComparisons": [
+          "可與亞瑟比較空間規模及是否需要星光走道",
+          "較多桌數時可與紫艷喜事比較英倫古典風與都會派對風"
+        ],
+        "commonQuestions": [
+          "愛丁堡最多可以安排幾桌？",
+          "星光大道如何進場？",
+          "愛丁堡是否有空中纜車？",
+          "空中鉛錘共有幾組？",
+          "多少桌使用愛丁堡最舒適？"
+        ],
+        "internalNotes": [
+          "目前可承接桌數為15至37桌。",
+          "舒適桌數為22至30桌。",
+          "廳內設有LED螢幕、音響及麥克風。",
+          "廳內有20組空中鉛錘。",
+          "愛丁堡設有升降星光走道。",
+          "愛丁堡沒有空中纜車。",
+          "確認場地資料為5米挑高、115坪。"
+        ]
+      },
+      "recommendationWeights": {
+        "romantic": 4,
+        "elegant": 5,
+        "modern": 3,
+        "luxurious": 5,
+        "warm": 2,
+        "party": 4,
+        "ceremony": 5,
+        "interactive": 5,
+        "photoFriendly": 5,
+        "familyOriented": 3
+      },
+      "sources": [
+        {
+          "type": "officialWebsite",
+          "url": "https://www.denwell.com/%e6%84%9b%e4%b8%81%e5%a0%a1/",
+          "note": "官方婚宴資料：英倫貴族、異國城堡、升降星光大道、最高37桌及空中鉛錘設計。確認場地資料為5米挑高、115坪。"
+        },
+        {
+          "type": "officialWebsite",
+          "url": "https://www.denwell.com/%e6%84%9b%e4%b8%81%e5%a0%a1-2/",
+          "note": "官方工商場地資料：3F唯一設有升降星光大道，具LED、麥克風、活動舞台、音響、專屬貴賓休息室及空中鉛錘；宴會型最高37桌。"
+        },
+        {
+          "type": "internalKnowledge",
+          "note": "內部資料：目前可承接15至37桌，舒適22至30桌；設有LED、星光走道、音響、麥克風及20組空中鉛錘。",
+          "url": null
+        }
+      ],
+      "equipmentInheritance": {
+        "inheritFromCombinedHalls": false
+      },
+      "combinedHallIds": []
+    },
+    {
+      "id": "green",
+      "displayName": "格林",
+      "englishName": "Green",
+      "floor": "3F",
+      "type": "single",
+      "status": "active",
+      "capacity": {
+        "minimumTables": 5,
+        "maximumTables": 11,
+        "comfortableMinimumTables": 6,
+        "comfortableMaximumTables": 9
+      },
+      "equipment": {
+        "ledScreen": true,
+        "projector": false,
+        "projectionScreenCount": 0,
+        "tv": false,
+        "tvSizeInches": null,
+        "soundSystem": true,
+        "microphone": true,
+        "starLightAisle": false,
+        "aerialCableEntrance": false,
+        "hangingGiftDeviceCount": 10,
+        "loft": false,
+        "secondStage": false
+      },
+      "style": {
+        "primaryColors": [
+          "自然綠",
+          "溫暖木質色",
+          "米白色"
+        ],
+        "designStyles": [
+          "綠意木質",
+          "自然簡約",
+          "永續設計",
+          "現代婚禮",
+          "擬真戶外風格"
+        ],
+        "visualKeywords": [
+          "綠意植栽",
+          "溫暖木質",
+          "沉靜自然",
+          "通透",
+          "輕量裝潢",
+          "再生花器",
+          "永續美學"
+        ]
+      },
+      "features": [
+        "全新綠意木質空間",
+        "無樑柱設計",
+        "可使用西式長桌",
+        "可使用經典圓桌",
+        "採用輕量化裝潢設計",
+        "運用可延續使用的建材",
+        "設有再生木材花器",
+        "設有婚禮專屬背板",
+        "適合蔬食及素食宴席",
+        "適合小桌數婚禮",
+        "官方標示45坪及5米挑高"
+      ],
+      "recommendedPersonalities": [],
+      "recommendedFor": {
+        "weddingStyles": [
+          "自然系婚禮",
+          "綠意婚禮",
+          "木質婚禮",
+          "永續婚禮",
+          "小型婚禮",
+          "西式長桌婚禮",
+          "溫馨婚禮"
+        ],
+        "customerPreferences": [
+          "喜歡綠色植栽與木質元素",
+          "偏好自然簡約設計",
+          "重視環保及永續概念",
+          "希望舉辦小桌數婚禮",
+          "希望使用西式長桌",
+          "希望賓客之間有較多互動",
+          "偏好擬真戶外但仍在室內的婚禮感"
+        ],
+        "entranceMethods": [
+          "一般走道進場",
+          "親友近距離祝福式進場",
+          "西式長桌互動式進場"
+        ],
+        "timeSlots": [
+          "lunch",
+          "dinner"
+        ]
+      },
+      "notRecommendedFor": {
+        "customerPreferences": [
+          "需要升降星光走道",
+          "需要空中纜車進場",
+          "偏好大型華麗宮廷婚禮",
+          "需要大型宴會空間",
+          "偏好強烈都會派對感"
+        ],
+        "reasons": [
+          "格林沒有升降星光走道及空中纜車",
+          "空間定位以小桌數、自然木質及永續婚禮為主",
+          "不屬於大型華麗宴會廳"
+        ]
+      },
+      "emotionTags": {
+        "firstImpression": [
+          "自然",
+          "舒服",
+          "清新",
+          "溫暖"
+        ],
+        "coupleFeeling": [
+          "放鬆",
+          "真誠",
+          "貼近自然",
+          "具有生活感"
+        ],
+        "familyFeeling": [
+          "溫馨",
+          "親近",
+          "不壓迫",
+          "容易互動"
+        ],
+        "guestFeeling": [
+          "像在室內花園聚會",
+          "距離新人很近",
+          "氣氛輕鬆",
+          "木質空間具有溫度"
+        ]
+      },
+      "salesNotes": {
+        "sellingPoints": [
+          "全新綠意植栽與溫暖木質設計",
+          "無樑柱空間讓視野通透",
+          "可彈性使用西式長桌或經典圓桌",
+          "適合小桌數婚禮及親密聚會",
+          "永續設計及再生花器具有明確故事性",
+          "可搭配蔬食及素食婚宴概念",
+          "具備LED螢幕、音響及麥克風"
+        ],
+        "commonComparisons": [
+          "可與雅諾比較自然木質風與法式新古典風",
+          "可與伊麗莎白比較自然簡約風與夢幻童話風",
+          "可與沐曦比較綠意木質與奶茶木質風格"
+        ],
+        "commonQuestions": [
+          "格林最多可以安排幾桌？",
+          "格林可以使用西式長桌嗎？",
+          "格林是否只能舉辦蔬食婚宴？",
+          "格林是否有LED螢幕？",
+          "格林確認最高可安排11桌嗎？"
+        ],
+        "internalNotes": [
+          "目前可承接桌數為5至11桌。",
+          "舒適桌數為6至9桌。",
+          "廳內設有LED螢幕、音響及麥克風。",
+          "內部設備資料記錄有10組空中鉛錘。",
+          "格林沒有星光走道及空中纜車。",
+          "最高桌數已確認為11桌。",
+          "推薦系統以目前營運範圍5至11桌為容量判斷依據。"
+        ]
+      },
+      "recommendationWeights": {
+        "romantic": 3,
+        "elegant": 2,
+        "modern": 3,
+        "luxurious": 1,
+        "warm": 5,
+        "party": 2,
+        "ceremony": 3,
+        "interactive": 4,
+        "photoFriendly": 4,
+        "familyOriented": 5
+      },
+      "sources": [
+        {
+          "type": "officialWebsite",
+          "url": "https://www.denwell.com/%e6%a0%bc%e6%9e%97green_wedding/",
+          "note": "目前官方資料：綠意植栽、溫暖木質、永續及輕量裝潢設計、無樑柱、西式長桌與經典圓桌；標示最高11桌、5米挑高及45坪。"
+        },
+        {
+          "type": "internalKnowledge",
+          "note": "內部資料：目前可承接5至11桌，舒適6至9桌；設有LED、音響、麥克風及10組空中鉛錘。",
+          "url": null
+        }
+      ],
+      "equipmentInheritance": {
+        "inheritFromCombinedHalls": false
+      },
+      "combinedHallIds": []
+    },
+    {
+      "id": "purple-good",
+      "displayName": "紫艷好事",
+      "englishName": null,
+      "floor": "5F",
+      "type": "single",
+      "status": "active",
+      "capacity": {
+        "minimumTables": 9,
+        "maximumTables": 30,
+        "comfortableMinimumTables": 15,
+        "comfortableMaximumTables": 23
+      },
+      "equipment": {
+        "ledScreen": true,
+        "ledScreenSizeInches": null,
+        "projector": false,
+        "projectionScreenCount": 0,
+        "tv": false,
+        "tvSizeInches": null,
+        "soundSystem": true,
+        "microphone": true,
+        "starLightAisle": true,
+        "aerialCableEntrance": true,
+        "hangingGiftDeviceCount": 25,
+        "loft": false,
+        "secondStage": false
+      },
+      "style": {
+        "primaryColors": [
+          "暖金色",
+          "霧紫色",
+          "水晶光影"
+        ],
+        "designStyles": [
+          "都會時尚",
+          "時尚前衛",
+          "浪漫派對",
+          "現代奢華"
+        ],
+        "visualKeywords": [
+          "暖金光影",
+          "霧紫層次",
+          "垂墜水晶",
+          "曲線天花板",
+          "演唱會氛圍"
+        ]
+      },
+      "features": [
+        "全場無樑柱",
+        "視野開闊無遮擋",
+        "升降星光大道",
+        "空中纜車",
+        "空中鉛錘",
+        "LED螢幕",
+        "適合品牌發表及派對型婚禮",
+        "94.3坪",
+        "8米挑高"
+      ],
+      "recommendedPersonalities": [],
+      "recommendedFor": {
+        "weddingStyles": [
+          "都會婚禮",
+          "派對婚禮",
+          "時尚婚禮",
+          "華麗婚禮",
+          "中型婚禮"
+        ],
+        "customerPreferences": [
+          "重視特殊進場效果",
+          "希望使用空中纜車",
+          "喜歡星光走道",
+          "喜歡都會時尚感",
+          "希望運用空中鉛錘製造驚喜",
+          "重視LED與燈光效果"
+        ],
+        "entranceMethods": [
+          "升降星光大道進場",
+          "空中纜車進場",
+          "搭配LED影片進場",
+          "搭配空中鉛錘安排驚喜流程"
+        ],
+        "timeSlots": [
+          "lunch",
+          "dinner"
+        ]
+      },
+      "notRecommendedFor": {
+        "customerPreferences": [
+          "偏好自然森林風",
+          "偏好安靜小型家宴",
+          "不希望婚禮具有舞台感"
+        ],
+        "reasons": [
+          "空間特色著重燈光、舞台、星光走道及特殊進場"
+        ]
+      },
+      "emotionTags": {
+        "firstImpression": [
+          "時尚",
+          "閃耀",
+          "前衛",
+          "具有派對感"
+        ],
+        "coupleFeeling": [
+          "像演唱會主角",
+          "華麗",
+          "受全場注目"
+        ],
+        "familyFeeling": [
+          "氣派",
+          "正式",
+          "有排場"
+        ],
+        "guestFeeling": [
+          "進場效果強烈",
+          "燈光變化豐富",
+          "互動感高"
+        ]
+      },
+      "salesNotes": {
+        "sellingPoints": [
+          "可同時提供星光走道、空中纜車與空中鉛錘",
+          "無樑柱空間讓賓客視野完整",
+          "暖金與霧紫燈光可快速改變場景氣氛",
+          "25組空中鉛錘可搭配送禮及互動流程",
+          "舒適桌數為15至23桌",
+          "94.3坪、8米挑高"
+        ],
+        "commonComparisons": [
+          "可與紫艷盛事比較桌數及空間比例",
+          "可與愛丁堡比較英倫古典與都會派對風格"
+        ],
+        "commonQuestions": [
+          "紫艷好事最多可以安排幾桌？",
+          "是否有空中纜車？",
+          "空中鉛錘共有幾組？",
+          "是否有星光走道？"
+        ],
+        "internalNotes": [
+          "目前可承接9至30桌。",
+          "舒適桌數為15至23桌。",
+          "設有星光走道、空中纜車、LED、音響及麥克風。",
+          "廳內有25組空中鉛錘。",
+          "確認場地坪數為94.3坪。",
+          "確認場地挑高為8米。"
+        ]
+      },
+      "recommendationWeights": {
+        "romantic": 3,
+        "elegant": 3,
+        "modern": 5,
+        "luxurious": 4,
+        "warm": 2,
+        "party": 5,
+        "ceremony": 4,
+        "interactive": 5,
+        "photoFriendly": 5,
+        "familyOriented": 2
+      },
+      "sources": [
+        {
+          "type": "officialWebsite",
+          "url": "https://www.denwell.com/%e7%b4%ab%e8%89%b7%e5%a5%bd%e4%ba%8b/",
+          "note": "官方資料：暖金與霧紫色調、無樑柱、最高30桌、空中纜車、升降星光大道及空中鉛錘。"
+        },
+        {
+          "type": "internalKnowledge",
+          "note": "內部確認資料：可承接9至30桌，舒適15至23桌；94.3坪、8米挑高；設有星光走道、空中纜車及25組空中鉛錘。",
+          "url": null
+        }
+      ],
+      "equipmentInheritance": {
+        "inheritFromCombinedHalls": false
+      },
+      "combinedHallIds": []
+    },
+    {
+      "id": "purple-happiness",
+      "displayName": "紫艷喜事",
+      "englishName": null,
+      "floor": "5F",
+      "type": "single",
+      "status": "active",
+      "capacity": {
+        "minimumTables": 15,
+        "maximumTables": 38,
+        "comfortableMinimumTables": 18,
+        "comfortableMaximumTables": 27
+      },
+      "equipment": {
+        "ledScreen": true,
+        "ledScreenSizeInches": null,
+        "projector": false,
+        "projectionScreenCount": 0,
+        "tv": false,
+        "tvSizeInches": null,
+        "soundSystem": true,
+        "microphone": true,
+        "starLightAisle": true,
+        "aerialCableEntrance": true,
+        "hangingGiftDeviceCount": 30,
+        "loft": false,
+        "secondStage": false
+      },
+      "style": {
+        "primaryColors": [
+          "暖金色",
+          "霧紫色",
+          "水晶光影"
+        ],
+        "designStyles": [
+          "都會時尚",
+          "時尚前衛",
+          "現代奢華",
+          "大型派對"
+        ],
+        "visualKeywords": [
+          "暖金光影",
+          "霧紫層次",
+          "垂墜水晶",
+          "演唱會舞台",
+          "聚光效果"
+        ]
+      },
+      "features": [
+        "全場無樑柱",
+        "升降星光大道",
+        "空中纜車",
+        "空中鉛錘",
+        "LED螢幕",
+        "適合中大型婚禮及品牌活動",
+        "117.2坪",
+        "8米挑高"
+      ],
+      "recommendedPersonalities": [],
+      "recommendedFor": {
+        "weddingStyles": [
+          "都會婚禮",
+          "派對婚禮",
+          "華麗婚禮",
+          "大型婚禮"
+        ],
+        "customerPreferences": [
+          "希望有演唱會式進場",
+          "需要較大型空間",
+          "喜歡空中纜車",
+          "喜歡星光走道",
+          "重視舞台及燈光效果"
+        ],
+        "entranceMethods": [
+          "升降星光大道進場",
+          "空中纜車進場",
+          "LED影片進場",
+          "空中鉛錘驚喜流程"
+        ],
+        "timeSlots": [
+          "lunch",
+          "dinner"
+        ]
+      },
+      "notRecommendedFor": {
+        "customerPreferences": [
+          "偏好微型婚禮",
+          "偏好自然木質風",
+          "不喜歡強烈舞台效果"
+        ],
+        "reasons": [
+          "空間規模較大，特色以都會時尚及派對舞台感為主"
+        ]
+      },
+      "emotionTags": {
+        "firstImpression": [
+          "大器",
+          "時尚",
+          "閃耀",
+          "派對感"
+        ],
+        "coupleFeeling": [
+          "巨星感",
+          "華麗",
+          "被全場注目"
+        ],
+        "familyFeeling": [
+          "氣派",
+          "體面",
+          "有大型婚宴感"
+        ],
+        "guestFeeling": [
+          "舞台效果完整",
+          "互動性高",
+          "進場令人期待"
+        ]
+      },
+      "salesNotes": {
+        "sellingPoints": [
+          "適合中大型婚宴",
+          "可同時使用星光走道、空中纜車及空中鉛錘",
+          "30組鉛錘為紫艷三個單廳中最多",
+          "舒適桌數為18至27桌",
+          "LED及燈光適合派對型婚禮",
+          "117.2坪、8米挑高"
+        ],
+        "commonComparisons": [
+          "可與愛丁堡比較城堡感與都會派對感",
+          "可與盛典比較現代紫色與歐洲皇家風"
+        ],
+        "commonQuestions": [
+          "多少桌最舒適？",
+          "鉛錘共有幾組？",
+          "是否有空中纜車？"
+        ],
+        "internalNotes": [
+          "目前可承接15至38桌。",
+          "舒適桌數為18至27桌。",
+          "設有星光走道、空中纜車及30組空中鉛錘。",
+          "確認場地坪數為117.2坪。",
+          "確認場地挑高為8米。"
+        ]
+      },
+      "recommendationWeights": {
+        "romantic": 3,
+        "elegant": 3,
+        "modern": 5,
+        "luxurious": 5,
+        "warm": 2,
+        "party": 5,
+        "ceremony": 4,
+        "interactive": 5,
+        "photoFriendly": 5,
+        "familyOriented": 2
+      },
+      "sources": [
+        {
+          "type": "officialWebsite",
+          "url": "https://www.denwell.com/%e7%b4%ab%e8%89%b7%e5%96%9c%e4%ba%8b/",
+          "note": "官方資料：暖金與霧紫色調、無樑柱、最高38桌、空中纜車、升降星光大道與空中鉛錘。"
+        },
+        {
+          "type": "internalKnowledge",
+          "note": "內部確認資料：可承接15至38桌，舒適18至27桌；117.2坪、8米挑高；設有星光走道、空中纜車及30組空中鉛錘。",
+          "url": null
+        }
+      ],
+      "equipmentInheritance": {
+        "inheritFromCombinedHalls": false
+      },
+      "combinedHallIds": []
+    },
+    {
+      "id": "purple-grand",
+      "displayName": "紫艷盛事",
+      "englishName": null,
+      "floor": "5F",
+      "type": "single",
+      "status": "active",
+      "capacity": {
+        "minimumTables": 10,
+        "maximumTables": 30,
+        "comfortableMinimumTables": 15,
+        "comfortableMaximumTables": 23
+      },
+      "equipment": {
+        "ledScreen": true,
+        "ledScreenSizeInches": null,
+        "projector": false,
+        "projectionScreenCount": 0,
+        "tv": false,
+        "tvSizeInches": null,
+        "soundSystem": true,
+        "microphone": true,
+        "starLightAisle": true,
+        "aerialCableEntrance": true,
+        "hangingGiftDeviceCount": 25,
+        "loft": false,
+        "secondStage": false
+      },
+      "style": {
+        "primaryColors": [
+          "暖金色",
+          "霧紫色",
+          "水晶光影"
+        ],
+        "designStyles": [
+          "都會時尚",
+          "時尚前衛",
+          "現代奢華",
+          "派對風格"
+        ],
+        "visualKeywords": [
+          "暖金光影",
+          "霧紫層次",
+          "垂墜水晶",
+          "特殊進場",
+          "精品活動"
+        ]
+      },
+      "features": [
+        "全場無樑柱",
+        "升降星光大道",
+        "空中纜車",
+        "空中鉛錘",
+        "LED螢幕",
+        "適合婚宴與精品品牌活動",
+        "100坪",
+        "8米挑高"
+      ],
+      "recommendedPersonalities": [],
+      "recommendedFor": {
+        "weddingStyles": [
+          "時尚婚禮",
+          "派對婚禮",
+          "都會婚禮",
+          "華麗婚禮"
+        ],
+        "customerPreferences": [
+          "重視特殊進場",
+          "希望使用空中纜車",
+          "喜歡星光走道",
+          "喜歡紫色與暖金色調",
+          "需要LED及舞台效果"
+        ],
+        "entranceMethods": [
+          "升降星光大道進場",
+          "空中纜車進場",
+          "LED影片進場",
+          "空中鉛錘驚喜流程"
+        ],
+        "timeSlots": [
+          "lunch",
+          "dinner"
+        ]
+      },
+      "notRecommendedFor": {
+        "customerPreferences": [
+          "偏好極小型婚禮",
+          "偏好自然森林風",
+          "不需要舞台效果"
+        ],
+        "reasons": [
+          "空間定位偏向時尚派對與特殊進場體驗"
+        ]
+      },
+      "emotionTags": {
+        "firstImpression": [
+          "前衛",
+          "華麗",
+          "時尚",
+          "浪漫"
+        ],
+        "coupleFeeling": [
+          "主角感",
+          "驚喜",
+          "具有表演感"
+        ],
+        "familyFeeling": [
+          "氣派",
+          "正式",
+          "體面"
+        ],
+        "guestFeeling": [
+          "燈光效果豐富",
+          "特殊進場吸睛",
+          "派對氣氛強烈"
+        ]
+      },
+      "salesNotes": {
+        "sellingPoints": [
+          "具備完整三項專利進場設備",
+          "無樑柱且視線完整",
+          "25組鉛錘可安排互動流程",
+          "舒適桌數15至23桌",
+          "可與其他紫艷廳房打通使用",
+          "100坪、8米挑高"
+        ],
+        "commonComparisons": [
+          "可與紫艷好事比較格局及桌數配置",
+          "桌數增加時可考慮紫艷盛事全"
+        ],
+        "commonQuestions": [
+          "是否可與其他紫艷廳打通？",
+          "最多可以安排幾桌？",
+          "鉛錘有幾組？"
+        ],
+        "internalNotes": [
+          "目前可承接10至30桌。",
+          "舒適桌數為15至23桌。",
+          "設有星光走道、空中纜車及25組空中鉛錘。",
+          "官網婚宴頁標示最高31桌，但內部目前營運上限為30桌。",
+          "確認場地坪數為100坪。",
+          "確認場地挑高為8米。"
+        ]
+      },
+      "recommendationWeights": {
+        "romantic": 3,
+        "elegant": 3,
+        "modern": 5,
+        "luxurious": 4,
+        "warm": 2,
+        "party": 5,
+        "ceremony": 4,
+        "interactive": 5,
+        "photoFriendly": 5,
+        "familyOriented": 2
+      },
+      "sources": [
+        {
+          "type": "officialWebsite",
+          "url": "https://www.denwell.com/%e7%b4%ab%e8%89%b7%e7%9b%9b%e4%ba%8b/",
+          "note": "官方資料：最高31桌、無樑柱、暖金霧紫、星光大道、空中纜車及空中鉛錘。"
+        },
+        {
+          "type": "internalKnowledge",
+          "note": "內部確認資料：目前可承接10至30桌，舒適15至23桌；100坪、8米挑高；設有星光走道、空中纜車及25組空中鉛錘。",
+          "url": null
+        }
+      ],
+      "equipmentInheritance": {
+        "inheritFromCombinedHalls": false
+      },
+      "combinedHallIds": []
+    },
+    {
+      "id": "century",
+      "displayName": "世紀",
+      "englishName": "Century",
+      "floor": "6F",
+      "type": "single",
+      "status": "active",
+      "capacity": {
+        "minimumTables": 20,
+        "maximumTables": 50,
+        "comfortableMinimumTables": 25,
+        "comfortableMaximumTables": 40
+      },
+      "equipment": {
+        "ledScreen": true,
+        "ledScreenSizeInches": 300,
+        "projector": false,
+        "projectionScreenCount": 0,
+        "tv": false,
+        "tvSizeInches": null,
+        "soundSystem": true,
+        "microphone": true,
+        "starLightAisle": true,
+        "aerialCableEntrance": true,
+        "hangingGiftDeviceCount": 40,
+        "loft": false,
+        "secondStage": false
+      },
+      "style": {
+        "primaryColors": [
+          "焦糖珠光",
+          "暖金色",
+          "黑白大理石色"
+        ],
+        "designStyles": [
+          "歐洲宮廷",
+          "藝術博物館",
+          "古典奢華",
+          "皇家婚禮"
+        ],
+        "visualKeywords": [
+          "歐洲藝術展間",
+          "水晶吊燈",
+          "焦糖珠光",
+          "人物畫作",
+          "時空隧道",
+          "300吋LED電視牆"
+        ]
+      },
+      "features": [
+        "無樑柱空間",
+        "歐洲藝術展間氛圍",
+        "宮廷式空間設計",
+        "水晶吊燈",
+        "300吋LED電視牆",
+        "空中纜車",
+        "升降星光大道",
+        "空中鉛錘",
+        "172坪",
+        "7米挑高"
+      ],
+      "recommendedPersonalities": [],
+      "recommendedFor": {
+        "weddingStyles": [
+          "皇家婚禮",
+          "歐式婚禮",
+          "大型婚禮",
+          "古典奢華婚禮"
+        ],
+        "customerPreferences": [
+          "偏好歐洲藝術及宮廷風",
+          "需要大型宴會空間",
+          "重視隆重與儀式感",
+          "希望使用空中纜車或星光走道",
+          "喜歡水晶吊燈及焦糖金色空間",
+          "需要大型LED影像效果"
+        ],
+        "entranceMethods": [
+          "升降星光大道進場",
+          "空中纜車進場",
+          "搭配300吋LED影片進場",
+          "空中鉛錘驚喜流程"
+        ],
+        "timeSlots": [
+          "lunch",
+          "dinner"
+        ]
+      },
+      "notRecommendedFor": {
+        "customerPreferences": [
+          "偏好微型家宴",
+          "偏好自然簡約風",
+          "不喜歡隆重場景"
+        ],
+        "reasons": [
+          "空間規模大，視覺及儀式感強烈"
+        ]
+      },
+      "emotionTags": {
+        "firstImpression": [
+          "磅礡",
+          "藝術感",
+          "皇家氣派",
+          "神秘"
+        ],
+        "coupleFeeling": [
+          "隆重",
+          "尊榮",
+          "像皇家婚禮主角"
+        ],
+        "familyFeeling": [
+          "體面",
+          "正式",
+          "氣勢宏大"
+        ],
+        "guestFeeling": [
+          "像走進歐洲博物館",
+          "空間震撼",
+          "儀式感強烈",
+          "大型LED畫面吸睛"
+        ]
+      },
+      "salesNotes": {
+        "sellingPoints": [
+          "適合20至50桌大型婚禮",
+          "舒適桌數25至40桌",
+          "300吋LED電視牆",
+          "40組空中鉛錘",
+          "具備星光走道及空中纜車",
+          "無樑柱歐洲博物館式空間"
+        ],
+        "commonComparisons": [
+          "可與盛典比較相同風格下的桌數與格局",
+          "可與紫艷喜事比較皇家古典與時尚派對風"
+        ],
+        "commonQuestions": [
+          "世紀最多幾桌？",
+          "LED電視牆尺寸是多少？",
+          "是否有空中纜車？",
+          "鉛錘有幾組？"
+        ],
+        "internalNotes": [
+          "目前可承接20至50桌。",
+          "舒適桌數為25至40桌。",
+          "設有星光走道、空中纜車及40組空中鉛錘。",
+          "世紀廳設有300吋LED電視牆。",
+          "場地為172坪、7米挑高。"
+        ]
+      },
+      "recommendationWeights": {
+        "romantic": 4,
+        "elegant": 5,
+        "modern": 3,
+        "luxurious": 5,
+        "warm": 2,
+        "party": 4,
+        "ceremony": 5,
+        "interactive": 4,
+        "photoFriendly": 5,
+        "familyOriented": 3
+      },
+      "sources": [
+        {
+          "type": "officialWebsite",
+          "url": "https://www.denwell.com/%e4%b8%96%e7%b4%80/",
+          "note": "官方資料：歐洲藝術展間、焦糖珠光、無樑柱、水晶吊燈及最高50桌。"
+        },
+        {
+          "type": "internalKnowledge",
+          "note": "內部確認資料：目前可承接20至50桌，舒適25至40桌；172坪、7米挑高；設有300吋LED電視牆、星光走道、空中纜車及40組鉛錘。",
+          "url": null
+        }
+      ],
+      "equipmentInheritance": {
+        "inheritFromCombinedHalls": false
+      },
+      "combinedHallIds": []
+    },
+    {
+      "id": "ceremony",
+      "displayName": "盛典",
+      "englishName": "Ceremony",
+      "floor": "6F",
+      "type": "single",
+      "status": "active",
+      "capacity": {
+        "minimumTables": 21,
+        "maximumTables": 52,
+        "comfortableMinimumTables": 25,
+        "comfortableMaximumTables": 40
+      },
+      "equipment": {
+        "ledScreen": true,
+        "ledScreenSizeInches": 300,
+        "projector": false,
+        "projectionScreenCount": 0,
+        "tv": false,
+        "tvSizeInches": null,
+        "soundSystem": true,
+        "microphone": true,
+        "starLightAisle": true,
+        "aerialCableEntrance": true,
+        "hangingGiftDeviceCount": 40,
+        "loft": false,
+        "secondStage": false
+      },
+      "style": {
+        "primaryColors": [
+          "焦糖珠光",
+          "暖金色",
+          "黑白大理石色"
+        ],
+        "designStyles": [
+          "皇家婚禮",
+          "歐洲宮廷",
+          "藝術博物館",
+          "演唱會級婚禮"
+        ],
+        "visualKeywords": [
+          "焦糖珠光",
+          "水晶吊燈",
+          "歐洲畫作",
+          "300吋LED電視牆",
+          "皇家宴會"
+        ]
+      },
+      "features": [
+        "無樑柱空間",
+        "歐洲藝術展間氛圍",
+        "300吋LED電視牆",
+        "升降星光大道",
+        "空中纜車",
+        "空中鉛錘",
+        "176坪",
+        "9米挑高"
+      ],
+      "recommendedPersonalities": [],
+      "recommendedFor": {
+        "weddingStyles": [
+          "皇家婚禮",
+          "大型婚禮",
+          "演唱會型婚禮",
+          "歐式宮廷婚禮"
+        ],
+        "customerPreferences": [
+          "需要大型LED視覺效果",
+          "重視舞台及影片呈現",
+          "偏好皇家宮廷風",
+          "希望使用空中纜車及星光走道",
+          "需要大型宴會空間"
+        ],
+        "entranceMethods": [
+          "升降星光大道進場",
+          "空中纜車進場",
+          "搭配300吋LED進場",
+          "空中鉛錘驚喜流程"
+        ],
+        "timeSlots": [
+          "lunch",
+          "dinner"
+        ]
+      },
+      "notRecommendedFor": {
+        "customerPreferences": [
+          "偏好小型家宴",
+          "偏好低調簡約",
+          "不需要舞台與影像效果"
+        ],
+        "reasons": [
+          "空間定位為大型、皇家及演唱會級婚禮"
+        ]
+      },
+      "emotionTags": {
+        "firstImpression": [
+          "震撼",
+          "皇家",
+          "藝術感",
+          "磅礡"
+        ],
+        "coupleFeeling": [
+          "巨星感",
+          "尊榮",
+          "隆重"
+        ],
+        "familyFeeling": [
+          "氣派",
+          "體面",
+          "正式"
+        ],
+        "guestFeeling": [
+          "視覺震撼",
+          "像參加演唱會與皇家婚禮",
+          "舞台效果強烈"
+        ]
+      },
+      "salesNotes": {
+        "sellingPoints": [
+          "300吋LED電視牆",
+          "可承接21至52桌",
+          "舒適桌數25至40桌",
+          "40組空中鉛錘",
+          "具備星光走道及空中纜車",
+          "適合大型皇家婚禮",
+          "176坪、9米挑高"
+        ],
+        "commonComparisons": [
+          "可與世紀比較場型與桌數需求",
+          "可與紫艷喜事比較皇家古典與現代派對感"
+        ],
+        "commonQuestions": [
+          "LED電視牆尺寸是多少？",
+          "最多可安排幾桌？",
+          "是否有空中纜車？"
+        ],
+        "internalNotes": [
+          "目前可承接21至52桌。",
+          "舒適桌數為25至40桌。",
+          "設有星光走道、空中纜車及40組空中鉛錘。",
+          "盛典廳設有300吋LED電視牆。",
+          "確認場地坪數為176坪。",
+          "確認場地挑高為9米。"
+        ]
+      },
+      "recommendationWeights": {
+        "romantic": 4,
+        "elegant": 5,
+        "modern": 4,
+        "luxurious": 5,
+        "warm": 2,
+        "party": 5,
+        "ceremony": 5,
+        "interactive": 5,
+        "photoFriendly": 5,
+        "familyOriented": 3
+      },
+      "sources": [
+        {
+          "type": "officialWebsite",
+          "url": "https://www.denwell.com/%e7%9b%9b%e5%85%b8/",
+          "note": "官方資料：歐洲藝術展間、焦糖珠光、水晶吊燈及最高52桌。"
+        },
+        {
+          "type": "internalKnowledge",
+          "note": "內部確認資料：目前可承接21至52桌，舒適25至40桌；176坪、9米挑高；設有300吋LED電視牆、星光走道、空中纜車及40組鉛錘。",
+          "url": null
+        }
+      ],
+      "equipmentInheritance": {
+        "inheritFromCombinedHalls": false
+      },
+      "combinedHallIds": []
+    },
+    {
+      "id": "century-ceremony",
+      "displayName": "世紀盛典",
+      "englishName": null,
+      "floor": "6F",
+      "type": "combined",
+      "status": "active",
+      "combinedHallIds": [
+        "century",
+        "ceremony"
+      ],
+      "capacity": {
+        "minimumTables": 45,
+        "maximumTables": 100,
+        "comfortableMinimumTables": null,
+        "comfortableMaximumTables": null
+      },
+      "equipmentInheritance": {
+        "inheritFromCombinedHalls": true
+      },
+      "features": [
+        "世紀與盛典兩廳打通",
+        "百桌規模無樑柱空間",
+        "344坪",
+        "官方工商規格為104桌",
+        "歐洲博物館及皇家宮廷風格",
+        "世紀與盛典皆設有300吋LED電視牆",
+        "升降星光大道",
+        "空中鉛錘",
+        "適合大型婚禮及千人活動"
+      ],
+      "recommendedPersonalities": [],
+      "recommendedFor": {
+        "weddingStyles": [
+          "超大型皇家婚禮",
+          "歐洲宮廷婚禮",
+          "演唱會型婚禮"
+        ],
+        "customerPreferences": [
+          "需要百桌規模",
+          "偏好皇家藝術風",
+          "重視大型LED與舞台效果"
+        ],
+        "entranceMethods": [
+          "升降星光大道進場",
+          "大型LED影片進場",
+          "大型舞台進場"
+        ],
+        "timeSlots": [
+          "lunch",
+          "dinner"
+        ]
+      },
+      "salesNotes": {
+        "sellingPoints": [
+          "世紀及盛典全打通",
+          "百桌無樑柱空間",
+          "世紀與盛典皆設有300吋LED電視牆",
+          "皇家及演唱會級婚宴效果"
+        ],
+        "commonComparisons": [
+          "可與紫艷盛事全比較皇家藝術風與都會時尚風"
+        ],
+        "commonQuestions": [
+          "最大桌數是多少？",
+          "世紀與盛典是否都有300吋LED電視牆？",
+          "是否能使用空中纜車？"
+        ],
+        "internalNotes": [
+          "由世紀與盛典兩廳打通。",
+          "官方婚宴頁同時標示100桌及104桌。",
+          "工商場地規格為104桌。",
+          "舒適桌數及內部最小承接桌數尚未提供，因此使用null。",
+          "世紀廳與盛典廳目前皆設有300吋LED電視牆。",
+          "組合廳繼承世紀與盛典的設備資料。",
+          "空中纜車在組合廳模式下的實際使用方式仍需現場確認。"
+        ]
+      },
+      "recommendationWeights": {
+        "romantic": 4,
+        "elegant": 5,
+        "modern": 4,
+        "luxurious": 5,
+        "warm": 2,
+        "party": 5,
+        "ceremony": 5,
+        "interactive": 5,
+        "photoFriendly": 5,
+        "familyOriented": 3
+      },
+      "sources": [
+        {
+          "type": "officialWebsite",
+          "url": "https://www.denwell.com/%e4%b8%96%e7%b4%80%e7%9b%9b%e5%85%b8/",
+          "note": "官方婚宴資料：百桌無樑柱、歐洲藝術展間、焦糖珠光及水晶吊燈。"
+        },
+        {
+          "type": "officialWebsite",
+          "url": "https://www.denwell.com/%e4%b8%96%e7%b4%80%e7%9b%9b%e5%85%b8-2/",
+          "note": "官方工商資料：344坪、104桌、6樓，具LED、星光大道與空中鉛錘。"
+        },
+        {
+          "type": "internalKnowledge",
+          "note": "內部確認資料：世紀與盛典兩廳打通，且兩廳目前皆設有300吋LED電視牆。",
+          "url": null
+        }
+      ],
+      "equipment": {
+        "ledScreen": null,
+        "ledScreenSizeInches": null,
+        "projector": null,
+        "projectionScreenCount": null,
+        "tv": null,
+        "tvSizeInches": null,
+        "soundSystem": null,
+        "microphone": null,
+        "starLightAisle": null,
+        "aerialCableEntrance": null,
+        "hangingGiftDeviceCount": null,
+        "loft": null,
+        "secondStage": null
+      },
+      "style": {
+        "primaryColors": [],
+        "designStyles": [],
+        "visualKeywords": []
+      },
+      "notRecommendedFor": {
+        "customerPreferences": [],
+        "reasons": []
+      },
+      "emotionTags": {
+        "firstImpression": [],
+        "coupleFeeling": [],
+        "familyFeeling": [],
+        "guestFeeling": []
+      }
+    },
+    {
+      "id": "nordic-light",
+      "displayName": "北歐光境",
+      "englishName": null,
+      "floor": null,
+      "type": "single",
+      "status": "active",
+      "capacity": {
+        "minimumTables": 10,
+        "maximumTables": 23,
+        "comfortableMinimumTables": null,
+        "comfortableMaximumTables": null,
+        "minimumGuests": null,
+        "maximumGuests": 240
+      },
+      "equipment": {
+        "ledScreen": null,
+        "ledScreenSizeInches": null,
+        "projector": null,
+        "projectionScreenCount": null,
+        "tv": null,
+        "tvSizeInches": null,
+        "soundSystem": null,
+        "microphone": null,
+        "starLightAisle": false,
+        "aerialCableEntrance": false,
+        "hangingGiftDeviceCount": 0,
+        "loft": false,
+        "secondStage": false
+      },
+      "equipmentInheritance": {
+        "inheritFromCombinedHalls": false
+      },
+      "style": {
+        "primaryColors": [
+          "莫蘭迪色系",
+          "自然綠",
+          "天空藍",
+          "暖光色",
+          "玫瑰金"
+        ],
+        "designStyles": [
+          "北歐自然風",
+          "半戶外婚禮",
+          "玻璃帷幕婚禮",
+          "自然簡約",
+          "西式長桌婚禮"
+        ],
+        "visualKeywords": [
+          "透光玻璃帷幕",
+          "自然採光",
+          "綠地",
+          "藍天",
+          "燈泡串",
+          "星空",
+          "極光",
+          "歐若拉",
+          "北歐小屋"
+        ]
+      },
+      "features": [
+        "以透光玻璃帷幕打造半戶外婚禮空間",
+        "白天可引入自然光與藍天景色",
+        "夜間可透過燈泡串營造繁星氛圍",
+        "可採西式長桌配置",
+        "可採經典圓桌配置",
+        "設有北歐小屋新娘休息室",
+        "北歐小屋具透光玻璃屋頂",
+        "北歐小屋設有自然採光",
+        "105坪",
+        "5米挑高",
+        "最高容納240位"
+      ],
+      "combinedHallIds": [],
+      "recommendedPersonalities": [],
+      "recommendedFor": {
+        "weddingStyles": [
+          "半戶外婚禮",
+          "北歐風婚禮",
+          "自然系婚禮",
+          "西式長桌婚禮",
+          "戶外感婚禮",
+          "莫蘭迪色系婚禮"
+        ],
+        "customerPreferences": [
+          "喜歡自然採光",
+          "喜歡玻璃屋空間",
+          "希望擁有戶外感但仍有遮蔽",
+          "喜歡北歐自然簡約風格",
+          "偏好西式長桌婚禮",
+          "希望白天與夜晚呈現不同氛圍",
+          "重視新娘休息室質感"
+        ],
+        "entranceMethods": [
+          "自然步行進場",
+          "西式長桌間進場",
+          "搭配燈泡串與夜間光影進場",
+          "戶外感證婚後銜接宴席"
+        ],
+        "timeSlots": [
+          "lunch",
+          "dinner"
+        ]
+      },
+      "notRecommendedFor": {
+        "customerPreferences": [
+          "需要空中纜車進場",
+          "需要升降星光走道",
+          "偏好封閉式大型宮廷宴會廳",
+          "需要百桌型大型宴會空間"
+        ],
+        "reasons": [
+          "北歐光境的核心特色為半戶外玻璃帷幕及自然氛圍",
+          "官網未提供空中纜車或升降星光走道資訊",
+          "官網提供的容量為240位，並非百桌型大型宴會場地"
+        ]
+      },
+      "emotionTags": {
+        "firstImpression": [
+          "通透",
+          "自然",
+          "清新",
+          "溫柔",
+          "像走進玻璃花園"
+        ],
+        "coupleFeeling": [
+          "自由",
+          "浪漫",
+          "放鬆",
+          "具有度假感",
+          "被自然光包圍"
+        ],
+        "familyFeeling": [
+          "舒服",
+          "明亮",
+          "溫馨",
+          "不拘謹"
+        ],
+        "guestFeeling": [
+          "像參加戶外婚禮",
+          "白天自然明亮",
+          "夜間具有星空感",
+          "西式聚會氣氛濃厚"
+        ]
+      },
+      "salesNotes": {
+        "sellingPoints": [
+          "透光玻璃帷幕兼具戶外感與天候遮蔽",
+          "白天自然採光與夜間燈泡串可呈現兩種氛圍",
+          "可選擇西式長桌或經典圓桌配置",
+          "設有獨立北歐小屋新娘休息室",
+          "105坪及5米挑高",
+          "最高容納240位"
+        ],
+        "commonComparisons": [
+          "可與法蘿比較法式花園與北歐半戶外風格",
+          "可與格林比較室內綠意木質與半戶外自然採光",
+          "可與沐曦比較奶茶木質與北歐莫蘭迪風格"
+        ],
+        "commonQuestions": [
+          "北歐光境最多可以容納多少人？",
+          "可以使用西式長桌嗎？",
+          "下雨時是否仍可使用？",
+          "是否有獨立新娘休息室？",
+          "北歐光境位於哪一樓？",
+          "實際可以安排多少桌？"
+        ],
+        "internalNotes": [
+          "官網目前標示最高容納240位。",
+          "內部目前營運桌數範圍為10至23桌。",
+          "官網標示場地為105坪、5米挑高。",
+          "北歐光境為透光玻璃帷幕打造的半戶外婚禮空間。",
+          "可使用西式長桌或經典圓桌。",
+          "設有北歐小屋新娘休息室。",
+          "實際樓層及設備資料仍待內部補充。"
+        ]
+      },
+      "recommendationWeights": {
+        "romantic": 5,
+        "elegant": 3,
+        "modern": 3,
+        "luxurious": 2,
+        "warm": 5,
+        "party": 2,
+        "ceremony": 5,
+        "interactive": 4,
+        "photoFriendly": 5,
+        "familyOriented": 4
+      },
+      "sources": [
+        {
+          "type": "officialWebsite",
+          "url": "https://www.denwell.com/%e5%8c%97%e6%ad%90%e5%85%89%e5%a2%83_wedding/",
+          "note": "官方資料：透光玻璃帷幕半戶外空間、西式長桌及圓桌、北歐小屋新娘休息室、最高240位、105坪及5米挑高。"
+        },
+        {
+          "type": "internalKnowledge",
+          "url": null,
+          "note": "目前尚未提供實際樓層、最小桌數、最大桌數、舒適桌數及場地設備資料。"
+        }
+      ]
+    }
+  ],
+  "ceremonySpaces": [
+    {
+      "id": "xinzhuang-wedding-ceremony",
+      "displayName": "新莊典華證婚儀式專案",
+      "type": "ceremony-package",
+      "status": "active",
+      "isBanquetHall": false,
+      "participatesInHallRecommendation": false,
+      "canBeBookedSeparately": false,
+      "requiresBanquetBooking": true,
+      "eligibleVenueId": "denwell-xinzhuang",
+      "bookingRule": {
+        "summary": "限定已下訂新莊典華喜宴廳房者加購",
+        "requiresBookedHall": true,
+        "allowedHallIds": "all-active-banquet-halls",
+        "standaloneBookingAllowed": false
+      },
+      "durationMinutes": 60,
+      "availableTimeSlots": [
+        {
+          "banquetTimeSlot": "lunch",
+          "startTime": "10:30",
+          "endTime": "11:30"
+        },
+        {
+          "banquetTimeSlot": "dinner",
+          "startTime": "17:00",
+          "endTime": "18:00"
+        }
+      ],
+      "spaceOptions": [
+        {
+          "id": "moonlit-forest",
+          "displayName": "悅光森林",
+          "style": {
+            "designStyles": [
+              "自然系證婚",
+              "森林系證婚",
+              "浪漫證婚"
+            ],
+            "visualKeywords": [
+              "自然",
+              "森林",
+              "柔和光線",
+              "親友見證"
+            ]
+          }
+        },
+        {
+          "id": "light-corridor",
+          "displayName": "光廊",
+          "style": {
+            "designStyles": [
+              "海島感證婚",
+              "光影證婚",
+              "現代浪漫"
+            ],
+            "visualKeywords": [
+              "光廊",
+              "海島氛圍",
+              "明亮",
+              "誓言儀式"
+            ]
+          }
+        }
+      ],
+      "packageIncludes": [
+        "精美結婚書約一份",
+        "專業音響設備",
+        "專業音響人員操作服務",
+        "證婚台花藝布置",
+        "椅側花藝布置",
+        "時尚調酒50瓶",
+        "證婚儀式場地一小時",
+        "證婚儀式流程規劃",
+        "證婚儀式主持人一名"
+      ],
+      "optionalAddOns": [
+        "雞尾酒點心"
+      ],
+      "recommendedFor": {
+        "customerPreferences": [
+          "希望在喜宴前舉辦正式證婚",
+          "希望由親友見證交換誓言",
+          "重視證婚儀式流程",
+          "希望證婚與喜宴在同一場館完成",
+          "需要主持人及音響服務"
+        ]
+      },
+      "salesNotes": {
+        "sellingPoints": [
+          "證婚與喜宴可在新莊典華同一場館完成",
+          "可選擇悅光森林或光廊兩種空間",
+          "包含主持人、音響、花藝及流程規劃",
+          "午宴及晚宴各有固定一小時使用時段"
+        ],
+        "commonQuestions": [
+          "沒有下訂喜宴可以單獨預訂嗎？",
+          "證婚儀式可以使用多久？",
+          "午宴及晚宴的使用時間為何？",
+          "可以選擇哪兩個證婚空間？",
+          "專案是否包含主持人及音響？"
+        ],
+        "internalNotes": [
+          "限定已下訂新莊典華喜宴廳房者加購。",
+          "不可單獨預訂。",
+          "不應出現在一般宴會廳桌數推薦結果中。",
+          "不可取代喜宴廳房。",
+          "應在新人選定宴會廳後，作為加購項目推薦。",
+          "實際專案內容及價格可能調整，應以現場接洽資訊為準。"
+        ]
+      },
+      "sources": [
+        {
+          "type": "officialWebsite",
+          "url": "https://www.denwell.com/news-xinzhuang-weddingceremony/",
+          "note": "官方資料：悅光森林與光廊兩種證婚空間，場地使用一小時；午宴10:30至11:30、晚宴17:00至18:00；限新莊典華婚宴加購使用。"
+        },
+        {
+          "type": "internalKnowledge",
+          "url": null,
+          "note": "內部確認：儀式堂限定已下訂喜宴廳房者加購。"
+        }
+      ]
+    }
+  ]
+}

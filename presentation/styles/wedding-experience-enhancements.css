@@ -1,0 +1,168 @@
+.wx-person{margin-bottom:22px;padding-bottom:4px;border-bottom:1px solid #725b421f}
+.wx-person h2{margin:0 0 14px;font:500 18px var(--font-brand);color:var(--accent)}
+.wx-profile input:disabled{opacity:.45}
+.wx-check{display:flex!important;align-items:center;gap:8px;margin:-8px 0 20px!important;font-size:13px!important}
+.wx-check input{width:17px;height:17px;accent-color:var(--accent)}
+.wx-options button:hover{transform:translateY(-5px)}
+.wx-personality-card{width:min(680px,100%);margin:28px auto 0;padding:clamp(30px,6vw,68px);position:relative;overflow:hidden;border:1px solid #725b4233;border-radius:30px;background:#ffffff83;box-shadow:0 30px 80px #3d2d201f;backdrop-filter:blur(18px)}
+.wx-personality-card:after{content:"";position:absolute;width:180px;height:180px;right:-70px;bottom:-85px;border:1px solid var(--accent);border-radius:50%;opacity:.25}
+.wx-personality-card>span{font:600 10px var(--font-brand);letter-spacing:.28em;color:var(--accent)}
+.wx-personality-card h1{margin:.35em 0 .15em}
+.wx-personality-card p{margin-inline:auto;max-width:500px}
+.wx-personality-card>small{display:block;margin-top:24px;letter-spacing:.16em;opacity:.72}
+.wx-card-save{display:grid;justify-items:center;gap:6px;margin:18px auto 4px}
+.wx-card-save button{min-height:44px;padding:10px 18px;border:1px solid var(--accent);border-radius:999px;background:transparent;color:inherit;font:600 13px/1.2 inherit;letter-spacing:.06em;cursor:pointer}
+.wx-card-save button:hover{transform:translateY(-2px);background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.wx-card-save p{min-height:1.4em;margin:0;font-size:12px;opacity:.72}
+.wx-halls article{transition:transform .45s ease,box-shadow .45s ease}
+.wx-halls article:hover{transform:translateY(-7px);box-shadow:0 24px 55px #3d2d2022}
+.wx-ambient{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.wx-ambient i{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--accent);opacity:.22;animation:wx-drift 14s ease-in-out infinite}
+.wx-ambient i:nth-child(1){left:12%;top:28%}
+.wx-ambient i:nth-child(2){right:16%;top:20%;animation-delay:-5s}
+.wx-ambient i:nth-child(3){left:65%;bottom:12%;animation-delay:-9s}
+.wx-moonlit-oracle .wx-ambient i{box-shadow:0 0 18px 5px #e8d48b;animation-name:wx-twinkle}
+.wx-moonlit-oracle .wx-personality-card{background:#102b4096;border-color:#d7bd7966;box-shadow:0 30px 90px #0008}
+.wx-blush-letter .wx-personality-card,.wx-blush-letter .wx-halls article{border-radius:10px 30px 10px 30px;background:linear-gradient(145deg,#fff9,#f4dce799)}
+.wx-handmade-vows .wx-personality-card,.wx-handmade-vows .wx-halls article{border-radius:5px 18px 7px 22px;background:#f5f0e3d9;box-shadow:8px 10px 0 #7c896f25}
+.wx-handmade-vows .wx-ambient i{width:18px;height:32px;border-radius:100% 0 100% 0;animation-name:wx-leaf}
+.wx-manor-invitation .wx-personality-card,.wx-manor-invitation .wx-halls article{border-radius:2px;outline:1px solid #fff6;outline-offset:-9px;background:#f7eee1c7}
+.wx-manor-invitation .wx-ambient i{width:90px;height:10px;border-radius:50%;filter:blur(4px);animation-name:wx-ribbon}
+.wx-celebration-deck .wx-personality-card,.wx-celebration-deck .wx-halls article{border:2px solid #5e4330;border-radius:18px;background:#fff4dbe8;box-shadow:7px 9px 0 #d76e56}
+.wx-celebration-deck .wx-halls article:nth-child(2){transform:rotate(1deg)}
+.wx-celebration-deck .wx-halls article:nth-child(3){transform:rotate(-1deg)}
+@keyframes wx-drift{50%{transform:translate3d(28px,-35px,0) rotate(8deg)}}
+@keyframes wx-twinkle{0%,100%{opacity:.08;transform:scale(.55)}50%{opacity:.65;transform:scale(1.15)}}
+@keyframes wx-leaf{50%{transform:translate(35px,-50px) rotate(110deg)}}
+@keyframes wx-ribbon{50%{transform:translateX(45px) rotate(5deg);opacity:.35}}
+@media(prefers-reduced-motion:reduce){
+  .wx-ambient i{animation:none!important}
+  .wx-options button,.wx-halls article,.wx-progress i{transition:none!important}
+  .wx-options button:hover,.wx-halls article:hover{transform:none!important}
+}
+
+/* 3.1.1 — locale-safe date row and six realistic card languages */
+.wx-profile input[type=checkbox]{width:1em!important;height:1em!important;min-width:1em!important;margin:0!important;padding:0!important;flex:0 0 1em}
+.wx-check{width:max-content;max-width:100%;display:inline-flex!important;flex-flow:row nowrap!important;align-items:center;gap:7px;margin:-8px 0 20px!important;font-size:13px!important;line-height:1.2;white-space:nowrap;letter-spacing:.04em!important}
+.wx-profile input[type=date]{font-variant-numeric:tabular-nums;letter-spacing:.04em}
+
+/* 3.1.7 — planner assignment and banquet period */
+.wx-profile select{width:100%;height:48px;margin-top:7px;padding:0 12px;color:inherit;border:0;border-bottom:1px solid #725b4255;background:#fff8}
+.wx-planner{width:min(280px,100%);margin:0 0 28px auto!important}
+.wx-planner select{appearance:auto}
+.wx-schedule-row{display:flex;align-items:flex-end;gap:16px;margin-top:-8px}
+.wx-meal-period{flex:1;margin:0!important}
+.wx-meal-period legend{margin-bottom:8px!important}
+.wx-meal-period .wx-radio{gap:5px}
+.wx-meal-period .wx-radio label{margin:0!important;padding:8px 6px;font-size:12px;white-space:nowrap}
+.wx-date-undecided{flex:0 0 auto;margin:0 0 9px!important}
+.wx-routing-note{margin-top:22px}
+.wx-submit-message{min-height:1.6em;color:#7b695e}
+.wx-submission-success{margin:1rem auto;padding:1rem 1.5rem;border:1px solid rgba(196,160,104,.55);background:rgba(255,248,236,.75)}
+.wx-submission-success strong{display:inline-block;margin-top:.35rem;color:#765843;font-size:clamp(1.25rem,4vw,1.8rem);letter-spacing:.08em}
+@media(max-width:760px){.wx-planner{width:100%;margin:0 0 24px!important}.wx-schedule-row{align-items:stretch;flex-direction:column;gap:12px}.wx-date-undecided{align-self:flex-start;margin:0 0 18px!important}}
+
+.wx-flow{--experience-photo:url('/realistic/brandcolor.webp');--card-ink:var(--ink);--card-wash:linear-gradient(105deg,#fffdf3ed,#f4ead9c7);--result-wash:linear-gradient(135deg,#fffdf1ed,#efe2d2d7);--hall-wash:linear-gradient(150deg,#fffdf4f3,#eee2d4df)}
+.wx-options button{position:relative;isolation:isolate;overflow:hidden;color:var(--card-ink);background:transparent!important;background-position:center;background-size:cover;box-shadow:0 15px 40px #34241824}
+.wx-options button:before{content:"";position:absolute;z-index:-1;inset:0;background:var(--card-wash);backdrop-filter:blur(2px)}
+.wx-options button:after{content:"";position:absolute;z-index:-2;inset:0;background-image:var(--experience-photo);background-position:var(--photo-position,center);background-size:cover;transform:scale(1.06);transition:transform 1.6s ease}
+.wx-options button:hover:after,.wx-options button[aria-pressed=true]:after{transform:scale(1.01)}
+.wx-options button:nth-child(1){--photo-position:15% 42%}.wx-options button:nth-child(2){--photo-position:42% 50%}.wx-options button:nth-child(3){--photo-position:68% 43%}.wx-options button:nth-child(4){--photo-position:88% 52%}
+
+.wx-personality-card{isolation:isolate;background:transparent!important;text-shadow:0 1px 15px #fff8}
+.wx-personality-card:before{content:"";position:absolute;z-index:-2;inset:0;background-image:var(--experience-photo);background-position:center;background-size:cover;transform:scale(1.02)}
+.wx-personality-card:after{content:"";position:absolute;z-index:-1;inset:0!important;width:auto!important;height:auto!important;right:0!important;bottom:0!important;border:0!important;border-radius:inherit!important;background:var(--result-wash);opacity:1!important}
+.wx-personality-card>*{position:relative;z-index:1}
+.wx-halls article{isolation:isolate;overflow:hidden;background:transparent!important}
+.wx-halls article:before{content:"";position:absolute;z-index:-2;inset:0;background-image:var(--experience-photo);background-position:var(--hall-position,center);background-size:cover;transform:scale(1.04);transition:transform 1.6s ease}
+.wx-halls article:after{content:"";position:absolute;z-index:-1;inset:0;background:var(--hall-wash)}
+.wx-halls article:hover:before{transform:scale(1)}
+.wx-halls article:nth-child(1){--hall-position:20% center}.wx-halls article:nth-child(2){--hall-position:52% center}.wx-halls article:nth-child(3){--hall-position:83% center}
+
+.wx-brandcolor{--experience-photo:url('/realistic/brandcolor.webp');--card-wash:linear-gradient(100deg,#f4ead9f2,#d1b58ba8);--result-wash:linear-gradient(135deg,#31281fe3,#725f4bbd);--hall-wash:linear-gradient(150deg,#fff9ecf4,#c8aa78c9);--card-ink:#332a22}.wx-brandcolor .wx-personality-card{color:#fffaf0;text-shadow:0 2px 20px #1f160d99}
+.wx-moonlit-oracle{--experience-photo:url('/realistic/moonlit-oracle.webp');--card-wash:linear-gradient(110deg,#061622e8,#15364bb8);--result-wash:linear-gradient(135deg,#06131ee8,#16354ab5);--hall-wash:linear-gradient(145deg,#06131eee,#15364bc9);--card-ink:#f7f0df}.wx-moonlit-oracle .wx-options button{backdrop-filter:blur(14px)}
+.wx-blush-letter{--experience-photo:url('/realistic/blush-letter.webp');--card-wash:linear-gradient(115deg,#fffaf8ee,#f2dce2bd);--result-wash:linear-gradient(135deg,#fff8f3ea,#e7bdc8c9);--hall-wash:linear-gradient(150deg,#fffaf7f2,#efd6dddb);--card-ink:#573d45}
+.wx-handmade-vows{--experience-photo:url('/realistic/handmade-vows.webp');--card-wash:linear-gradient(110deg,#f4f0e6ed,#d8d3c1c7);--result-wash:linear-gradient(135deg,#f5f0e5e9,#89937fc8);--hall-wash:linear-gradient(150deg,#f6f1e7ee,#d1cfbce0);--card-ink:#3f4037}
+.wx-manor-invitation{--experience-photo:url('/realistic/manor-invitation.webp');--card-wash:linear-gradient(110deg,#f8eee1e8,#cdb79dbb);--result-wash:linear-gradient(135deg,#33271fe3,#816b5bc2);--hall-wash:linear-gradient(150deg,#fff8eced,#c6ac8fd8);--card-ink:#3c3028}.wx-manor-invitation .wx-personality-card{color:#fff9ec;text-shadow:0 2px 18px #21150d99}
+.wx-celebration-deck{--experience-photo:url('/realistic/celebration-deck.webp');--card-wash:linear-gradient(110deg,#fff2d9ed,#f0a578c2);--result-wash:linear-gradient(135deg,#fff0d9e9,#ce5c5ac9);--hall-wash:linear-gradient(150deg,#fff3dcec,#ec9b72d9);--card-ink:#462f2b}
+
+@media(prefers-reduced-motion:reduce){.wx-options button:after,.wx-halls article:before{transition:none!important;transform:none!important}}
+
+/* 3.1.2 — choice cards are independent sub-scenes; hero photography is never cropped here. */
+.wx-options button{min-height:250px!important;padding:0 20px 20px!important;background:var(--card-wash)!important}
+.wx-options button:before,.wx-options button:after{content:none!important}
+.wx-options button>i{grid-row:2/4!important}.wx-options button>span:not(.wx-choice-scene){opacity:.66}
+.wx-choice-scene{grid-column:1/-1;height:165px;margin:0 -20px 18px;position:relative;display:block;overflow:hidden;opacity:1!important;transform-origin:50% 85%;transition:transform .7s cubic-bezier(.2,.8,.2,1),filter .7s ease}
+.wx-choice-scene>span{position:absolute;display:block;opacity:1!important;pointer-events:none}.wx-scene-back{inset:0}.wx-scene-subject{z-index:2}.wx-scene-front{z-index:3}.wx-scene-light{z-index:4;inset:0}
+.wx-options button:hover .wx-choice-scene{transform:scale(1.025)}.wx-options button[aria-pressed=true] .wx-choice-scene{transform:translateY(-7px) scale(1.035)}
+
+/* Brandcolor: latte editorial, paired coffee, natural ceramic, metal service. */
+.wx-brandcolor .wx-scene-1 .wx-scene-back{background:linear-gradient(100deg,#ede2d1 0 58%,#d2b58b 58%)}.wx-brandcolor .wx-scene-1 .wx-scene-subject{width:64px;height:42px;left:54%;top:67px;border:7px solid #f4ead9;border-radius:7px 7px 25px 25px;background:radial-gradient(ellipse at 50% 30%,#f2ddbc 0 18%,#8b5d3d 20% 38%,#ead7b9 40%);box-shadow:20px 9px 0 -12px #f4ead9,0 22px 20px #61452b44}.wx-brandcolor .wx-scene-1 .wx-scene-front{width:98px;height:62px;left:12%;bottom:18px;transform:rotate(-8deg);background:repeating-linear-gradient(#f8f1e5 0 5px,#c6ab8555 6px 7px)}.wx-brandcolor .wx-scene-1 .wx-scene-light{background:linear-gradient(115deg,#fff9 0 24%,transparent 25%)}
+.wx-brandcolor .wx-scene-2 .wx-scene-back{background:linear-gradient(155deg,#8d6647,#3b2b23)}.wx-brandcolor .wx-scene-2 .wx-scene-subject{width:126px;height:54px;left:calc(50% - 63px);top:62px;background:radial-gradient(circle at 25% 50%,#efe3cf 0 17%,#704529 19% 29%,transparent 31%),radial-gradient(circle at 75% 50%,#d8bd98 0 17%,#704529 19% 29%,transparent 31%)}.wx-brandcolor .wx-scene-2 .wx-scene-front{inset:auto 0 0;height:40px;background:radial-gradient(ellipse,#5e3924 0 26%,transparent 28%) 12px 7px/28px 17px}.wx-brandcolor .wx-scene-2 .wx-scene-light{background:radial-gradient(circle at 50% 32%,#ffdca55c,transparent 45%)}
+.wx-brandcolor .wx-scene-3 .wx-scene-back{background:linear-gradient(110deg,#e9dfcc,#b7ad8d)}.wx-brandcolor .wx-scene-3 .wx-scene-subject{width:74px;height:70px;left:22%;top:55px;border-radius:12px 12px 30px 30px;background:#e9e0cf;box-shadow:10px 14px 20px #59452d33}.wx-brandcolor .wx-scene-3 .wx-scene-front{width:110px;height:130px;right:4%;bottom:-48px;border-radius:100% 0;background:repeating-linear-gradient(78deg,#6d7b55 0 8px,#a4ad8755 9px 15px)}.wx-brandcolor .wx-scene-3 .wx-scene-light{background:linear-gradient(90deg,#fff8,transparent 52%)}
+.wx-brandcolor .wx-scene-4 .wx-scene-back{background:linear-gradient(145deg,#241b18,#5d4233)}.wx-brandcolor .wx-scene-4 .wx-scene-subject{width:130px;height:78px;left:calc(50% - 65px);top:48px;border:2px solid #c7a66d;border-radius:50%;background:radial-gradient(ellipse,#f0dfc2 0 24%,#80512f 26% 44%,#26201e 46%);box-shadow:0 18px 0 -9px #b6935f,0 25px 24px #0008}.wx-brandcolor .wx-scene-4 .wx-scene-front{inset:10px 10px auto auto;width:45px;height:72px;border-right:1px solid #d4b77d;border-top:1px solid #d4b77d}.wx-brandcolor .wx-scene-4 .wx-scene-light{background:linear-gradient(125deg,transparent 48%,#d9b97e55 50%,transparent 62%)}
+
+/* Moonlit Oracle: empty sea, warm terrace, moon forest, radiant aisle. */
+.wx-moonlit-oracle .wx-choice-scene{border-bottom:1px solid #d9bd7744}.wx-moonlit-oracle .wx-scene-1 .wx-scene-back{background:linear-gradient(#081624 0 48%,#173e55 49%,#0c2a40)}.wx-moonlit-oracle .wx-scene-1 .wx-scene-subject{width:54px;height:54px;right:18%;top:24px;border-radius:50%;background:#e9dca7;box-shadow:0 0 35px #e9dca799}.wx-moonlit-oracle .wx-scene-1 .wx-scene-front{inset:auto 0 0;height:54px;background:repeating-radial-gradient(ellipse at 50% 0,#c7d0c922 0 2px,transparent 4px 13px)}.wx-moonlit-oracle .wx-scene-1 .wx-scene-light{background:linear-gradient(105deg,transparent 46%,#e8d89844 55%,transparent 67%)}
+.wx-moonlit-oracle .wx-scene-2 .wx-scene-back{background:linear-gradient(#07131f,#163348)}.wx-moonlit-oracle .wx-scene-2 .wx-scene-subject{inset:28px 8% auto;height:42px;background:radial-gradient(circle,#f4cf79 0 3px,transparent 5px) 0 0/28px 22px;filter:drop-shadow(0 0 7px #f2c86b)}.wx-moonlit-oracle .wx-scene-2 .wx-scene-front{width:105px;height:42px;left:calc(50% - 52px);bottom:18px;border-radius:50%;background:#6c4e37;box-shadow:0 -9px 0 -6px #e6c071,35px -18px 0 -31px #fff0a8}.wx-moonlit-oracle .wx-scene-2 .wx-scene-light{background:radial-gradient(circle at 50% 72%,#dcae5844,transparent 40%)}
+.wx-moonlit-oracle .wx-scene-3 .wx-scene-back{background:linear-gradient(135deg,#071a1e,#123b36 65%,#163a4c)}.wx-moonlit-oracle .wx-scene-3 .wx-scene-subject{inset:0 0 0 42%;background:repeating-radial-gradient(ellipse at 100% 0,#315f4c 0 12px,#163c32 13px 22px,transparent 24px 38px)}.wx-moonlit-oracle .wx-scene-3 .wx-scene-front{width:16px;height:180px;left:21%;top:-5px;transform:rotate(-12deg);background:#111f20;box-shadow:43px 0 0 #172927}.wx-moonlit-oracle .wx-scene-3 .wx-scene-light{background:linear-gradient(120deg,transparent 25%,#d9e5c73d 37%,transparent 49%)}
+.wx-moonlit-oracle .wx-scene-4 .wx-scene-back{background:linear-gradient(#10162b,#31204c 60%,#0a1f34)}.wx-moonlit-oracle .wx-scene-4 .wx-scene-subject{width:90px;height:165px;left:calc(50% - 45px);top:38px;clip-path:polygon(42% 0,58% 0,100% 100%,0 100%);background:linear-gradient(90deg,transparent,#e9ca7b88,transparent)}.wx-moonlit-oracle .wx-scene-4 .wx-scene-front{inset:30px 7% auto;height:90px;background:radial-gradient(circle,#e7c66d 0 2px,transparent 4px) 0 0/31px 27px}.wx-moonlit-oracle .wx-scene-4 .wx-scene-light{background:radial-gradient(circle at 50% 90%,#fff0a866,transparent 36%)}
+
+/* Blush Letter: rounded note, sealed envelope, botanical sheet, wine label. */
+.wx-blush-letter .wx-choice-scene{background:#fff8f6}.wx-blush-letter .wx-scene-1 .wx-scene-back{inset:14px 14%;border-radius:60px 60px 15px 15px;background:linear-gradient(145deg,#f8cdd8,#a94d68)}.wx-blush-letter .wx-scene-1 .wx-scene-subject{width:50px;height:50px;right:21%;top:26px;border:1px solid #fff8;border-radius:50% 0 50% 50%;transform:rotate(30deg)}.wx-blush-letter .wx-scene-1 .wx-scene-front{left:23%;bottom:28px;width:86px;height:2px;background:#fff8;box-shadow:0 10px 0 #fff5,0 20px 0 #fff4}
+.wx-blush-letter .wx-scene-2 .wx-scene-back{inset:22px 8%;background:linear-gradient(135deg,#f5d7be,#ed8e7d);clip-path:polygon(0 0,100% 0,100% 75%,50% 100%,0 75%)}.wx-blush-letter .wx-scene-2 .wx-scene-subject{width:30px;height:30px;left:calc(50% - 15px);top:80px;border-radius:50%;background:#b96365;box-shadow:0 0 0 5px #f4c0a7}.wx-blush-letter .wx-scene-2 .wx-scene-light{background:radial-gradient(circle at 72% 20%,#fff9,transparent 25%)}
+.wx-blush-letter .wx-scene-3 .wx-scene-back{inset:10px 5% 18px 24%;border-radius:4px;background:linear-gradient(125deg,#eef0df,#bfcfae)}.wx-blush-letter .wx-scene-3 .wx-scene-subject{width:90px;height:115px;left:5%;bottom:0;border-right:2px solid #6c8b6b55;border-radius:100% 0;background:repeating-radial-gradient(ellipse at 100% 100%,#8da37c 0 5px,transparent 7px 15px)}.wx-blush-letter .wx-scene-3 .wx-scene-front{width:64px;height:2px;right:13%;top:65px;background:#71866b88;box-shadow:0 13px 0 #71866b44,0 26px 0 #71866b44}
+.wx-blush-letter .wx-scene-4 .wx-scene-back{inset:16px 11%;border:1px solid #7d273f;background:#fffaf2;box-shadow:inset 0 0 0 7px #fffaf2,inset 0 0 0 8px #c79aa5}.wx-blush-letter .wx-scene-4 .wx-scene-subject{right:19%;top:28px;width:48px;height:24px;border-radius:2px;background:#792c43}.wx-blush-letter .wx-scene-4 .wx-scene-front{left:20%;bottom:38px;width:52px;height:36px;border-left:1px solid #9c3853;border-bottom:1px solid #9c3853}
+
+/* Handmade Vows: quiet sheet, torn botanical, tied tag, free bookmarks. */
+.wx-handmade-vows .wx-choice-scene{background:#d8d1bd}.wx-handmade-vows .wx-scene-1 .wx-scene-back{inset:12px 18%;transform:rotate(-2deg);background:#f2ecdf;box-shadow:5px 8px 12px #4b443422}.wx-handmade-vows .wx-scene-1 .wx-scene-subject{left:27%;top:50px;width:82px;height:2px;background:#777165;box-shadow:0 13px 0 #77716566,0 26px 0 #77716544}.wx-handmade-vows .wx-scene-1 .wx-scene-front{right:24%;bottom:20px;width:35px;height:60px;border-radius:100% 0;background:#9b826b55}
+.wx-handmade-vows .wx-scene-2 .wx-scene-back{inset:10px 8%;clip-path:polygon(0 7%,12% 2%,26% 8%,40% 3%,55% 8%,69% 2%,84% 7%,100% 3%,97% 95%,84% 99%,70% 94%,54% 100%,38% 95%,22% 99%,5% 94%);background:#e9e6d7}.wx-handmade-vows .wx-scene-2 .wx-scene-subject{width:78px;height:95px;left:22%;bottom:8px;background:radial-gradient(circle,#788670 0 8px,transparent 9px) 0 0/26px 27px;transform:rotate(-8deg)}.wx-handmade-vows .wx-scene-2 .wx-scene-front{right:15%;top:26px;width:70px;height:90px;border-left:1px solid #62715a;background:repeating-radial-gradient(ellipse at 0 50%,#71816a55 0 5px,transparent 7px 15px)}
+.wx-handmade-vows .wx-scene-3 .wx-scene-back{inset:24px 20%;transform:rotate(3deg);background:#d6bd97;box-shadow:6px 8px 0 #8a745c33}.wx-handmade-vows .wx-scene-3 .wx-scene-subject{inset:8px 0 auto;height:3px;border-top:2px solid #8c6f52;transform:rotate(-8deg)}.wx-handmade-vows .wx-scene-3 .wx-scene-front{width:34px;height:34px;right:24%;bottom:28px;border-radius:50%;background:#7b4539;box-shadow:0 0 0 4px #c79a78}
+.wx-handmade-vows .wx-scene-4 .wx-scene-back{width:58px;height:138px;left:24%;top:10px;transform:rotate(-7deg);background:#e8dfc9;box-shadow:55px 8px 0 #b8c0aa,92px -3px 0 #d0b89b}.wx-handmade-vows .wx-scene-4 .wx-scene-subject{width:72px;height:30px;right:16%;top:42px;border-top:2px solid #615b4f;border-right:2px solid #615b4f;transform:skew(-20deg)}.wx-handmade-vows .wx-scene-4 .wx-scene-front{width:55px;height:3px;left:42%;bottom:36px;background:#6c665c;box-shadow:18px -12px 0 -1px #6c665c}
+
+/* Manor Invitation: candle invitation, window, formal table, afternoon tea. */
+.wx-manor-invitation .wx-scene-1 .wx-scene-back{background:linear-gradient(120deg,#d5baa4,#88665c)}.wx-manor-invitation .wx-scene-1 .wx-scene-subject{inset:22px 24%;transform:rotate(-5deg);background:#f2e5d0;box-shadow:0 10px 20px #37271d55}.wx-manor-invitation .wx-scene-1 .wx-scene-front{width:48px;height:100px;right:14%;bottom:0;background:radial-gradient(ellipse at 50% 0,#fff4bd 0 5px,transparent 7px),linear-gradient(90deg,#e7d1af,#fff2da,#c9aa82);clip-path:polygon(25% 12%,75% 12%,100% 100%,0 100%)}.wx-manor-invitation .wx-scene-1 .wx-scene-light{background:radial-gradient(circle at 79% 22%,#ffdca466,transparent 30%)}
+.wx-manor-invitation .wx-scene-2 .wx-scene-back{background:linear-gradient(90deg,#b79c80 0 8%,#e9dfcb 9% 45%,#9eb59a 46% 100%)}.wx-manor-invitation .wx-scene-2 .wx-scene-subject{inset:8px 18%;border:8px solid #e2d3bc;background:linear-gradient(90deg,transparent 48%,#d6c4a7 49% 52%,transparent 53%),linear-gradient(transparent 48%,#d6c4a7 49% 52%,transparent 53%)}.wx-manor-invitation .wx-scene-2 .wx-scene-front{inset:auto 0 0;height:44px;background:repeating-radial-gradient(ellipse,#6e8666 0 12px,transparent 13px 25px)}.wx-manor-invitation .wx-scene-2 .wx-scene-light{background:linear-gradient(110deg,#fff8,transparent 48%)}
+.wx-manor-invitation .wx-scene-3 .wx-scene-back{background:linear-gradient(#4f3a35,#a0816f)}.wx-manor-invitation .wx-scene-3 .wx-scene-subject{inset:35px 14% auto;height:80px;background:radial-gradient(circle,#e6c585 0 4px,transparent 5px) 0 0/48px 35px}.wx-manor-invitation .wx-scene-3 .wx-scene-front{inset:auto 10% 13px;height:42px;border-radius:50%;border:2px solid #cbae7b;background:#f0e4cf55}.wx-manor-invitation .wx-scene-3 .wx-scene-light{background:radial-gradient(circle at 50% 38%,#f0ca8555,transparent 45%)}
+.wx-manor-invitation .wx-scene-4 .wx-scene-back{background:linear-gradient(#dfe5d5 0 56%,#cfb89c 57%)}.wx-manor-invitation .wx-scene-4 .wx-scene-subject{width:100px;height:68px;left:calc(50% - 50px);bottom:18px;border-radius:50%;background:#eee5d5;box-shadow:0 9px 0 -2px #9a7b62}.wx-manor-invitation .wx-scene-4 .wx-scene-front{width:80px;height:100px;left:9%;bottom:-22px;border-radius:100% 0;background:#91a07b88}.wx-manor-invitation .wx-scene-4 .wx-scene-light{background:linear-gradient(105deg,#fff9,transparent 38%)}
+
+/* Celebration Deck: candle table, garden arch, gold stage, confetti party. */
+.wx-celebration-deck .wx-choice-scene{perspective:500px;background:#f7e5be}.wx-celebration-deck .wx-scene-1 .wx-scene-back{inset:10px;border-radius:60% 60% 10px 10px;background:linear-gradient(#f4c7c2,#f9e6d1);box-shadow:inset 0 0 0 8px #fff5}.wx-celebration-deck .wx-scene-1 .wx-scene-subject{width:116px;height:48px;left:calc(50% - 58px);bottom:25px;border-radius:50%;background:#fff0df;box-shadow:0 9px 0 #dc9a8b,0 18px 0 #b75e62}.wx-celebration-deck .wx-scene-1 .wx-scene-front{inset:auto 12% 12px;height:45px;background:radial-gradient(circle,#d87c84 0 7px,#f2d6c7 8px 11px,transparent 12px) 0 0/38px 35px}
+.wx-celebration-deck .wx-scene-2 .wx-scene-back{background:linear-gradient(#dce3c7,#f6edcf)}.wx-celebration-deck .wx-scene-2 .wx-scene-subject{width:116px;height:110px;left:calc(50% - 58px);top:20px;border:12px solid #9fae7c;border-bottom:0;border-radius:70px 70px 0 0}.wx-celebration-deck .wx-scene-2 .wx-scene-front{inset:auto 0 0;height:45px;background:repeating-radial-gradient(ellipse at 50% 100%,#809867 0 14px,#aabe8a 15px 25px,transparent 26px 40px)}.wx-celebration-deck .wx-scene-2 .wx-scene-light{background:linear-gradient(105deg,#fff8,transparent 43%)}
+.wx-celebration-deck .wx-scene-3 .wx-scene-back{background:linear-gradient(#5e3767,#2c1e42)}.wx-celebration-deck .wx-scene-3 .wx-scene-subject{inset:36px 14% 0;clip-path:polygon(18% 0,82% 0,100% 100%,0 100%);background:linear-gradient(90deg,#b78c43,#f7d778,#9f7136);box-shadow:0 -8px 0 #f6d68b}.wx-celebration-deck .wx-scene-3 .wx-scene-front{inset:0;background:linear-gradient(65deg,transparent 47%,#f5d06b 48% 50%,transparent 51%),linear-gradient(115deg,transparent 47%,#f5d06b 48% 50%,transparent 51%)}.wx-celebration-deck .wx-scene-3 .wx-scene-light{background:radial-gradient(circle at 50% 25%,#fff1a477,transparent 36%)}
+.wx-celebration-deck .wx-scene-4 .wx-scene-back{background:linear-gradient(135deg,#ef795f,#f5c85c 50%,#4cb7ae)}.wx-celebration-deck .wx-scene-4 .wx-scene-subject{inset:16px;background:conic-gradient(from 20deg at 15% 15%,transparent 0 12%,#fff0c7 13% 15%,transparent 16% 100%),conic-gradient(from 80deg at 85% 30%,transparent 0 20%,#764c99 21% 24%,transparent 25% 100%)}.wx-celebration-deck .wx-scene-4 .wx-scene-front{inset:0;background:radial-gradient(ellipse,#ee5d75 0 5px,transparent 6px) 0 0/35px 31px;transform:rotate(-7deg)}.wx-celebration-deck .wx-scene-4 .wx-scene-light{background:radial-gradient(circle at 50% 50%,#fff8,transparent 50%)}
+
+/* Question-specific light/depth variation makes every rendered choice instance distinct. */
+.wx-option[data-question-order="2"] .wx-choice-scene{filter:saturate(.88) contrast(1.04)}.wx-option[data-question-order="3"] .wx-scene-light{transform:translateX(8%)}.wx-option[data-question-order="4"] .wx-scene-subject{translate:0 -4px}.wx-option[data-question-order="5"] .wx-choice-scene{filter:brightness(.94) contrast(1.08)}.wx-option[data-question-order="6"] .wx-scene-front{translate:-5% 0}.wx-option[data-question-order="7"] .wx-scene-light{opacity:.72!important;transform:scaleX(-1)}.wx-option[data-question-order="8"] .wx-choice-scene{filter:saturate(1.08) contrast(1.06)}
+@media(max-width:760px){.wx-options button{min-height:220px!important}.wx-choice-scene{height:140px}}
+@media(prefers-reduced-motion:reduce){.wx-choice-scene{transition:none!important}.wx-options button:hover .wx-choice-scene,.wx-options button[aria-pressed=true] .wx-choice-scene{transform:none!important}}
+
+/* 3.1.6 — text-only quiz choices. Decorative scenes and image crops are removed. */
+.wx-options button{
+  min-height:116px!important;
+  padding:22px 24px!important;
+  grid-template-columns:40px minmax(0,1fr)!important;
+  align-content:center;
+  background:var(--card-wash)!important;
+  box-shadow:0 12px 30px #34241818;
+}
+.wx-options button>i{grid-row:1/3!important;align-self:start}
+.wx-options button>span{opacity:.66}
+.wx-options button:before,.wx-options button:after,.wx-choice-scene{display:none!important;content:none!important}
+.wx-options button[aria-pressed="true"]{
+  color:#24180d!important;
+  border-color:#f2cf88!important;
+  background:linear-gradient(135deg,#fffaf0,#ead09b)!important;
+  box-shadow:
+    0 0 0 3px rgba(255,224,157,.62),
+    0 0 26px 8px rgba(221,174,91,.58),
+    0 15px 36px rgba(84,52,18,.3)!important;
+  transform:translateY(-4px) scale(1.012);
+  filter:brightness(1.08);
+}
+.wx-options button[aria-pressed="true"]>i,
+.wx-options button[aria-pressed="true"]>b{color:#6f4818!important}
+.wx-options button[aria-pressed="true"]>span{opacity:.82!important}
+@media(max-width:760px){
+  .wx-options button{min-height:96px!important;padding:18px!important}
+}

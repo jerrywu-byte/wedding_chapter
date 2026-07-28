@@ -1,0 +1,322 @@
+{
+  "version": "five-story-v1",
+  "questions": [
+    {
+      "id": "q1-memory",
+      "order": 1,
+      "title": "婚禮結束後，你最希望留下什麼回憶？",
+      "selectionType": "single",
+      "status": "active",
+      "options": [
+        {
+          "questionId": "q1-memory",
+          "optionId": "q1-a",
+          "text": "大家玩得很開心，笑聲從頭到尾都沒有停過。",
+          "personalityScores": {
+            "gentle-gatherer": 2,
+            "starlight-star": 1
+          },
+          "hiddenPersonalityScores": {
+            "celebration-director": 1
+          },
+          "traits": ["joyful"],
+          "experienceTags": ["joyful", "gathering", "laughter"]
+        },
+        {
+          "questionId": "q1-memory",
+          "optionId": "q1-b",
+          "text": "我們從高空緩緩登場，全場驚呼的那一刻。",
+          "personalityScores": {
+            "starlight-star": 2,
+            "urban-dreamer": 1
+          },
+          "hiddenPersonalityScores": {
+            "celebration-director": 1
+          },
+          "traits": ["surprise"],
+          "experienceTags": ["aerial-entrance", "surprise", "spotlight"]
+        },
+        {
+          "questionId": "q1-memory",
+          "optionId": "q1-c",
+          "text": "和最重要的人，一起留下溫暖又真實的回憶。",
+          "personalityScores": {
+            "gentle-gatherer": 2,
+            "moonlight-poet": 1
+          },
+          "hiddenPersonalityScores": {
+            "ceremony-dreamer": 1
+          },
+          "traits": ["emotion"],
+          "experienceTags": ["warmth", "family", "emotion"]
+        },
+        {
+          "questionId": "q1-memory",
+          "optionId": "q1-d",
+          "text": "每一個細節都很有質感，每張照片都值得珍藏。",
+          "personalityScores": {
+            "royal-curator": 2,
+            "urban-dreamer": 1
+          },
+          "hiddenPersonalityScores": {},
+          "traits": [],
+          "experienceTags": ["detail", "quality", "photography"]
+        }
+      ]
+    },
+    {
+      "id": "q2-scene",
+      "order": 2,
+      "title": "如果只能選一個畫面，你最期待的是……",
+      "selectionType": "single",
+      "status": "active",
+      "options": [
+        {
+          "questionId": "q2-scene",
+          "optionId": "q2-a",
+          "text": "走上那條屬於自己的舞台，每一步都像主角登場，全場目光都聚焦在你們身上。",
+          "personalityScores": {
+            "starlight-star": 2,
+            "urban-dreamer": 1
+          },
+          "hiddenPersonalityScores": {
+            "ceremony-dreamer": 1
+          },
+          "traits": ["entrance"],
+          "experienceTags": ["starlight-aisle", "spotlight", "grand-entrance"]
+        },
+        {
+          "questionId": "q2-scene",
+          "optionId": "q2-b",
+          "text": "在大家期待的目光中，從高空緩緩出現，讓婚禮從第一秒就充滿驚喜。",
+          "personalityScores": {
+            "starlight-star": 2,
+            "urban-dreamer": 1
+          },
+          "hiddenPersonalityScores": {
+            "celebration-director": 1
+          },
+          "traits": ["surprise"],
+          "experienceTags": ["aerial-entrance", "surprise", "dramatic-entrance"]
+        },
+        {
+          "questionId": "q2-scene",
+          "optionId": "q2-c",
+          "text": "在綠意與陽光的陪伴下，一步一步走向彼此，完成最重要的承諾。",
+          "personalityScores": {
+            "forest-collector": 2,
+            "moonlight-poet": 1
+          },
+          "hiddenPersonalityScores": {
+            "ceremony-dreamer": 2
+          },
+          "traits": ["promise"],
+          "experienceTags": ["nature-ceremony", "vows", "promise", "greenery"]
+        },
+        {
+          "questionId": "q2-scene",
+          "optionId": "q2-d",
+          "text": "隨著音樂、燈光與畫面一起展開，像一場精彩的電影正式開演。",
+          "personalityScores": {
+            "urban-dreamer": 2,
+            "royal-curator": 1
+          },
+          "hiddenPersonalityScores": {
+            "celebration-director": 2
+          },
+          "traits": ["performance"],
+          "experienceTags": ["cinematic", "lighting", "performance", "stage"]
+        }
+      ]
+    },
+    {
+      "id": "q3-guests",
+      "order": 3,
+      "title": "婚禮結束後，你最希望聽見親友怎麼說？",
+      "selectionType": "single",
+      "status": "active",
+      "options": [
+        {
+          "questionId": "q3-guests",
+          "optionId": "q3-a",
+          "text": "「真的超歡樂，每個人都玩得很開心！」",
+          "personalityScores": {
+            "gentle-gatherer": 2,
+            "starlight-star": 1
+          },
+          "hiddenPersonalityScores": {
+            "celebration-director": 2
+          },
+          "traits": ["atmosphere"],
+          "experienceTags": ["joyful", "guest-experience", "atmosphere"]
+        },
+        {
+          "questionId": "q3-guests",
+          "optionId": "q3-b",
+          "text": "「剛剛那個進場真的太震撼了，到現在還忘不了！」",
+          "personalityScores": {
+            "starlight-star": 2,
+            "urban-dreamer": 1
+          },
+          "hiddenPersonalityScores": {
+            "celebration-director": 1
+          },
+          "traits": ["surprise"],
+          "experienceTags": ["memorable-entrance", "dramatic", "surprise"]
+        },
+        {
+          "questionId": "q3-guests",
+          "optionId": "q3-c",
+          "text": "「整場婚禮很舒服，也很感動。」",
+          "personalityScores": {
+            "moonlight-poet": 2,
+            "gentle-gatherer": 1
+          },
+          "hiddenPersonalityScores": {
+            "ceremony-dreamer": 2
+          },
+          "traits": ["emotion"],
+          "experienceTags": ["emotional", "comfortable", "touching"]
+        },
+        {
+          "questionId": "q3-guests",
+          "optionId": "q3-d",
+          "text": "「每個細節都很精緻，看得出來很用心。」",
+          "personalityScores": {
+            "royal-curator": 2,
+            "urban-dreamer": 1
+          },
+          "hiddenPersonalityScores": {},
+          "traits": [],
+          "experienceTags": ["refined", "detail", "thoughtful"]
+        }
+      ]
+    },
+    {
+      "id": "q4-focus",
+      "order": 4,
+      "title": "如果只能花最多心思準備一件事，你會選擇……",
+      "selectionType": "single",
+      "status": "active",
+      "options": [
+        {
+          "questionId": "q4-focus",
+          "optionId": "q4-a",
+          "text": "安排互動和活動，讓每位賓客都能留下美好回憶。",
+          "personalityScores": {
+            "gentle-gatherer": 2,
+            "starlight-star": 1
+          },
+          "hiddenPersonalityScores": {
+            "celebration-director": 2
+          },
+          "traits": ["interaction"],
+          "experienceTags": ["interaction", "activity", "guest-experience"]
+        },
+        {
+          "questionId": "q4-focus",
+          "optionId": "q4-b",
+          "text": "打造最有記憶點的進場、橋段和驚喜。",
+          "personalityScores": {
+            "starlight-star": 2,
+            "urban-dreamer": 1
+          },
+          "hiddenPersonalityScores": {
+            "celebration-director": 2
+          },
+          "traits": ["program"],
+          "experienceTags": ["entrance", "program", "surprise", "performance"]
+        },
+        {
+          "questionId": "q4-focus",
+          "optionId": "q4-c",
+          "text": "陪伴家人與朋友，好好享受每一個相聚時刻。",
+          "personalityScores": {
+            "gentle-gatherer": 2,
+            "moonlight-poet": 1
+          },
+          "hiddenPersonalityScores": {
+            "ceremony-dreamer": 1
+          },
+          "traits": ["emotion"],
+          "experienceTags": ["family", "friends", "gathering", "warmth"]
+        },
+        {
+          "questionId": "q4-focus",
+          "optionId": "q4-d",
+          "text": "把每個細節都做到最好，讓整場婚禮更有質感。",
+          "personalityScores": {
+            "royal-curator": 2,
+            "urban-dreamer": 1
+          },
+          "hiddenPersonalityScores": {},
+          "traits": [],
+          "experienceTags": ["detail", "quality", "curation"]
+        }
+      ]
+    },
+    {
+      "id": "q5-film",
+      "order": 5,
+      "title": "如果你的婚禮是一部電影，你希望它是哪一種類型？",
+      "selectionType": "single",
+      "status": "active",
+      "options": [
+        {
+          "questionId": "q5-film",
+          "optionId": "q5-a",
+          "text": "一部充滿歡笑與感動，每個人都意猶未盡的電影。",
+          "personalityScores": {
+            "gentle-gatherer": 2,
+            "moonlight-poet": 1
+          },
+          "hiddenPersonalityScores": {
+            "celebration-director": 1
+          },
+          "traits": ["joyful"],
+          "experienceTags": ["laughter", "emotion", "togetherness"]
+        },
+        {
+          "questionId": "q5-film",
+          "optionId": "q5-b",
+          "text": "一部氣勢十足、每一幕都讓人驚呼連連的大片。",
+          "personalityScores": {
+            "starlight-star": 2,
+            "urban-dreamer": 1
+          },
+          "hiddenPersonalityScores": {
+            "celebration-director": 2
+          },
+          "traits": ["performance"],
+          "experienceTags": ["grand", "dramatic", "spectacular", "performance"]
+        },
+        {
+          "questionId": "q5-film",
+          "optionId": "q5-c",
+          "text": "一部溫暖療癒，讓人多年後想起還會微笑的作品。",
+          "personalityScores": {
+            "moonlight-poet": 2,
+            "forest-collector": 1
+          },
+          "hiddenPersonalityScores": {
+            "ceremony-dreamer": 2
+          },
+          "traits": ["romantic"],
+          "experienceTags": ["warm", "healing", "romantic", "memory"]
+        },
+        {
+          "questionId": "q5-film",
+          "optionId": "q5-d",
+          "text": "一部畫面精緻、每一幀都像藝術品的電影。",
+          "personalityScores": {
+            "royal-curator": 2,
+            "urban-dreamer": 1
+          },
+          "hiddenPersonalityScores": {},
+          "traits": [],
+          "experienceTags": ["artistic", "refined", "visual", "quality"]
+        }
+      ]
+    }
+  ]
+}

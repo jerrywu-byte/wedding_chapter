@@ -1,0 +1,437 @@
+{
+  "version": "1.0.0",
+  "personalities": [
+    {
+      "id": "moonlight-poet",
+      "displayName": "月光詩人",
+      "subtitle": "讓光影與細節，慢慢說完你們的故事",
+      "description": "你在意的不是最喧鬧的瞬間，而是光線落下、花朵搖曳與親友感動的表情。你的婚禮適合柔和、浪漫、自然且充滿畫面感的空間。",
+      "heroImage": {
+        "desktop": "/images/personalities/moonlight-poet-desktop.webp",
+        "mobile": "/images/personalities/moonlight-poet-mobile.webp",
+        "alt": "月光、燭光與薄紗交織的私密婚禮場景",
+        "focalPointDesktop": "center center",
+        "focalPointMobile": "center center"
+      },
+      "keywords": [
+        "浪漫",
+        "柔和光線",
+        "自然採光",
+        "花園感",
+        "細膩",
+        "拍照氛圍"
+      ],
+      "preferredFeatures": [
+        "自然採光",
+        "玻璃帷幕",
+        "花園風格",
+        "柔和色調",
+        "浪漫燈光",
+        "拍照友善"
+      ],
+      "avoidedFeatures": [
+        "過度強烈的舞台感",
+        "過度喧鬧的派對氛圍"
+      ],
+      "weights": {
+        "romantic": 5,
+        "elegant": 3,
+        "modern": 2,
+        "luxurious": 1,
+        "warm": 4,
+        "party": 1,
+        "ceremony": 3,
+        "interactive": 2,
+        "photoFriendly": 5,
+        "familyOriented": 3
+      },
+      "resultCard": {
+        "headline": "你的婚禮，是一首被光影收藏的詩",
+        "summary": "柔和、浪漫與充滿畫面感的空間，最能承接你心中的婚禮。",
+        "tone": "poetic"
+      },
+      "observations": ["為了桌卡紙張厚度猶豫三天。", "第一次進場前，會先互看五秒才願意走。", "覺得背景音樂差半秒，現場一定有人會發現。", "婚攝說拍得很好，還是會再問一次：「真的有拍到月亮嗎？」"],
+      "scene": {"lines": ["攝影師：「新人請靠近一點。」", "新郎：「這樣可以嗎？」", "新娘：「再一點。」", "攝影師：「再一點。」", "最後結果：兩個人的額頭先完成碰杯儀式。"]},
+      "specialAbility": {"label": "細節感知力", "value": "★★★★★"},
+      "aiSecret": "你們最後決定婚禮時，通常不是因為最便宜，而是因為「就是這個感覺」。",
+      "status": "active"
+    },
+    {
+      "id": "starlight-star",
+      "displayName": "星辰主角",
+      "subtitle": "今晚所有星光，都為你們而亮",
+      "description": "你希望婚禮有明確的高潮與令人難忘的登場。燈光、音樂、舞台與賓客的目光，都是故事的一部分。",
+      "heroImage": {
+        "desktop": "/images/personalities/star-lead-desktop.webp",
+        "mobile": "/images/personalities/star-lead-mobile.webp",
+        "alt": "新人沿著星光走道在聚光燈下隆重進場",
+        "focalPointDesktop": "center center",
+        "focalPointMobile": "center center"
+      },
+      "keywords": [
+        "巨星感",
+        "特殊進場",
+        "舞台",
+        "星光走道",
+        "燈光",
+        "震撼"
+      ],
+      "preferredFeatures": [
+        "星光走道",
+        "空中纜車",
+        "大型LED",
+        "舞台效果",
+        "空中鉛錘",
+        "強烈進場"
+      ],
+      "avoidedFeatures": [
+        "過度低調的空間",
+        "缺少舞台效果的場地"
+      ],
+      "weights": {
+        "romantic": 3,
+        "elegant": 2,
+        "modern": 5,
+        "luxurious": 4,
+        "warm": 1,
+        "party": 5,
+        "ceremony": 4,
+        "interactive": 5,
+        "photoFriendly": 5,
+        "familyOriented": 1
+      },
+      "resultCard": {
+        "headline": "你的婚禮，值得一場全場屏息的登場",
+        "summary": "強烈燈光、特殊進場與完整舞台，能讓你真正成為婚禮主角。",
+        "tone": "dramatic"
+      },
+      "observations": ["二次進場一定想玩點新的。", "第一次彩排，就已經開始思考要不要 Encore。", "主持人一說「新人準備進場」，你們心裡會自動響起開場音樂。", "明明說想簡單一點，最後還是很容易多加一個橋段。"],
+      "scene": {"lines": ["婚攝：「請看著彼此，自然一點。」", "你們：直接演出偶像劇大結局。", "攝影師內心：今天素材不用擔心了。"]},
+      "specialAbility": {"label": "親友歡呼值", "value": "+200%"},
+      "aiSecret": "你們嘴上說流程不用太多，但二次進場通常不會只是安靜地走進來。",
+      "status": "active"
+    },
+    {
+      "id": "forest-collector",
+      "displayName": "森林收藏家",
+      "subtitle": "把自然、笑聲與相聚，收藏成婚禮的樣子",
+      "description": "你喜歡自然、木質與輕鬆自在的氛圍。比起華麗排場，你更重視賓客是否能放鬆交談，感受到真實的溫度。",
+      "heroImage": {
+        "desktop": "/images/personalities/forest-collector-desktop.webp",
+        "mobile": "/images/personalities/forest-collector-mobile.webp",
+        "alt": "新人與親友在綠意與自然光中自在相聚",
+        "focalPointDesktop": "center center",
+        "focalPointMobile": "center center"
+      },
+      "keywords": [
+        "自然",
+        "木質",
+        "綠意",
+        "放鬆",
+        "戶外感",
+        "溫度"
+      ],
+      "preferredFeatures": [
+        "木質設計",
+        "綠意",
+        "自然採光",
+        "半戶外",
+        "長桌",
+        "溫暖空間"
+      ],
+      "avoidedFeatures": [
+        "強烈宮廷感",
+        "過度華麗的舞台效果"
+      ],
+      "weights": {
+        "romantic": 3,
+        "elegant": 2,
+        "modern": 2,
+        "luxurious": 1,
+        "warm": 5,
+        "party": 1,
+        "ceremony": 3,
+        "interactive": 3,
+        "photoFriendly": 4,
+        "familyOriented": 5
+      },
+      "resultCard": {
+        "headline": "你的婚禮，是一場被自然擁抱的相聚",
+        "summary": "木質、綠意與自然光，比華麗裝飾更能表達你們的故事。",
+        "tone": "natural"
+      },
+      "observations": ["比起水晶吊燈，更在意窗外的夕陽。", "花藝老師很容易成為婚禮 MVP。", "親友聊天的時間，比流程精準到秒更重要。", "最後相簿裡，最喜歡的通常是大家笑到模糊的照片。"],
+      "scene": {"lines": ["主持人：「新人可以準備敬酒了。」", "你們：「等一下，還沒跟阿嬤拍照。」", "五分鐘後：「還有舅舅。」", "十分鐘後：「還有狗狗。」", "主持人默默把流程表往後移。"]},
+      "specialAbility": {"label": "相聚幸福感", "value": "+300%"},
+      "aiSecret": "你們最後最容易超出預算的，可能不是菜色，而是花藝與那些「放著一定很好看」的小東西。",
+      "status": "active"
+    },
+    {
+      "id": "royal-curator",
+      "displayName": "皇家策展人",
+      "subtitle": "每一個細節，都值得被隆重展出",
+      "description": "你重視空間的完整感、藝術感與正式儀式。婚禮不只是聚會，而是一場經過策劃、值得被記住的重要典禮。",
+      "heroImage": {
+        "desktop": "/images/personalities/royal-curator-desktop.webp",
+        "mobile": "/images/personalities/royal-curator-mobile.webp",
+        "alt": "新人面向對稱而精緻的金色宴會佈置",
+        "focalPointDesktop": "center center",
+        "focalPointMobile": "center center"
+      },
+      "keywords": [
+        "宮廷",
+        "皇家",
+        "藝術",
+        "儀式感",
+        "正式",
+        "奢華"
+      ],
+      "preferredFeatures": [
+        "歐洲宮廷風格",
+        "水晶吊燈",
+        "藝術設計",
+        "高挑空間",
+        "正式舞台",
+        "大型宴會空間"
+      ],
+      "avoidedFeatures": [
+        "過度休閒的空間",
+        "缺少正式感的場地"
+      ],
+      "weights": {
+        "romantic": 3,
+        "elegant": 5,
+        "modern": 2,
+        "luxurious": 5,
+        "warm": 2,
+        "party": 2,
+        "ceremony": 5,
+        "interactive": 2,
+        "photoFriendly": 4,
+        "familyOriented": 3
+      },
+      "resultCard": {
+        "headline": "你的婚禮，是一場只為你們展出的皇家典藏",
+        "summary": "隆重、藝術與儀式感，是你心中不可缺少的婚禮語言。",
+        "tone": "royal"
+      },
+      "observations": ["Timeline 已經更新到第 28 版。", "Google Sheet 很可能有十個以上的分頁。", "主持人還沒提醒，你們就已經知道下一個流程。", "每一個物件都有位置，而且不能只是「大概放那裡」。"],
+      "scene": {"lines": ["婚企：「流程交給我們就好。」", "你們：「沒問題，我們也整理了一份流程書。」", "婚企接過文件。", "文件厚度：67 頁。", "封面寫著：Final_v18_真的最後版。"]},
+      "specialAbility": {"label": "流程掌控力", "value": "MAX"},
+      "aiSecret": "你們有很高機率建立一份名為「婚禮 Final_v18_真的最後版.xlsx」的檔案。",
+      "status": "active"
+    },
+    {
+      "id": "urban-dreamer",
+      "displayName": "都會造夢家",
+      "subtitle": "把婚禮變成一場只演一次的時尚企劃",
+      "description": "你喜歡俐落、前衛、具有視覺衝擊的婚禮。LED、燈光、音樂和互動流程，都能成為展現個性的工具。",
+      "heroImage": {
+        "desktop": "/images/personalities/urban-dreamer-desktop.webp",
+        "mobile": "/images/personalities/urban-dreamer-mobile.webp",
+        "alt": "新人站在現代建築與城市夜景之間",
+        "focalPointDesktop": "center center",
+        "focalPointMobile": "center center"
+      },
+      "keywords": [
+        "時尚",
+        "都會",
+        "LED",
+        "派對",
+        "前衛",
+        "互動"
+      ],
+      "preferredFeatures": [
+        "大型LED",
+        "燈光效果",
+        "現代設計",
+        "派對舞台",
+        "互動設備",
+        "特殊進場"
+      ],
+      "avoidedFeatures": [
+        "過度傳統的空間",
+        "缺乏科技與舞台感的場地"
+      ],
+      "weights": {
+        "romantic": 2,
+        "elegant": 3,
+        "modern": 5,
+        "luxurious": 4,
+        "warm": 1,
+        "party": 5,
+        "ceremony": 3,
+        "interactive": 5,
+        "photoFriendly": 4,
+        "familyOriented": 2
+      },
+      "resultCard": {
+        "headline": "你的婚禮，是一場只屬於你們的時尚製作",
+        "summary": "俐落設計、燈光與互動，最能呈現你們不複製別人的個性。",
+        "tone": "modern"
+      },
+      "observations": ["禮服通常不會只準備一套。", "不同區域，會自然對應不同的拍照風格。", "Reels 的畫面可能比婚禮流程更早想好。", "婚禮專屬 Hashtag 很可能已經命名完成。"],
+      "scene": {"lines": ["婚攝：「可以站得自然一點。」", "你們：自然地站出時尚雜誌封面。", "婚攝：「很好，再來一張。」", "你們：立刻切換第二套姿勢。"]},
+      "specialAbility": {"label": "社群收藏率", "value": "★★★★★"},
+      "aiSecret": "你們最早確定的，可能不是婚禮日期，而是哪一個角度拍起來最好看。",
+      "status": "active"
+    },
+    {
+      "id": "gentle-gatherer",
+      "displayName": "溫柔聚會家",
+      "subtitle": "最重要的不是多盛大，而是重要的人都在",
+      "description": "你最在意親友是否自在、桌距是否舒服，以及每個人能不能真正參與這一天。你的婚禮溫馨而真誠。",
+      "heroImage": {
+        "desktop": "/images/personalities/gentle-gatherer-desktop.webp",
+        "mobile": "/images/personalities/gentle-gatherer-mobile.webp",
+        "alt": "新人與家人朋友在暖光餐桌旁笑著舉杯",
+        "focalPointDesktop": "center center",
+        "focalPointMobile": "center center"
+      },
+      "keywords": [
+        "溫馨",
+        "親友",
+        "自在",
+        "小型婚禮",
+        "互動",
+        "家庭感"
+      ],
+      "preferredFeatures": [
+        "舒適桌距",
+        "小型空間",
+        "親友互動",
+        "溫暖色調",
+        "容易交流",
+        "家庭聚會感"
+      ],
+      "avoidedFeatures": [
+        "過度空曠的大型場地",
+        "賓客距離過遠的配置"
+      ],
+      "weights": {
+        "romantic": 3,
+        "elegant": 2,
+        "modern": 2,
+        "luxurious": 1,
+        "warm": 5,
+        "party": 1,
+        "ceremony": 2,
+        "interactive": 4,
+        "photoFriendly": 3,
+        "familyOriented": 5
+      },
+      "resultCard": {
+        "headline": "你的婚禮，是一場重要的人都能靠近的相聚",
+        "summary": "舒服、溫馨與真實交流，比盛大場面更接近你心中的婚禮。",
+        "tone": "warm"
+      },
+      "observations": ["每一桌都很容易停留太久。", "敬酒敬到一半，主持人可能開始尋找新人。", "送客結束後，還會在門口繼續聊天。", "比起一切完美，更在意大家有沒有吃飽、開心、被好好照顧。"],
+      "scene": {"lines": ["主持人：「今天的婚禮圓滿完成。」", "你們：「等一下，我們再拍一張大合照。」", "十分鐘後：有人還在聊天。", "二十分鐘後：新人也還在聊天。"]},
+      "specialAbility": {"label": "親友幸福感", "value": "∞"},
+      "aiSecret": "婚禮結束後，你們最懷念的，通常不是哪個流程，而是大家聚在一起笑的那幾分鐘。",
+      "status": "active"
+    },
+    {
+      "id": "ceremony-dreamer",
+      "displayName": "儀式築夢者",
+      "subtitle": "讓每一個承諾，都有被好好記住的方式",
+      "description": "你們重視的不只是婚禮看起來是否漂亮，而是誓詞、進場、交換戒指、父母感謝與證婚儀式，能不能形成完整的情緒起承轉合。你們希望每一個重要時刻都被妥善安排，也希望多年以後，仍然記得當時說過的話、握住的手，以及全場安靜下來的那一刻。",
+      "heroImage": {
+        "desktop": "/images/personalities/ceremony-dreamer-desktop.webp",
+        "mobile": "/images/personalities/ceremony-dreamer-mobile.webp",
+        "alt": "新人在花門與燭光前安靜交換誓詞",
+        "focalPointDesktop": "center center",
+        "focalPointMobile": "center center"
+      },
+      "keywords": ["儀式完整", "情感", "誓詞", "進場", "證婚", "父母感謝"],
+      "preferredFeatures": ["有證婚空間", "有舞台層次", "燈光情緒明顯", "進場儀式感強", "適合誓詞與交換戒指", "能安排完整流程起承轉合"],
+      "avoidedFeatures": ["流程環節難以銜接", "燈光與舞台層次不足"],
+      "weights": {
+        "romantic": 4,
+        "elegant": 4,
+        "modern": 1,
+        "luxurious": 2,
+        "warm": 4,
+        "party": 0,
+        "ceremony": 5,
+        "interactive": 1,
+        "photoFriendly": 3,
+        "familyOriented": 4
+      },
+      "resultCard": {
+        "headline": "你的婚禮，是一段被好好記住的承諾",
+        "summary": "完整的情緒、儀式與流程層次，最能承接你們珍惜的每一個重要時刻。",
+        "tone": "ceremonial"
+      },
+      "observations": [
+        "彩排時最在意的，不是自己站在哪裡，而是哪一句話會先讓人紅了眼眶。",
+        "交換誓詞明明只準備一分鐘，最後卻可能偷偷修改到第十二版。",
+        "對進場音樂的要求不是「好聽就好」，而是必須剛好在那一秒走到彼此身邊。",
+        "嘴上說自己應該不會哭，口袋裡卻已經準備好兩包面紙。"
+      ],
+      "scene": {
+        "lines": [
+          "主持人：「接下來，請新人交換誓詞。」",
+          "新郎翻開誓詞，深呼吸三次。",
+          "新娘：「你不是說只有三行嗎？」",
+          "新郎：「原本是。」",
+          "最後結果：誓詞還沒念完，第一排親友已經開始傳面紙。"
+        ]
+      },
+      "specialAbility": {"label": "情感共鳴力", "value": "★★★★★"},
+      "aiSecret": "你們真正想留下的，通常不只是婚禮看起來有多漂亮，而是多年以後，仍然記得對方當時說了什麼。",
+      "status": "active"
+    },
+    {
+      "id": "celebration-director",
+      "displayName": "歡樂導演家",
+      "subtitle": "讓每一位賓客，都成為故事裡的一部分",
+      "description": "你們期待的婚禮，不只是新人在台上完成流程，而是每一位賓客都真正參與其中。從二次進場、抽獎、遊戲、發放小物，到伴郎伴娘與親友的臨場演出，你們在意的是全場的投入感，以及婚禮結束後大家仍然捨不得離開的熱度。",
+      "heroImage": {
+        "desktop": "/images/personalities/joy-director-desktop.webp",
+        "mobile": "/images/personalities/joy-director-mobile.webp",
+        "alt": "新人帶領賓客在彩帶與歡呼中一起互動",
+        "focalPointDesktop": "center center",
+        "focalPointMobile": "center center"
+      },
+      "keywords": ["賓客參與", "遊戲", "表演", "二次進場", "抽獎", "熱鬧互動"],
+      "preferredFeatures": ["適合賓客互動", "有寬敞走道", "有明確舞台", "適合二次進場", "燈光與音響完整", "動線不妨礙賓客參與"],
+      "avoidedFeatures": ["賓客互動動線受限", "舞台與音響表現不足"],
+      "weights": {
+        "romantic": 1,
+        "elegant": 1,
+        "modern": 3,
+        "luxurious": 1,
+        "warm": 3,
+        "party": 5,
+        "ceremony": 1,
+        "interactive": 5,
+        "photoFriendly": 2,
+        "familyOriented": 3
+      },
+      "resultCard": {
+        "headline": "你的婚禮，是一場全場都參與其中的特別節目",
+        "summary": "寬敞動線、完整舞台與熱鬧互動，能讓每一位賓客都成為故事的一部分。",
+        "tone": "celebratory"
+      },
+      "observations": [
+        "二次進場不只要想新人怎麼出現，還要先安排賓客怎麼一起失控。",
+        "抽獎獎品還沒買齊，遊戲規則已經設計到第三版。",
+        "最擔心的不是現場太吵，而是大家坐得太安靜。",
+        "婚禮開始前，就已經鎖定哪幾位親友最適合被主持人點名。"
+      ],
+      "scene": {
+        "lines": [
+          "主持人：「接下來請大家一起參加小遊戲。」",
+          "賓客：「輸了會怎樣？」",
+          "你們：「沒有懲罰，放心。」",
+          "三分鐘後：舅舅拿著麥克風唱歌，伴郎正在台上跳舞。",
+          "最後結果：原本五分鐘的遊戲，正式成為今晚的特別節目。"
+        ]
+      },
+      "specialAbility": {"label": "全場帶動力", "value": "+300%"},
+      "aiSecret": "你們希望大家記住的，不只是新人有多幸福，而是那天每一個人都真的參與其中，而且玩得捨不得回家。",
+      "status": "active"
+    }
+  ]
+}

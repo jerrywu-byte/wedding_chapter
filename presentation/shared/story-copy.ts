@@ -1,0 +1,1 @@
+export const copy={brand:"月光詩人",eyebrow:"YOUR WEDDING CHAPTER",title:"找到屬於你們的婚禮篇章",intro:"循著直覺，慢慢翻開幾個關於婚禮的片段。\n在故事結束以前，我們會找到最適合承載這段回憶的地方。",open:"翻開故事",back:"回到上一頁",next:"繼續閱讀",result:"你們的婚禮篇章",resultEyebrow:"屬於你們的篇章",stage:"每一段故事，都需要一個讓它發生的地方。",stageAction:"尋找故事的舞台"} as const;

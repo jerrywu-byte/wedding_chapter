@@ -1,0 +1,1 @@
+*:focus-visible{outline:3px solid currentColor;outline-offset:4px}@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}

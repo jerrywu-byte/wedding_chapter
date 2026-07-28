@@ -1,0 +1,29 @@
+:root {
+  --dna-background: #f7f3ed;
+  --dna-background-soft: #eee7dd;
+  --dna-surface: #fffdf9;
+  --dna-surface-elevated: #ffffff;
+  --dna-primary: #b49a72;
+  --dna-primary-hover: #a4875f;
+  --dna-primary-dark: #6f5d47;
+  --dna-secondary: #d7c4bb;
+  --dna-accent: #aeb9aa;
+  --dna-text: #403934;
+  --dna-text-soft: #655c55;
+  --dna-muted-text: #81776f;
+  --dna-border: #dfd4c5;
+  --dna-border-strong: #c9b79d;
+  --dna-success: #68806e;
+  --dna-warning: #9b713e;
+  --dna-error: #9a514b;
+  --dna-overlay: rgba(42, 36, 31, .62);
+  --dna-shadow-soft: 0 12px 34px rgba(86, 70, 50, .08);
+  --dna-shadow-card: 0 22px 58px rgba(86, 70, 50, .14);
+  --dna-radius-small: 12px;
+  --dna-radius-medium: 19px;
+  --dna-radius-large: 30px;
+  --dna-radius-pill: 999px;
+  --dna-transition-fast: 180ms ease;
+  --dna-transition-normal: 280ms ease;
+  --dna-transition-slow: 420ms ease;
+}
