@@ -72,7 +72,7 @@ export function submitWeddingChapter(
 
   const requestOptions: RequestInit = {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "text/plain;charset=utf-8" },
     body: JSON.stringify(payload),
     redirect: "follow",
   };

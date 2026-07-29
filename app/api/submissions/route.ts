@@ -55,7 +55,7 @@ export async function POST(request: Request) {
   try {
     const upstream = await fetch(url, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "text/plain;charset=utf-8" },
       body: JSON.stringify(payload),
       redirect: "follow",
       signal: AbortSignal.timeout(30000),

@@ -34,6 +34,19 @@ test("API 使用伺服器端環境變數並處理錯誤與逾時", () => {
   assert.match(api, /ALREADY_SAVED/);
 });
 
+test("Google Apps Script POST 使用 simple request 並保留可讀 JSON 回應", () => {
+  assert.match(client, /text\/plain;charset=utf-8/);
+  assert.match(api, /text\/plain;charset=utf-8/);
+  assert.doesNotMatch(client, /application\/json/);
+  assert.doesNotMatch(client, /mode:\s*["']no-cors["']/);
+  assert.doesNotMatch(client, /Authorization/);
+  assert.match(client, /await response\.json\(\)/);
+  assert.match(client, /!body\.success/);
+  assert.match(gas, /JSON\.parse\(e\.postData\.contents\)/);
+  assert.match(gas, /createTextOutput\(JSON\.stringify\(body\)\)/);
+  assert.match(gas, /ContentService\.MimeType\.JSON/);
+});
+
 test("前端只有業務代碼，不含業務 Email", () => {
   assert.match(planners, /APRIL/);
   assert.match(planners, /getBanquetPlannerCode/);
