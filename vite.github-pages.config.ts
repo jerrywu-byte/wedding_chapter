@@ -2,7 +2,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
 import { resolve } from "node:path";
 
-const GITHUB_PAGES_BASE = "/wedding-chapter/";
+const GITHUB_PAGES_BASE = "/wedding_chapter/";
 
 function githubPagesAssetPaths(base: string): Plugin {
   return {
