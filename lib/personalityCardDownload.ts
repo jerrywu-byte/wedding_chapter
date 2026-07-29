@@ -24,21 +24,49 @@ export async function createPersonalityCardPng(node: HTMLElement) {
   return blob;
 }
 
-export async function triggerPersonalityCardDownload(blob: Blob, filename: string) {
-  const file = new File([blob], filename, { type: "image/png" });
-  if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-    && navigator.share
-    && navigator.canShare?.({ files: [file] })) {
-    await navigator.share({ files: [file], title: filename });
-    return;
+export function safePersonalityCardFileName(filename: string) {
+  const withoutExtension = filename.replace(/\.png$/i, "");
+  const safeName = withoutExtension
+    .replace(/[<>:"/\\|?*\u0000-\u001f]/g, "_")
+    .replace(/\s+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return safeName || "Wedding_Chapter_Personality_Card";
+}
+
+export function createPersonalityCardFile(blob: Blob, filename: string) {
+  const safeFileName = safePersonalityCardFileName(filename);
+  return new File([blob], `${safeFileName}.png`, { type: "image/png" });
+}
+
+export function canSharePersonalityCardFile(file: File) {
+  if (typeof navigator.share !== "function" || typeof navigator.canShare !== "function") {
+    return false;
   }
+  try {
+    return navigator.canShare({ files: [file] });
+  } catch {
+    return false;
+  }
+}
+
+export function prefersPersonalityCardPreview() {
+  if (typeof window.matchMedia !== "function") return false;
+  return window.matchMedia("(pointer: coarse)").matches
+    || window.matchMedia("(max-width: 760px)").matches;
+}
+
+export function triggerPersonalityCardDownload(blob: Blob, filename: string) {
   const objectUrl = URL.createObjectURL(blob);
   const link = document.createElement("a");
-  link.download = filename;
+  link.download = `${safePersonalityCardFileName(filename)}.png`;
   link.href = objectUrl;
   link.rel = "noopener";
   document.body.appendChild(link);
-  link.click();
-  link.remove();
-  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 30_000);
+  try {
+    link.click();
+  } finally {
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 30_000);
+  }
 }

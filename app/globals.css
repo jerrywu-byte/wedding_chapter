@@ -68,6 +68,16 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--khaki-light
 .personality-card__secret{position:relative;background:linear-gradient(115deg,#dbc7a7,#f9f2e7 56%,#dfcdb3)}
 .personality-card-error{width:min(680px,100%);margin:28px auto;padding:42px;color:#3d332a;background:#fffaf0}
 .wx-download-render{position:fixed;z-index:-9999;left:-20000px;top:0;width:1080px;pointer-events:none}
+.personality-card-preview-backdrop{position:fixed;z-index:1000;inset:0;padding:20px;display:grid;place-items:center;background:rgba(28,22,18,.82)}
+.personality-card-preview-modal{width:min(620px,100%);max-height:94svh;padding:24px;overflow:auto;border-radius:24px;color:#382e25;background:#f8f1e7;box-shadow:0 28px 80px rgba(0,0,0,.35);text-align:center}
+.personality-card-preview-modal h2{margin:0 0 8px;font:500 28px/1.4 var(--font-brand)}
+.personality-card-preview-modal>p{margin:8px 0 16px;line-height:1.7}
+.personality-card-preview-image{width:100%;display:flex;justify-content:center;overflow:visible;background:#2d241d}
+.personality-card-preview-image img{width:auto;max-width:100%;height:auto;max-height:64svh;display:block;object-fit:contain;pointer-events:auto;user-select:auto;-webkit-user-select:auto;-webkit-touch-callout:default;touch-action:auto}
+.personality-card-preview-note{font-size:14px;color:#6f5b46}
+.personality-card-preview-actions{margin-top:18px;display:flex;justify-content:center;gap:12px}
+.personality-card-preview-actions button{min-width:140px;min-height:48px;padding:0 22px;border:1px solid #79644d55;border-radius:99px;background:#fff;cursor:pointer}
+@media(max-width:700px){.personality-card-preview-backdrop{padding:0;place-items:end center}.personality-card-preview-modal{width:100%;max-height:96svh;padding:20px 16px 24px;border-radius:26px 26px 0 0}.personality-card-preview-image img{max-height:62svh}.personality-card-preview-actions{display:grid;grid-template-columns:1fr 1fr}.personality-card-preview-actions button{min-width:0;width:100%}}
 .personality-card--download{width:1080px;margin:0;box-shadow:none}
 .personality-card--download .personality-card__hero{min-height:560px;padding:88px 110px}
 .personality-card--download .personality-card__hero h1{font-size:76px}
