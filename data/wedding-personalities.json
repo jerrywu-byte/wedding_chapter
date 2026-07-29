@@ -5,7 +5,7 @@
       "id": "moonlight-poet",
       "displayName": "月光詩人",
       "subtitle": "讓光影與細節，慢慢說完你們的故事",
-      "description": "你在意的不是最喧鬧的瞬間，而是光線落下、花朵搖曳與親友感動的表情。你的婚禮適合柔和、浪漫、自然且充滿畫面感的空間。",
+      "description": "你在意的不是最喧鬧的瞬間，而是光線落下、花朵搖曳與親友感動的表情。\n你的婚禮適合柔和、浪漫、自然且充滿畫面感的空間。",
       "heroImage": {
         "desktop": "/images/personalities/moonlight-poet-desktop.webp",
         "mobile": "/images/personalities/moonlight-poet-mobile.webp",
@@ -60,7 +60,7 @@
       "id": "starlight-star",
       "displayName": "星辰主角",
       "subtitle": "今晚所有星光，都為你們而亮",
-      "description": "你希望婚禮有明確的高潮與令人難忘的登場。燈光、音樂、舞台與賓客的目光，都是故事的一部分。",
+      "description": "你希望婚禮有明確的高潮與令人難忘的登場。\n燈光、音樂、舞台與賓客的目光，都是故事的一部分。",
       "heroImage": {
         "desktop": "/images/personalities/star-lead-desktop.webp",
         "mobile": "/images/personalities/star-lead-mobile.webp",
@@ -115,7 +115,7 @@
       "id": "forest-collector",
       "displayName": "森林收藏家",
       "subtitle": "把自然、笑聲與相聚，收藏成婚禮的樣子",
-      "description": "你喜歡自然、木質與輕鬆自在的氛圍。比起華麗排場，你更重視賓客是否能放鬆交談，感受到真實的溫度。",
+      "description": "你喜歡自然、木質與輕鬆自在的氛圍。\n比起華麗排場，你更重視賓客是否能放鬆交談，感受到真實的溫度。",
       "heroImage": {
         "desktop": "/images/personalities/forest-collector-desktop.webp",
         "mobile": "/images/personalities/forest-collector-mobile.webp",
@@ -170,7 +170,7 @@
       "id": "royal-curator",
       "displayName": "皇家策展人",
       "subtitle": "每一個細節，都值得被隆重展出",
-      "description": "你重視空間的完整感、藝術感與正式儀式。婚禮不只是聚會，而是一場經過策劃、值得被記住的重要典禮。",
+      "description": "你重視空間的完整感、藝術感與正式儀式。\n婚禮不只是聚會，而是一場經過策劃、值得被記住的重要典禮。",
       "heroImage": {
         "desktop": "/images/personalities/royal-curator-desktop.webp",
         "mobile": "/images/personalities/royal-curator-mobile.webp",
@@ -225,7 +225,7 @@
       "id": "urban-dreamer",
       "displayName": "都會造夢家",
       "subtitle": "把婚禮變成一場只演一次的時尚企劃",
-      "description": "你喜歡俐落、前衛、具有視覺衝擊的婚禮。LED、燈光、音樂和互動流程，都能成為展現個性的工具。",
+      "description": "你喜歡俐落、前衛、具有視覺衝擊的婚禮。\nLED、燈光、音樂和互動流程，都能成為展現個性的工具。",
       "heroImage": {
         "desktop": "/images/personalities/urban-dreamer-desktop.webp",
         "mobile": "/images/personalities/urban-dreamer-mobile.webp",
@@ -280,7 +280,7 @@
       "id": "gentle-gatherer",
       "displayName": "溫柔聚會家",
       "subtitle": "最重要的不是多盛大，而是重要的人都在",
-      "description": "你最在意親友是否自在、桌距是否舒服，以及每個人能不能真正參與這一天。你的婚禮溫馨而真誠。",
+      "description": "你最在意親友是否自在、桌距是否舒服，以及每個人能不能真正參與這一天。\n你的婚禮溫馨而真誠。",
       "heroImage": {
         "desktop": "/images/personalities/gentle-gatherer-desktop.webp",
         "mobile": "/images/personalities/gentle-gatherer-mobile.webp",
@@ -335,7 +335,7 @@
       "id": "ceremony-dreamer",
       "displayName": "儀式築夢者",
       "subtitle": "讓每一個承諾，都有被好好記住的方式",
-      "description": "你們重視的不只是婚禮看起來是否漂亮，而是誓詞、進場、交換戒指、父母感謝與證婚儀式，能不能形成完整的情緒起承轉合。你們希望每一個重要時刻都被妥善安排，也希望多年以後，仍然記得當時說過的話、握住的手，以及全場安靜下來的那一刻。",
+      "description": "你們重視的不只是婚禮看起來是否漂亮，\n而是誓詞、進場、交換戒指、父母感謝與證婚儀式，能不能形成完整的情緒起承轉合。\n\n你們希望每一個重要時刻都被妥善安排，\n也希望多年以後，\n仍然記得當時說過的話、握住的手，以及全場安靜下來的那一刻。",
       "heroImage": {
         "desktop": "/images/personalities/ceremony-dreamer-desktop.webp",
         "mobile": "/images/personalities/ceremony-dreamer-mobile.webp",
@@ -386,7 +386,7 @@
       "id": "celebration-director",
       "displayName": "歡樂導演家",
       "subtitle": "讓每一位賓客，都成為故事裡的一部分",
-      "description": "你們期待的婚禮，不只是新人在台上完成流程，而是每一位賓客都真正參與其中。從二次進場、抽獎、遊戲、發放小物，到伴郎伴娘與親友的臨場演出，你們在意的是全場的投入感，以及婚禮結束後大家仍然捨不得離開的熱度。",
+      "description": "你們期待的婚禮，不只是新人在台上完成流程，而是每一位賓客都真正參與其中。\n\n從二次進場、抽獎、遊戲、發放小物，到伴郎伴娘與親友的臨場演出，\n你們在意的是全場的投入感，以及婚禮結束後大家仍然捨不得離開的熱度。",
       "heroImage": {
         "desktop": "/images/personalities/joy-director-desktop.webp",
         "mobile": "/images/personalities/joy-director-mobile.webp",

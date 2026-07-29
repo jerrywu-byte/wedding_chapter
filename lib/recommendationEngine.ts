@@ -41,6 +41,7 @@ export interface RecommendationReasonResult {
 export interface RankedHallByQuiz extends HallStyleScore, RecommendationReasonResult {
   displayName: string;
   capacityStatus: "eligible" | "manual-confirmation";
+  recommendationTier: "primary" | "comfort" | "manual-confirmation";
 }
 
 export interface QuizHallRecommendationResult {
@@ -170,6 +171,8 @@ function rankHalls(
   tableCount: number,
   quizResult: QuizResult,
   capacityStatus: "eligible" | "manual-confirmation",
+  recommendationTier: RankedHallByQuiz["recommendationTier"] =
+    capacityStatus === "manual-confirmation" ? "manual-confirmation" : "primary",
 ): RankedHallByQuiz[] {
   return halls
     .map((hall) => ({
@@ -188,6 +191,7 @@ function rankHalls(
     .map(({ hall, style, explanation }) => ({
       displayName: hall.displayName,
       capacityStatus,
+      recommendationTier,
       ...style,
       ...explanation,
     }))
@@ -199,11 +203,26 @@ function rankHalls(
     );
 }
 
-function rangeOverlapsHall(range: EstimatedTableRange, hall: Hall): boolean {
-  const { minimumTables, maximumTables } = hall.capacity;
-  if (minimumTables === null || maximumTables === null) return false;
-  const selectedMaximum = range.maximum ?? Number.POSITIVE_INFINITY;
-  return maximumTables >= range.minimum && minimumTables <= selectedMaximum;
+function rangeFits(
+  range: EstimatedTableRange,
+  minimum: number | null,
+  maximum: number | null,
+): boolean {
+  if (minimum === null || maximum === null) return false;
+  const selectedMaximum = range.maximum ?? range.minimum;
+  return range.minimum >= minimum && selectedMaximum <= maximum;
+}
+
+function recommendationTierForRange(
+  range: EstimatedTableRange,
+  hall: Hall,
+): "primary" | "comfort" | null {
+  const capacity = hall.capacity;
+  if (rangeFits(range, capacity.minimumTables, capacity.maximumTables)) return "primary";
+  if (rangeFits(range, capacity.comfortableMinimumTables, capacity.comfortableMaximumTables)) {
+    return "comfort";
+  }
+  return null;
 }
 
 function rankEligibleHallsByTableRange(
@@ -214,22 +233,33 @@ function rankEligibleHallsByTableRange(
   const candidates = hallsData.halls.filter(
     (hall) => hall.status === "active" && hall.type === hallType,
   );
-  const eligible = candidates.filter((hall) => rangeOverlapsHall(range, hall));
+  const primary = candidates.filter((hall) => recommendationTierForRange(range, hall) === "primary");
+  const comfort = candidates.filter((hall) => recommendationTierForRange(range, hall) === "comfort");
+  const eligible = [...primary, ...comfort];
   const manual = candidates.filter(
     (hall) => hall.capacity.minimumTables === null || hall.capacity.maximumTables === null,
   );
   const referenceCount = range.maximum ?? range.minimum;
-  const recommendations = rankHalls(eligible, referenceCount, quizResult, "eligible").map((item) => {
-    const hall = eligible.find((candidate) => candidate.id === item.hallId)!;
-    return {
-      ...item,
-      reasons: [
-        item.reasons[0],
-        `選擇的${range.label}與${hall.displayName}${hall.capacity.minimumTables}至${hall.capacity.maximumTables}桌的可承接範圍相符。`,
-        ...item.reasons.slice(2),
-      ],
-    };
-  });
+  const recommendations = [
+    ...rankHalls(primary, referenceCount, quizResult, "eligible", "primary"),
+    ...rankHalls(comfort, referenceCount, quizResult, "eligible", "comfort"),
+  ].map((item) => {
+      const hall = eligible.find((candidate) => candidate.id === item.hallId)!;
+      const minimum = item.recommendationTier === "primary"
+        ? hall.capacity.minimumTables
+        : hall.capacity.comfortableMinimumTables;
+      const maximum = item.recommendationTier === "primary"
+        ? hall.capacity.maximumTables
+        : hall.capacity.comfortableMaximumTables;
+      return {
+        ...item,
+        reasons: [
+          item.reasons[0],
+          `選擇的${range.label}與${hall.displayName}${minimum}至${maximum}桌的${item.recommendationTier === "primary" ? "最佳" : "舒適"}推薦範圍相符。`,
+          ...item.reasons.slice(2),
+        ],
+      };
+    });
   return {
     isComplete: true,
     recommendations,
@@ -267,6 +297,18 @@ export function rankEligibleHallsByQuizResult(
     tableCount,
     quizResult,
     "eligible",
+  ).map((item) => {
+    const hall = hardFilterResult.eligibleHalls.find((candidate) => candidate.id === item.hallId)!;
+    const isPrimary =
+      hall.capacity.minimumTables !== null &&
+      hall.capacity.maximumTables !== null &&
+      tableCount >= hall.capacity.minimumTables &&
+      tableCount <= hall.capacity.maximumTables;
+    return { ...item, recommendationTier: isPrimary ? "primary" as const : "comfort" as const };
+  }).sort((a, b) =>
+    (a.recommendationTier === "primary" ? 0 : 1) - (b.recommendationTier === "primary" ? 0 : 1) ||
+    b.normalizedScore - a.normalizedScore ||
+    a.hallId.localeCompare(b.hallId)
   );
 
   const manualConfirmationHalls = hardFilterResult.excludedHalls
@@ -310,10 +352,16 @@ export function rankHallsForBasicInfo(
     const combined = rankEligibleHallsByTableRange(criteria.estimatedTableRange, quizResult, "combined");
     const official = [...single.recommendations, ...combined.recommendations]
       .filter((item, index, all) => all.findIndex((other) => other.hallId === item.hallId) === index)
-      .sort((a, b) => b.normalizedScore - a.normalizedScore || a.hallId.localeCompare(b.hallId));
+      .sort((a, b) =>
+        (a.recommendationTier === "primary" ? 0 : 1) - (b.recommendationTier === "primary" ? 0 : 1) ||
+        b.normalizedScore - a.normalizedScore ||
+        a.hallId.localeCompare(b.hallId));
     const manual = [...single.manualConfirmationHalls, ...combined.manualConfirmationHalls]
       .filter((item, index, all) => all.findIndex((other) => other.hallId === item.hallId) === index)
-      .sort((a, b) => b.normalizedScore - a.normalizedScore || a.hallId.localeCompare(b.hallId));
+      .sort((a, b) =>
+        (a.recommendationTier === "primary" ? 0 : 1) - (b.recommendationTier === "primary" ? 0 : 1) ||
+        b.normalizedScore - a.normalizedScore ||
+        a.hallId.localeCompare(b.hallId));
     return {
       isComplete: true,
       recommendations: official,

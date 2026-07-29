@@ -92,11 +92,11 @@ export function validateHall(hall: Hall): string[] {
   if (min !== null && max !== null && min > max) {
     errors.push(`${hall.id}: minimumTables 不可大於 maximumTables`);
   }
-  if (comfortableMin !== null && (min === null || max === null || comfortableMin < min || comfortableMin > max)) {
-    errors.push(`${hall.id}: comfortableMinimumTables 必須位於桌數範圍內`);
+  if ((comfortableMin === null) !== (comfortableMax === null)) {
+    errors.push(`${hall.id}: 舒適推薦桌數上下限必須同時提供或同時為 null`);
   }
-  if (comfortableMax !== null && (min === null || max === null || comfortableMax < min || comfortableMax > max)) {
-    errors.push(`${hall.id}: comfortableMaximumTables 必須位於桌數範圍內`);
+  if ((min === null || max === null) && (comfortableMin !== null || comfortableMax !== null)) {
+    errors.push(`${hall.id}: 無最佳推薦桌數時不可設定舒適推薦桌數`);
   }
   if (comfortableMin !== null && comfortableMax !== null && comfortableMin > comfortableMax) {
     errors.push(`${hall.id}: comfortableMinimumTables 不可大於 comfortableMaximumTables`);

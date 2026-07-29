@@ -12,10 +12,9 @@ export const comfortText = (hall: Hall) => range(hall.capacity.comfortableMinimu
 
 export function HallRecommendationCard({ result, rank, compared, onCompare, onDetail }: { result: RankedHallByQuiz; rank?: number; compared: boolean; onCompare(): void; onDetail(): void }) {
   const hall = hallById(result.hallId)!;
-  const labels = ["最符合你", "另一種可能", "驚喜選擇"];
   return <article className="hall-card">
-    <div className="hall-card-top"><div>{rank ? <b>#{rank} {labels[rank - 1]}</b> : <b className="manual">容量需確認</b>}<h3>{hall.displayName}</h3><p>{hall.floor ?? "樓層待確認"}</p></div><span className="score">{result.normalizedScore}%</span></div>
-    <dl><div><dt>可承接桌數</dt><dd>{capacityText(hall)}</dd></div><div><dt>舒適桌數</dt><dd>{comfortText(hall)}</dd></div></dl>
+    <div className="hall-card-top"><div>{rank ? <b>#{rank} {result.recommendationTier === "comfort" ? "舒適推薦" : "最佳推薦"}</b> : <b className="manual">容量需確認</b>}<h3>{hall.displayName}</h3><p>{hall.floor ?? "樓層待確認"}</p></div><span className="score">{result.normalizedScore}%</span></div>
+    <dl><div><dt>最佳推薦桌數</dt><dd>{capacityText(hall)}</dd></div><div><dt>舒適推薦桌數</dt><dd>{comfortText(hall)}</dd></div></dl>
     <ul>{result.reasons.slice(0, 3).map((reason) => <li key={reason}>{reason}</li>)}</ul>
     {result.warnings.map((warning) => <p className="warning" key={warning}>{warning}</p>)}
     <div className="card-buttons"><button onClick={onDetail}>查看詳情</button><button onClick={onCompare}>{compared ? "移出比較" : "加入比較"}</button></div>

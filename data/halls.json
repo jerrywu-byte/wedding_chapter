@@ -12,9 +12,9 @@
       "floor": "1F",
       "capacity": {
         "minimumTables": 10,
-        "maximumTables": 20,
-        "comfortableMinimumTables": 13,
-        "comfortableMaximumTables": 14
+        "maximumTables": 19,
+        "comfortableMinimumTables": 8,
+        "comfortableMaximumTables": 21
       },
       "equipment": {
         "ledScreen": false,
@@ -106,9 +106,9 @@
       "status": "active",
       "capacity": {
         "minimumTables": 9,
-        "maximumTables": 29,
-        "comfortableMinimumTables": 13,
-        "comfortableMaximumTables": 15
+        "maximumTables": 21,
+        "comfortableMinimumTables": 6,
+        "comfortableMaximumTables": 24
       },
       "equipment": {
         "ledScreen": true,
@@ -297,8 +297,8 @@
       "capacity": {
         "minimumTables": 45,
         "maximumTables": 100,
-        "comfortableMinimumTables": null,
-        "comfortableMaximumTables": null
+        "comfortableMinimumTables": 40,
+        "comfortableMaximumTables": 105
       },
       "equipmentInheritance": {
         "inheritFromCombinedHalls": true
@@ -420,9 +420,9 @@
       "floor": "2F",
       "capacity": {
         "minimumTables": 5,
-        "maximumTables": 13,
-        "comfortableMinimumTables": null,
-        "comfortableMaximumTables": null
+        "maximumTables": 11,
+        "comfortableMinimumTables": 3,
+        "comfortableMaximumTables": 13
       },
       "equipment": {
         "ledScreen": false,
@@ -509,8 +509,8 @@
       "capacity": {
         "minimumTables": 6,
         "maximumTables": 23,
-        "comfortableMinimumTables": null,
-        "comfortableMaximumTables": null
+        "comfortableMinimumTables": 3,
+        "comfortableMaximumTables": 26
       },
       "equipment": {
         "ledScreen": null,
@@ -600,10 +600,10 @@
       "type": "single",
       "status": "active",
       "capacity": {
-        "minimumTables": 5,
-        "maximumTables": 20,
-        "comfortableMinimumTables": 9,
-        "comfortableMaximumTables": 11
+        "minimumTables": 6,
+        "maximumTables": 18,
+        "comfortableMinimumTables": 4,
+        "comfortableMaximumTables": 20
       },
       "equipment": {
         "ledScreen": true,
@@ -787,8 +787,8 @@
       "type": "single",
       "status": "active",
       "capacity": {
-        "minimumTables": 15,
-        "maximumTables": 37,
+        "minimumTables": 20,
+        "maximumTables": 33,
         "comfortableMinimumTables": 22,
         "comfortableMaximumTables": 30
       },
@@ -984,8 +984,8 @@
       "capacity": {
         "minimumTables": 5,
         "maximumTables": 11,
-        "comfortableMinimumTables": 6,
-        "comfortableMaximumTables": 9
+        "comfortableMinimumTables": 3,
+        "comfortableMaximumTables": 13
       },
       "equipment": {
         "ledScreen": true,
@@ -1176,10 +1176,10 @@
       "type": "single",
       "status": "active",
       "capacity": {
-        "minimumTables": 9,
-        "maximumTables": 30,
-        "comfortableMinimumTables": 15,
-        "comfortableMaximumTables": 23
+        "minimumTables": 10,
+        "maximumTables": 28,
+        "comfortableMinimumTables": 7,
+        "comfortableMaximumTables": 31
       },
       "equipment": {
         "ledScreen": true,
@@ -1354,9 +1354,9 @@
       "status": "active",
       "capacity": {
         "minimumTables": 15,
-        "maximumTables": 38,
-        "comfortableMinimumTables": 18,
-        "comfortableMaximumTables": 27
+        "maximumTables": 35,
+        "comfortableMinimumTables": 12,
+        "comfortableMaximumTables": 38
       },
       "equipment": {
         "ledScreen": true,
@@ -1526,9 +1526,9 @@
       "status": "active",
       "capacity": {
         "minimumTables": 10,
-        "maximumTables": 30,
-        "comfortableMinimumTables": 15,
-        "comfortableMaximumTables": 23
+        "maximumTables": 28,
+        "comfortableMinimumTables": 7,
+        "comfortableMaximumTables": 31
       },
       "equipment": {
         "ledScreen": true,
@@ -1698,10 +1698,10 @@
       "type": "single",
       "status": "active",
       "capacity": {
-        "minimumTables": 20,
+        "minimumTables": 23,
         "maximumTables": 50,
-        "comfortableMinimumTables": 25,
-        "comfortableMaximumTables": 40
+        "comfortableMinimumTables": 18,
+        "comfortableMaximumTables": 55
       },
       "equipment": {
         "ledScreen": true,
@@ -1876,10 +1876,10 @@
       "type": "single",
       "status": "active",
       "capacity": {
-        "minimumTables": 21,
-        "maximumTables": 52,
-        "comfortableMinimumTables": 25,
-        "comfortableMaximumTables": 40
+        "minimumTables": 24,
+        "maximumTables": 50,
+        "comfortableMinimumTables": 19,
+        "comfortableMaximumTables": 55
       },
       "equipment": {
         "ledScreen": true,
@@ -2056,8 +2056,8 @@
       "capacity": {
         "minimumTables": 45,
         "maximumTables": 100,
-        "comfortableMinimumTables": null,
-        "comfortableMaximumTables": null
+        "comfortableMinimumTables": 40,
+        "comfortableMaximumTables": 105
       },
       "equipmentInheritance": {
         "inheritFromCombinedHalls": true
@@ -2189,9 +2189,9 @@
       "status": "active",
       "capacity": {
         "minimumTables": 10,
-        "maximumTables": 23,
-        "comfortableMinimumTables": null,
-        "comfortableMaximumTables": null,
+        "maximumTables": 19,
+        "comfortableMinimumTables": 10,
+        "comfortableMaximumTables": 15,
         "minimumGuests": null,
         "maximumGuests": 240
       },

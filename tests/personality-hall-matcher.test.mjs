@@ -120,11 +120,14 @@ test("ceremonySpaces 不參與廳房權重驗證", () => {
   assert.deepEqual(hallData.validateHallRecommendationWeights(data), []);
 });
 
-test("北歐光境桌數容量更新為10至23且不影響權重驗證", () => {
+test("北歐光境桌數最佳10至19、舒適10至15且不影響權重驗證", () => {
   const data = structuredClone(require("../data/halls.json"));
   const nordic = data.halls.find((hall) => hall.id === "nordic-light");
   assert.equal(nordic.capacity.minimumTables, 10);
-  assert.equal(nordic.capacity.maximumTables, 23);
+  assert.equal(nordic.capacity.maximumTables, 19);
+  assert.equal(nordic.capacity.comfortableMinimumTables, 10);
+  assert.equal(nordic.capacity.comfortableMaximumTables, 15);
+  assert.equal(nordic.capacity.maximumGuests, 240);
   assert.deepEqual(hallData.validateHallRecommendationWeights(data), []);
 });
 

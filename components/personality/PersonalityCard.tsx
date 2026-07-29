@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import { Fragment, forwardRef } from "react";
 import type { WeddingPersonality } from "../../types/wedding-personality";
 import { EditorialLineBreaks } from "../typography/EditorialLineBreaks";
 
@@ -53,7 +53,7 @@ export const PersonalityCard = forwardRef<HTMLElement, PersonalityCardProps>(
           <section className="personality-card__intro">
             <Kicker>PERSONALITY STORY</Kicker>
             <h2>你們的婚禮故事</h2>
-            <p>{personality.description}</p>
+            <p><FixedLineBreaks text={personality.description} /></p>
           </section>
 
           <section className="personality-card__direction">
@@ -102,6 +102,15 @@ export const PersonalityCard = forwardRef<HTMLElement, PersonalityCardProps>(
 
 function Kicker({ children }: { children: string }) {
   return <p className="personality-card__kicker">{children}</p>;
+}
+
+function FixedLineBreaks({ text }: { text: string }) {
+  return text.split("\n").map((line, index) => (
+    <Fragment key={`${index}-${line}`}>
+      {index > 0 ? <br /> : null}
+      {line}
+    </Fragment>
+  ));
 }
 
 function AiSecretText({ text }: { text: string }) {
