@@ -81,8 +81,9 @@ export function submitWeddingChapter(
     : fetch("/api/submissions", requestOptions);
 
   const request = submissionRequest.then(async response => {
-    const body = await response.json() as Partial<WeddingChapterSubmissionResult> & { error?: string };
-    if (!response.ok || !body.success) throw new Error(body.error || "資料暫時無法送出。");
+    const body = await response.json() as Partial<WeddingChapterSubmissionResult> & { error?: string; message?: string };
+    if (!response.ok || !body.success) throw new Error(body.message || body.error || "資料暫時無法送出。");
+    if (!body.serialNumber?.trim()) throw new Error("Google Sheets 未回傳流水編號。");
     return body as WeddingChapterSubmissionResult;
   }).finally(() => {
     activeSubmissions.delete(payload.submissionId);

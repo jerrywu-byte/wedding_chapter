@@ -36,18 +36,18 @@ export async function POST(request: Request) {
   try {
     payload = await request.json() as WeddingChapterSubmission;
   } catch {
-    return Response.json({ success: false, status: "ERROR", error: "無效 JSON。" }, { status: 400 });
+    return Response.json({ success: false, status: "ERROR", message: "無效 JSON。" }, { status: 400 });
   }
 
   const validationError = validate(payload);
   if (validationError) {
-    return Response.json({ success: false, status: "ERROR", error: validationError }, { status: 400 });
+    return Response.json({ success: false, status: "ERROR", message: validationError }, { status: 400 });
   }
 
   const url = runtimeEnv().GOOGLE_APPS_SCRIPT_WEB_APP_URL;
   if (!url) {
     return Response.json(
-      { success: false, status: "ERROR", error: "Google Sheets 服務尚未完成部署設定。" },
+      { success: false, status: "ERROR", message: "Google Sheets 服務尚未完成部署設定。" },
       { status: 503 },
     );
   }
@@ -61,19 +61,25 @@ export async function POST(request: Request) {
       signal: AbortSignal.timeout(30000),
     });
     const raw = await upstream.text();
-    let result: (Partial<WeddingChapterSubmissionResult> & { error?: string }) | null = null;
+    let result: (Partial<WeddingChapterSubmissionResult> & { error?: string; message?: string }) | null = null;
     try {
       result = JSON.parse(raw);
     } catch {
       return Response.json(
-        { success: false, status: "ERROR", error: "Google Sheets 服務回傳無效 JSON。" },
+        { success: false, status: "ERROR", message: "Google Sheets 服務回傳無效 JSON。" },
         { status: 502 },
       );
     }
 
     if (!upstream.ok || !result.success || !["SAVED", "ALREADY_SAVED"].includes(result.status ?? "")) {
       return Response.json(
-        { success: false, status: result.status ?? "ERROR", error: result.error || "Google Sheets 儲存失敗。" },
+        { success: false, status: result.status ?? "ERROR", message: result.message || result.error || "Google Sheets 儲存失敗。" },
+        { status: 502 },
+      );
+    }
+    if (!result.serialNumber?.trim()) {
+      return Response.json(
+        { success: false, status: "ERROR", message: "Google Sheets 未回傳流水編號。" },
         { status: 502 },
       );
     }
@@ -90,7 +96,7 @@ export async function POST(request: Request) {
       {
         success: false,
         status: "ERROR",
-        error: timedOut ? "Google Sheets 服務逾時。" : "無法連線至 Google Sheets 服務。",
+        message: timedOut ? "Google Sheets 服務逾時。" : "無法連線至 Google Sheets 服務。",
       },
       { status: 502 },
     );

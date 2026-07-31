@@ -1,6 +1,8 @@
 .wx-person{margin-bottom:22px;padding-bottom:4px;border-bottom:1px solid #725b421f}
 .wx-person h2{margin:0 0 14px;font:500 18px var(--font-brand);color:var(--accent)}
 .wx-profile input:disabled{opacity:.45}
+.wx-profile .wx-real-name-input{color:#3b3734!important;background:#efefed!important;border-bottom-color:#b9b6b2!important}
+.wx-profile .wx-real-name-input::placeholder{color:#77736f;opacity:1}
 .wx-check{display:flex!important;align-items:center;gap:8px;margin:-8px 0 20px!important;font-size:13px!important}
 .wx-check input{width:17px;height:17px;accent-color:var(--accent)}
 .wx-options button:hover{transform:translateY(-5px)}
@@ -48,8 +50,10 @@
 
 /* 3.1.7 — planner assignment and banquet period */
 .wx-profile select{width:100%;height:48px;margin-top:7px;padding:0 12px;color:inherit;border:0;border-bottom:1px solid #725b4255;background:#fff8}
-.wx-planner{width:min(280px,100%);margin:0 0 28px auto!important}
+.wx-profile-actions{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:18px;margin-top:22px}
+.wx-planner{width:100%;margin:0!important}
 .wx-planner select{appearance:auto}
+.wx-profile-actions>.wx-primary{min-width:220px;margin-bottom:0}
 .wx-schedule-row{display:flex;align-items:flex-end;gap:16px;margin-top:-8px}
 .wx-meal-period{flex:1;margin:0!important}
 .wx-meal-period legend{margin-bottom:8px!important}
@@ -58,9 +62,12 @@
 .wx-date-undecided{flex:0 0 auto;margin:0 0 9px!important}
 .wx-routing-note{margin-top:22px}
 .wx-submit-message{min-height:1.6em;color:#7b695e}
-.wx-submission-success{margin:1rem auto;padding:1rem 1.5rem;border:1px solid rgba(196,160,104,.55);background:rgba(255,248,236,.75)}
+.wx-submission-success{width:min(620px,100%);margin:1rem auto;padding:clamp(24px,5vw,42px);border:1px solid rgba(196,160,104,.55);background:rgba(255,248,236,.75)}
+.wx-submission-success h2{margin:0 0 16px}
+.wx-submission-success p{margin:14px 0}
 .wx-submission-success strong{display:inline-block;margin-top:.35rem;color:#765843;font-size:clamp(1.25rem,4vw,1.8rem);letter-spacing:.08em}
-@media(max-width:760px){.wx-planner{width:100%;margin:0 0 24px!important}.wx-schedule-row{align-items:stretch;flex-direction:column;gap:12px}.wx-date-undecided{align-self:flex-start;margin:0 0 18px!important}}
+.wx-line-button{min-height:48px;margin-top:10px;padding:0 24px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;color:#fff;text-decoration:none;background:#3f8f58}
+@media(max-width:760px){.wx-profile-actions{grid-template-columns:minmax(0,1fr);width:100%;gap:14px}.wx-profile-actions>.wx-primary{width:100%;min-width:0}.wx-schedule-row{align-items:stretch;flex-direction:column;gap:12px}.wx-date-undecided{align-self:flex-start;margin:0 0 18px!important}.wx-line-button{width:100%}}
 
 .wx-flow{--experience-photo:url('/realistic/brandcolor.webp');--card-ink:var(--ink);--card-wash:linear-gradient(105deg,#fffdf3ed,#f4ead9c7);--result-wash:linear-gradient(135deg,#fffdf1ed,#efe2d2d7);--hall-wash:linear-gradient(150deg,#fffdf4f3,#eee2d4df)}
 .wx-options button{position:relative;isolation:isolate;overflow:hidden;color:var(--card-ink);background:transparent!important;background-position:center;background-size:cover;box-shadow:0 15px 40px #34241824}

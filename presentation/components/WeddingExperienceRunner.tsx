@@ -13,7 +13,7 @@ import {
   prefersPersonalityCardPreview,
   triggerPersonalityCardDownload,
 } from "../../lib/personalityCardDownload";
-import { BANQUET_PLANNERS } from "../../lib/banquetPlanners";
+import { SALES_OPTIONS, getSalesLineUrl } from "../../lib/banquetPlanners";
 import { validatePhone } from "../../lib/sessionState";
 import { createWeddingChapterSubmission, submitWeddingChapter } from "../../lib/weddingChapterSubmission";
 import { ESTIMATED_TABLE_RANGES, getEstimatedTableRange, isEstimatedTableRangeId, tableRangeForLegacyCount } from "../../lib/tableRanges";
@@ -62,7 +62,7 @@ function normalized(profile: WeddingProfile): WeddingProfile {
 function profileErrors(profile: WeddingProfile) {
   const p = normalized(profile);
   const errors: string[] = [];
-  if (!p.banquetPlanner) errors.push("請選擇您的宴會企劃");
+  if (!p.banquetPlanner) errors.push("請先選擇接待您的業務人員");
   if (!p.groomName.trim()) errors.push("請填寫新郎姓名");
   if (!validatePhone(p.groomPhone)) errors.push("請填寫正確的新郎電話");
   if (!p.brideName.trim()) errors.push("請填寫新娘姓名");
@@ -126,6 +126,7 @@ export default function WeddingExperienceRunner({ experienceId }: { experienceId
   const [submissionMessage, setSubmissionMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const submitLock = useRef(false);
+  const plannerSelectRef = useRef<HTMLSelectElement>(null);
   const downloadCardRef = useRef<HTMLElement>(null);
   const previewUrlRef = useRef<string | null>(null);
 
@@ -160,11 +161,24 @@ export default function WeddingExperienceRunner({ experienceId }: { experienceId
   const mealPeriodLabel = p.mealPeriod === "lunch" ? "午宴" : p.mealPeriod === "dinner" ? "晚宴" : "都可以";
   const tableRange = getEstimatedTableRange(p.estimatedTableRangeId);
   const tableRangeLabel = tableRange?.label ?? "尚未選擇";
+  const salesLineUrl = getSalesLineUrl(p.banquetPlanner);
+
+  useEffect(() => {
+    if (session.submissionNumber && !salesLineUrl) {
+      console.warn("Wedding Chapter 無法識別業務 LINE 網址", {
+        banquetPlanner: p.banquetPlanner,
+      });
+    }
+  }, [session.submissionNumber, salesLineUrl, p.banquetPlanner]);
 
   const submitProfile = () => {
     const profile = normalized(p);
     const foundErrors = profileErrors(profile);
     setErrors(foundErrors);
+    if (!profile.banquetPlanner) {
+      requestAnimationFrame(() => plannerSelectRef.current?.focus());
+      return;
+    }
     if (!foundErrors.length) update({ profile, step: "opening" });
   };
   const answer = (optionId: string) => update({ quizAnswers: [...session.quizAnswers.filter(item => item.questionId !== question.id), { questionId: question.id, optionId }] });
@@ -266,12 +280,12 @@ export default function WeddingExperienceRunner({ experienceId }: { experienceId
     if (submitLock.current || session.submissionNumber) return;
     submitLock.current = true;
     setSubmitting(true);
-    setSubmissionMessage("正在儲存新人資料…");
+    setSubmissionMessage("資料送出中…");
     try {
       const payload = createWeddingChapterSubmission(session);
       const saved = await submitWeddingChapter(payload);
       update({ submissionNumber: saved.serialNumber, submittedAt: new Date().toISOString() });
-      setSubmissionMessage(`資料已儲存，流水編號 ${saved.serialNumber}。`);
+      setSubmissionMessage("");
     } catch (error) {
       setSubmissionMessage(error instanceof Error ? error.message : "暫時無法送出，請稍後再試。");
     } finally {
@@ -288,18 +302,12 @@ export default function WeddingExperienceRunner({ experienceId }: { experienceId
     {session.step === "profile" && <section className="wx-page wx-profile">
       <div className="wx-intro"><small>BEFORE THE STORY</small><h1>先寫下<br/>故事的名字</h1><p>兩人的資料只需填寫一次，之後會直接用來尋找適合的婚禮舞台。</p></div>
       <form onSubmit={event => { event.preventDefault(); submitProfile(); }}>
-        <label className="wx-planner" htmlFor="banquet-planner">選擇您的宴會企劃 *
-          <select id="banquet-planner" required value={p.banquetPlanner} onChange={event => updateProfile({ banquetPlanner: event.target.value as WeddingProfile["banquetPlanner"] })}>
-            <option value="" disabled>請選擇</option>
-            {BANQUET_PLANNERS.map(name => <option value={name} key={name}>{name}</option>)}
-          </select>
-        </label>
         <div className="wx-person"><h2>新郎資料</h2><div className="wx-two">
-          <Field label="新郎姓名" value={p.groomName} change={value => updateProfile({ groomName: value })}/>
+          <Field label="新郎姓名" value={p.groomName} change={value => updateProfile({ groomName: value })} placeholder="請填寫真實姓名（僅供身分核對使用）" className="wx-real-name-input"/>
           <Field label="新郎電話" value={p.groomPhone} change={value => updateProfile({ groomPhone: value })} placeholder="0912345678" type="tel"/>
         </div></div>
         <div className="wx-person"><h2>新娘資料</h2><div className="wx-two">
-          <Field label="新娘姓名" value={p.brideName} change={value => updateProfile({ brideName: value })}/>
+          <Field label="新娘姓名" value={p.brideName} change={value => updateProfile({ brideName: value })} placeholder="請填寫真實姓名（僅供身分核對使用）" className="wx-real-name-input"/>
           <Field label="新娘電話" value={p.bridePhone} change={value => updateProfile({ bridePhone: value })} placeholder="0912345678" type="tel"/>
         </div></div>
         <fieldset><legend>主要聯絡人</legend><div className="wx-radio">
@@ -318,7 +326,16 @@ export default function WeddingExperienceRunner({ experienceId }: { experienceId
             <label className="wx-check wx-date-undecided"><input type="checkbox" checked={p.weddingDateUndecided} onChange={event => updateProfile({ weddingDateUndecided: event.target.checked, weddingDate: event.target.checked ? null : p.weddingDate })}/> 未決定日期</label>
           </div>
         </div><label>預計桌數<select value={p.estimatedTableRangeId} onChange={event => { const id = event.target.value; const range = isEstimatedTableRangeId(id) ? getEstimatedTableRange(id) : null; updateProfile({ estimatedTableRangeId: isEstimatedTableRangeId(id) ? id : "", estimatedTables: range?.minimum ?? null }); }}><option value="" disabled>請選擇</option>{ESTIMATED_TABLE_RANGES.map(range => <option value={range.id} key={range.id}>{range.label}</option>)}</select></label></div>
-        <Errors values={errors}/><button className="wx-primary">進入你們的故事 →</button>
+        <Errors values={errors}/>
+        <div className="wx-profile-actions">
+          <label className="wx-planner" htmlFor="banquet-planner">負責業務 *
+            <select ref={plannerSelectRef} id="banquet-planner" required value={p.banquetPlanner} onChange={event => updateProfile({ banquetPlanner: event.target.value as WeddingProfile["banquetPlanner"] })}>
+              <option value="" disabled>請選擇</option>
+              {SALES_OPTIONS.map(option => <option value={option.label} key={option.value}>{option.label}</option>)}
+            </select>
+          </label>
+          <button className="wx-primary">進入我們的婚禮故事 →</button>
+        </div>
       </form>
     </section>}
 
@@ -326,7 +343,7 @@ export default function WeddingExperienceRunner({ experienceId }: { experienceId
     {session.step === "quiz" && <section className="wx-page wx-quiz"><div className="wx-progress"><i style={{ width: `${(session.currentQuestionIndex + 1) / questions.length * 100}%` }}/></div><small>CHAPTER {String(session.currentQuestionIndex + 1).padStart(2, "0")} · {session.currentQuestionIndex + 1} / {questions.length}</small><h1><EditorialLineBreaks text={question.title} /></h1><div className="wx-options" data-question={question.id}>{question.options.map((option, index) => <button className={`wx-option wx-option-${index + 1}`} key={option.optionId} aria-pressed={session.quizAnswers.some(item => item.questionId === question.id && item.optionId === option.optionId)} onClick={() => answer(option.optionId)}><i>{String.fromCharCode(65 + index)}</i><b>{option.text}</b></button>)}</div><Errors values={errors}/><nav><button className="wx-back" onClick={back}>返回</button><button className="wx-primary" onClick={next}>{session.currentQuestionIndex === questions.length - 1 ? "揭曉篇章" : "下一題"} →</button></nav></section>}
     {session.step === "personality-result" && result && <section className="wx-page wx-center wx-personality"><small>THE STORY WITHIN YOU</small>{personality ? <><PersonalityCard personality={personality} coupleNames={`${p.groomName} × ${p.brideName}`} mode="screen"/><div className="wx-download-render" aria-hidden="true"><PersonalityCard ref={downloadCardRef} personality={personality} coupleNames={`${p.groomName} × ${p.brideName}`} mode="download"/></div><div className="wx-card-save"><button onClick={savePersonalityCard}>↓ 將人格卡另存為圖片</button><p role="status" aria-live="polite">{saveMessage}</p></div></> : <article className="personality-card-error"><h1>人格篇章需要重新整理</h1><p>這筆舊資料的人格代碼已無法辨識，請返回最後一題重新揭曉，不會隨機替換成其他人格。</p></article>}<div className="wx-actions"><button className="wx-back" onClick={back}>返回最後一題</button>{personality ? <button className="wx-primary" onClick={findVenues}>尋找故事舞台 →</button> : null}</div></section>}
     {session.step === "venue-result" && <section className="wx-page wx-venues"><small>YOUR STORY STAGES</small><h1>適合你們的婚禮舞台</h1><p>{tableRangeLabel} · {dateLabel}</p><div className="wx-halls">{session.venueRecommendations.map((recommendation, index) => { const hall = getHallById(recommendation.hallId); const tierIndex = session.venueRecommendations.filter(item => item.recommendationTier === recommendation.recommendationTier).findIndex(item => item.hallId === recommendation.hallId); return <article key={recommendation.hallId}><em>0{index + 1}</em><small>{recommendation.recommendationTier === "comfort" ? `舒適推薦 ${tierIndex + 1}` : `最佳推薦 ${tierIndex + 1}`}</small><h2>{recommendation.displayName}</h2><p>{recommendation.reasons[1] || recommendation.reasons[0]}</p><b>{recommendation.recommendationTier === "comfort" ? hall?.capacity.comfortableMinimumTables : hall?.capacity.minimumTables ?? "待確認"}–{recommendation.recommendationTier === "comfort" ? hall?.capacity.comfortableMaximumTables : hall?.capacity.maximumTables ?? "待確認"} 桌</b><ul>{hall?.features.slice(0, 3).map(feature => <li key={feature}>{feature}</li>)}</ul><button onClick={() => setDetail(detail === recommendation.hallId ? null : recommendation.hallId)}>{detail === recommendation.hallId ? "收起詳細資料" : "查看詳細資料"}</button>{detail === recommendation.hallId && <div>{recommendation.reasons.map(reason => <p key={reason}>{reason}</p>)}</div>}</article>; })}</div><nav><button className="wx-back" onClick={back}>返回人格篇章</button><button className="wx-primary" onClick={() => go("ending")}>完成篇章 →</button></nav></section>}
-    {session.step === "ending" && <section className="wx-page wx-center wx-ending"><small>WEDDING CHAPTER</small><h1>{p.groomName} × {p.brideName}</h1><blockquote>「屬於你們的婚禮篇章，已經悄悄展開。」</blockquote><dl><div><dt>宴會企劃</dt><dd>{p.banquetPlanner}</dd></div><div><dt>宴會時段</dt><dd>{mealPeriodLabel}</dd></div><div><dt>人格篇章</dt><dd>{result?.displayName}</dd></div><div><dt>第一推薦</dt><dd>{session.venueRecommendations[0]?.displayName}</dd></div><div><dt>婚禮日期</dt><dd>{dateLabel}</dd></div><div><dt>預計桌數</dt><dd>{tableRangeLabel}</dd></div></dl><p className="wx-routing-note">完成後將交由 {p.banquetPlanner} 接續服務</p>{session.submissionNumber ? <p className="wx-submission-success" role="status">已完成送出<br/><strong>{session.submissionNumber}</strong></p> : null}<p className="wx-submit-message" role="status" aria-live="polite">{submissionMessage}</p><div className="wx-actions"><button className="wx-back" onClick={back}>回到推薦廳房</button><button onClick={() => go("personality-result")}>重新閱讀篇章</button><button className="wx-primary" disabled={submitting || Boolean(session.submissionNumber)} onClick={completeChapter}>{session.submissionNumber ? "已完成" : submitting ? "處理中…" : "完成"}</button></div></section>}
+    {session.step === "ending" && <section className="wx-page wx-center wx-ending"><small>WEDDING CHAPTER</small><h1>{p.groomName} × {p.brideName}</h1><blockquote>「屬於你們的婚禮篇章，已經悄悄展開。」</blockquote><dl><div><dt>宴會企劃</dt><dd>{p.banquetPlanner}</dd></div><div><dt>宴會時段</dt><dd>{mealPeriodLabel}</dd></div><div><dt>人格篇章</dt><dd>{result?.displayName}</dd></div><div><dt>第一推薦</dt><dd>{session.venueRecommendations[0]?.displayName}</dd></div><div><dt>婚禮日期</dt><dd>{dateLabel}</dd></div><div><dt>預計桌數</dt><dd>{tableRangeLabel}</dd></div></dl><p className="wx-routing-note">完成後將交由 {p.banquetPlanner} 接續服務</p>{session.submissionNumber ? <div className="wx-submission-success" role="status"><h2>資料已成功送出</h2><p>流水編號：<strong>{session.submissionNumber}</strong></p>{salesLineUrl ? <><p>最後一步：<br/>請前往官方 LINE 完成報到，<br/>讓婚禮顧問接續為你們服務。</p><a className="wx-line-button" href={salesLineUrl} target="_blank" rel="noopener noreferrer">前往官方 LINE 完成報到</a></> : <p>資料已成功送出，請由現場服務人員協助加入官方 LINE。</p>}</div> : <><p className="wx-submit-message" role="status" aria-live="polite">{submissionMessage}</p><div className="wx-actions"><button className="wx-back" disabled={submitting} onClick={back}>回到推薦廳房</button><button disabled={submitting} onClick={() => go("personality-result")}>重新閱讀篇章</button><button className="wx-primary" disabled={submitting} onClick={completeChapter}>{submitting ? "資料送出中…" : "完成並送出"}</button></div></>}</section>}
     {cardPreview
       ? <PersonalityCardPreviewModal
           preview={cardPreview}
@@ -338,8 +355,8 @@ export default function WeddingExperienceRunner({ experienceId }: { experienceId
   </main>;
 }
 
-function Field({ label, value, change, placeholder, type = "text", disabled = false, lang }: { label: string; value: string; change: (value: string) => void; placeholder?: string; type?: string; disabled?: boolean; lang?: string }) {
-  return <label>{label}<input type={type} lang={lang} value={value} disabled={disabled} onChange={event => change(event.target.value)} placeholder={placeholder}/></label>;
+function Field({ label, value, change, placeholder, type = "text", disabled = false, lang, className }: { label: string; value: string; change: (value: string) => void; placeholder?: string; type?: string; disabled?: boolean; lang?: string; className?: string }) {
+  return <label>{label}<input className={className} type={type} lang={lang} value={value} disabled={disabled} onChange={event => change(event.target.value)} placeholder={placeholder}/></label>;
 }
 function Errors({ values }: { values: string[] }) {
   return values.length ? <div className="wx-errors" role="alert">{values.map(value => <p key={value}>{value}</p>)}</div> : null;

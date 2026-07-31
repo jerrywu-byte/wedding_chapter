@@ -64,13 +64,13 @@ const LEGACY_HEADERS = {
 };
 
 const OFFICIAL_SALES = [
-  ['APRIL', 'April', 'april@denwell.com'],
-  ['SEAN', 'Sean', 'sean.huang@denwell.com'],
-  ['JIMMY', 'Jimmy', 'jimmy.wu@denwell.com'],
-  ['LISA', 'Lisa', 'lisa.chen@denwell.com'],
-  ['NIDIA', 'Nidia', 'nidia.hsu@denwell.com'],
-  ['JERRY', 'Jerry', 'jerry.wu@denwell.com'],
-  ['ELLE', 'Elle', 'elle.ong@denwell.com'],
+  ['APRIL', 'April'],
+  ['SEAN', 'Sean'],
+  ['JIMMY', 'Jimmy'],
+  ['LISA', 'Lisa'],
+  ['NIDIA', 'Nidia'],
+  ['JERRY', 'Jerry'],
+  ['ELLE', 'Elle'],
 ];
 
 /**
@@ -123,7 +123,7 @@ function doPost(e) {
     return jsonResponse_({
       success: false,
       status: 'ERROR',
-      error: error && error.message ? error.message : String(error),
+      message: error && error.message ? error.message : String(error),
     });
   }
 }
@@ -323,7 +323,7 @@ function upsertSales_(sheet) {
   OFFICIAL_SALES.forEach(function (sales) {
     const row = existing[sales[0]];
     if (row) {
-      sheet.getRange(row, 1, 1, 3).setValues([sales]);
+      sheet.getRange(row, 1, 1, 2).setValues([sales]);
     } else {
       sheet.appendRow(sales);
     }
@@ -332,13 +332,12 @@ function upsertSales_(sheet) {
 
 function findSales_(sheet, salesCode) {
   if (sheet.getLastRow() < 2) return null;
-  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 3).getValues();
+  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 2).getValues();
   for (let i = 0; i < values.length; i += 1) {
     if (cleanText_(values[i][0]).toUpperCase() === salesCode) {
       return {
         salesCode: salesCode,
         salesName: cleanText_(values[i][1]),
-        salesEmail: cleanText_(values[i][2]),
       };
     }
   }
