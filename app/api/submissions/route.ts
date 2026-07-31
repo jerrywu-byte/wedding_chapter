@@ -79,7 +79,7 @@ export async function POST(request: Request) {
     }
     if (!result.serialNumber?.trim()) {
       return Response.json(
-        { success: false, status: "ERROR", message: "Google Sheets 未回傳流水編號。" },
+        { success: false, status: "ERROR", message: "Google Sheets 未回傳訪客編號。" },
         { status: 502 },
       );
     }
