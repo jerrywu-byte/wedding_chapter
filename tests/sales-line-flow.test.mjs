@@ -10,24 +10,15 @@ const api = read("app/api/submissions/route.ts");
 const gas = read("google-apps-script/Code.gs");
 const css = read("presentation/styles/wedding-experience-enhancements.css");
 
-const expectedSales = [
-  ["April", "APRIL", "https://maac.io/3eqps"],
-  ["Sean", "SEAN", "https://maac.io/3eqA9"],
-  ["Jimmy", "JIMMY", "https://maac.io/3eqAK"],
-  ["Lisa", "LISA", "https://maac.io/3eHta"],
-  ["Nidia", "NIDIA", "https://maac.io/3eHII"],
-  ["Jerry", "JERRY", "https://maac.io/3eHRf"],
-  ["Elle", "ELLE", "https://maac.io/4BCtc"],
-];
-
-test("七位業務名稱、程式值與 LINE 網址集中在 SALES_OPTIONS", () => {
-  assert.match(sales, /export const SALES_OPTIONS/);
-  for (const [label, value, lineUrl] of expectedSales) {
-    assert.match(sales, new RegExp(`label: "${label}", value: "${value}", lineUrl: "${lineUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
-  }
+test("業務名稱、代碼與 LINE 網址由業務資料分頁動態讀取", () => {
+  assert.match(sales, /loadSalesOptions/);
+  assert.match(sales, /action: "getSalesOptions"/);
+  assert.match(gas, /getSalesOptions_/);
+  assert.match(gas, /'LINE連結', '啟用'/);
   assert.match(sales, /getBanquetPlannerCode/);
   assert.match(sales, /getSalesLineUrl/);
   assert.doesNotMatch(runner, /maac\.io/);
+  assert.doesNotMatch(sales, /maac\.io|APRIL|JERRY/);
 });
 
 test("業務選單位於基本資料最下方並在進入按鈕之前", () => {
@@ -41,11 +32,11 @@ test("業務選單位於基本資料最下方並在進入按鈕之前", () => {
   assert.match(runner, /plannerSelectRef\.current\?\.focus/);
 });
 
-test("送至 Sheet 的值由統一設定轉為大寫 salesCode", () => {
-  assert.match(client, /const salesCode = getBanquetPlannerCode\(profile\.banquetPlanner\)/);
+test("送至 Sheet 的值由目前業務名單轉為大寫 salesCode", () => {
+  assert.match(client, /const salesCode = getBanquetPlannerCode\(profile\.banquetPlanner, salesOptions\)/);
   assert.match(client, /salesCode,/);
   assert.match(gas, /normalized\.salesCode/);
-  for (const [, value] of expectedSales) assert.match(gas, new RegExp(`\\['${value}'`));
+  assert.match(gas, /cleanText_\(row\[0\]\)\.toUpperCase\(\)/);
 });
 
 test("LINE 按鈕只在 Sheet 成功並取得流水號後顯示", () => {
@@ -85,6 +76,14 @@ test("正式送出不寄 Email 且不產生任何文件", () => {
   const submissionCode = [client, api, gas].join("\n");
   assert.doesNotMatch(submissionCode, /MailApp|GmailApp|sendEmail|buildEmail|@denwell\.com/);
   assert.doesNotMatch(submissionCode, /DocumentApp|DriveApp|MimeType\.PDF|DOCX|createPdf|createWord|replaceText/);
+});
+
+test("業務名單採 simple request 且不把 Email 回傳前端", () => {
+  assert.match(sales, /text\/plain;charset=utf-8/);
+  assert.doesNotMatch(sales, /application\/json|Authorization|no-cors/);
+  const salesOptionsFunction = gas.slice(gas.indexOf("function getSalesOptions_"), gas.indexOf("function isSalesEnabled_"));
+  assert.doesNotMatch(salesOptionsFunction, /salesEmail|row\[2\]/);
+  assert.match(salesOptionsFunction, /lineUrl/);
 });
 
 test("重複點擊由前端鎖與 Apps Script idempotency 雙重保護", () => {

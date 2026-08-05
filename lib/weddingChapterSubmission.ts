@@ -1,4 +1,4 @@
-import { getBanquetPlannerCode } from "./banquetPlanners";
+import { getBanquetPlannerCode, type SalesOption } from "./banquetPlanners";
 import type { WeddingExperienceSession } from "../types/wedding-experience";
 
 export interface WeddingChapterSubmission {
@@ -25,9 +25,10 @@ export interface WeddingChapterSubmissionResult {
 
 export function createWeddingChapterSubmission(
   session: WeddingExperienceSession,
+  salesOptions: readonly SalesOption[],
 ): WeddingChapterSubmission {
   const profile = session.profile;
-  const salesCode = getBanquetPlannerCode(profile.banquetPlanner);
+  const salesCode = getBanquetPlannerCode(profile.banquetPlanner, salesOptions);
   if (!salesCode) throw new Error("尚未選擇宴會企劃。");
   if (!session.submissionClientId) throw new Error("缺少送出識別碼。");
   if (!profile.mealPeriod) throw new Error("尚未選擇宴會時段。");

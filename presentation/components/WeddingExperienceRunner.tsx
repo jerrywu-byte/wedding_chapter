@@ -13,7 +13,7 @@ import {
   prefersPersonalityCardPreview,
   triggerPersonalityCardDownload,
 } from "../../lib/personalityCardDownload";
-import { SALES_OPTIONS, getSalesLineUrl } from "../../lib/banquetPlanners";
+import { getSalesLineUrl, loadSalesOptions, type SalesOption } from "../../lib/banquetPlanners";
 import { validatePhone } from "../../lib/sessionState";
 import { createWeddingChapterSubmission, submitWeddingChapter } from "../../lib/weddingChapterSubmission";
 import { ESTIMATED_TABLE_RANGES, getEstimatedTableRange, isEstimatedTableRangeId, tableRangeForLegacyCount } from "../../lib/tableRanges";
@@ -125,6 +125,9 @@ export default function WeddingExperienceRunner({ experienceId }: { experienceId
   const [shareMessage, setShareMessage] = useState("");
   const [submissionMessage, setSubmissionMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [salesOptions, setSalesOptions] = useState<SalesOption[]>([]);
+  const [salesLoading, setSalesLoading] = useState(true);
+  const [salesLoadError, setSalesLoadError] = useState("");
   const submitLock = useRef(false);
   const plannerSelectRef = useRef<HTMLSelectElement>(null);
   const downloadCardRef = useRef<HTMLElement>(null);
@@ -147,6 +150,24 @@ export default function WeddingExperienceRunner({ experienceId }: { experienceId
     history.replaceState({ experienceId, step: session.step }, "", experienceUrl(experienceId, session.step));
   }, [ready, session, experienceId]);
   useEffect(() => {
+    let active = true;
+    loadSalesOptions()
+      .then(options => {
+        if (!active) return;
+        setSalesOptions(options);
+        if (!options.length) setSalesLoadError("目前沒有可選擇的業務人員，請洽現場服務人員。");
+      })
+      .catch(error => {
+        if (!active) return;
+        setSalesOptions([]);
+        setSalesLoadError(error instanceof Error ? error.message : "暫時無法讀取業務名單。");
+      })
+      .finally(() => {
+        if (active) setSalesLoading(false);
+      });
+    return () => { active = false; };
+  }, []);
+  useEffect(() => {
     if (!ready || session.step !== "venue-result") return;
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [ready, session.step]);
@@ -165,7 +186,7 @@ export default function WeddingExperienceRunner({ experienceId }: { experienceId
   const mealPeriodLabel = p.mealPeriod === "lunch" ? "午宴" : p.mealPeriod === "dinner" ? "晚宴" : "都可以";
   const tableRange = getEstimatedTableRange(p.estimatedTableRangeId);
   const tableRangeLabel = tableRange?.label ?? "尚未選擇";
-  const salesLineUrl = getSalesLineUrl(p.banquetPlanner);
+  const salesLineUrl = getSalesLineUrl(p.banquetPlanner, salesOptions);
   const recommendedHallNames = session.venueRecommendations
     .slice(0, 3)
     .map(recommendation => recommendation.displayName)
@@ -182,6 +203,10 @@ export default function WeddingExperienceRunner({ experienceId }: { experienceId
   const submitProfile = () => {
     const profile = normalized(p);
     const foundErrors = profileErrors(profile);
+    if (profile.banquetPlanner && !salesOptions.some(option => option.label === profile.banquetPlanner)) {
+      foundErrors.unshift("請重新選擇接待您的業務人員");
+    }
+    if (salesLoadError) foundErrors.unshift(salesLoadError);
     setErrors(foundErrors);
     if (!profile.banquetPlanner) {
       requestAnimationFrame(() => plannerSelectRef.current?.focus());
@@ -290,7 +315,7 @@ export default function WeddingExperienceRunner({ experienceId }: { experienceId
     setSubmitting(true);
     setSubmissionMessage("資料送出中…");
     try {
-      const payload = createWeddingChapterSubmission(session);
+      const payload = createWeddingChapterSubmission(session, salesOptions);
       const saved = await submitWeddingChapter(payload);
       update({ submissionNumber: saved.serialNumber, submittedAt: new Date().toISOString() });
       setSubmissionMessage("");
@@ -337,9 +362,9 @@ export default function WeddingExperienceRunner({ experienceId }: { experienceId
         <Errors values={errors}/>
         <div className="wx-profile-actions">
           <label className="wx-planner" htmlFor="banquet-planner">負責業務 *
-            <select ref={plannerSelectRef} id="banquet-planner" required value={p.banquetPlanner} onChange={event => updateProfile({ banquetPlanner: event.target.value as WeddingProfile["banquetPlanner"] })}>
-              <option value="" disabled>請選擇</option>
-              {SALES_OPTIONS.map(option => <option value={option.label} key={option.value}>{option.label}</option>)}
+            <select ref={plannerSelectRef} id="banquet-planner" required disabled={salesLoading || Boolean(salesLoadError)} value={p.banquetPlanner} onChange={event => updateProfile({ banquetPlanner: event.target.value as WeddingProfile["banquetPlanner"] })}>
+              <option value="" disabled>{salesLoading ? "業務名單載入中…" : salesLoadError ? "業務名單暫時無法載入" : "請選擇"}</option>
+              {salesOptions.map(option => <option value={option.label} key={option.value}>{option.label}</option>)}
             </select>
           </label>
           <button className="wx-primary">進入我們的婚禮故事 →</button>

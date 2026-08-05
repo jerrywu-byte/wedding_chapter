@@ -7,6 +7,12 @@ type RuntimeEnv = {
   GOOGLE_APPS_SCRIPT_WEB_APP_URL?: string;
 };
 
+type SalesOptionsRequest = { action: "getSalesOptions" };
+
+function isSalesOptionsRequest(payload: unknown): payload is SalesOptionsRequest {
+  return Boolean(payload && typeof payload === "object" && (payload as Partial<SalesOptionsRequest>).action === "getSalesOptions");
+}
+
 function runtimeEnv(): RuntimeEnv {
   return (globalThis as typeof globalThis & { __SITE_ENV__?: RuntimeEnv }).__SITE_ENV__ ?? {};
 }
@@ -32,16 +38,18 @@ function validate(payload: WeddingChapterSubmission): string | null {
 }
 
 export async function POST(request: Request) {
-  let payload: WeddingChapterSubmission;
+  let payload: WeddingChapterSubmission | SalesOptionsRequest;
   try {
-    payload = await request.json() as WeddingChapterSubmission;
+    payload = await request.json() as WeddingChapterSubmission | SalesOptionsRequest;
   } catch {
     return Response.json({ success: false, status: "ERROR", message: "無效 JSON。" }, { status: 400 });
   }
 
-  const validationError = validate(payload);
-  if (validationError) {
-    return Response.json({ success: false, status: "ERROR", message: validationError }, { status: 400 });
+  if (!isSalesOptionsRequest(payload)) {
+    const validationError = validate(payload);
+    if (validationError) {
+      return Response.json({ success: false, status: "ERROR", message: validationError }, { status: 400 });
+    }
   }
 
   const url = runtimeEnv().GOOGLE_APPS_SCRIPT_WEB_APP_URL;
@@ -69,6 +77,17 @@ export async function POST(request: Request) {
         { success: false, status: "ERROR", message: "Google Sheets 服務回傳無效 JSON。" },
         { status: 502 },
       );
+    }
+
+    if (isSalesOptionsRequest(payload)) {
+      const salesResult = result as typeof result & { salesOptions?: unknown };
+      if (!upstream.ok || !salesResult?.success || !Array.isArray(salesResult.salesOptions)) {
+        return Response.json(
+          { success: false, status: "ERROR", message: salesResult?.message || salesResult?.error || "業務名單讀取失敗。" },
+          { status: 502 },
+        );
+      }
+      return Response.json({ success: true, salesOptions: salesResult.salesOptions });
     }
 
     if (!upstream.ok || !result.success || !["SAVED", "ALREADY_SAVED"].includes(result.status ?? "")) {

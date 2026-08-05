@@ -32,7 +32,7 @@ const SUBMISSION_HEADERS = [
   '業務姓名',
 ];
 
-const SALES_HEADERS = ['業務代碼', '業務姓名', '業務Email'];
+const SALES_HEADERS = ['業務代碼', '業務姓名', '業務Email', 'LINE連結', '啟用'];
 const SETTINGS_HEADERS = ['設定項目', '設定值'];
 
 const LEGACY_SHEETS = {
@@ -63,16 +63,6 @@ const LEGACY_HEADERS = {
   '系統設定': ['key', 'value'],
 };
 
-const OFFICIAL_SALES = [
-  ['APRIL', 'April'],
-  ['SEAN', 'Sean'],
-  ['JIMMY', 'Jimmy'],
-  ['LISA', 'Lisa'],
-  ['NIDIA', 'Nidia'],
-  ['JERRY', 'Jerry'],
-  ['ELLE', 'Elle'],
-];
-
 /**
  * Run once from the Apps Script editor after setting SPREADSHEET_ID.
  * Safe to run again: it never clears existing submission data.
@@ -89,7 +79,7 @@ function setupWeddingChapterSheets() {
   const sales = ensureSheet_(
     spreadsheet,
     SALES_SHEET,
-    SALES_HEADERS,
+    SALES_HEADERS.slice(0, 3),
     LEGACY_SHEETS[SALES_SHEET],
     LEGACY_HEADERS[SALES_SHEET]
   );
@@ -105,7 +95,7 @@ function setupWeddingChapterSheets() {
   sales.setFrozenRows(1);
   settings.setFrozenRows(1);
 
-  upsertSales_(sales);
+  ensureSalesColumns_(sales);
   ensureSerialSetting_(settings, getRocYear_(new Date()));
 
   return {
@@ -117,6 +107,12 @@ function setupWeddingChapterSheets() {
 function doPost(e) {
   try {
     const payload = parseRequest_(e);
+    if (payload && payload.action === 'getSalesOptions') {
+      return jsonResponse_({
+        success: true,
+        salesOptions: getSalesOptions_(),
+      });
+    }
     const result = saveSubmission_(payload);
     return jsonResponse_(result);
   } catch (error) {
@@ -311,30 +307,19 @@ function requireSheet_(spreadsheet, name) {
   return sheet;
 }
 
-function upsertSales_(sheet) {
-  const existing = {};
-  if (sheet.getLastRow() > 1) {
-    sheet.getRange(2, 1, sheet.getLastRow() - 1, 3).getValues().forEach(function (row, index) {
-      const code = cleanText_(row[0]).toUpperCase();
-      if (code) existing[code] = index + 2;
-    });
+function ensureSalesColumns_(sheet) {
+  sheet.getRange(1, 4, 1, 2).setValues([SALES_HEADERS.slice(3)]);
+  if (sheet.getMaxRows() > 1) {
+    const checkboxRule = SpreadsheetApp.newDataValidation().requireCheckbox().build();
+    sheet.getRange(2, 5, sheet.getMaxRows() - 1, 1).setDataValidation(checkboxRule);
   }
-
-  OFFICIAL_SALES.forEach(function (sales) {
-    const row = existing[sales[0]];
-    if (row) {
-      sheet.getRange(row, 1, 1, 2).setValues([sales]);
-    } else {
-      sheet.appendRow(sales);
-    }
-  });
 }
 
 function findSales_(sheet, salesCode) {
   if (sheet.getLastRow() < 2) return null;
-  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 2).getValues();
+  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, SALES_HEADERS.length).getValues();
   for (let i = 0; i < values.length; i += 1) {
-    if (cleanText_(values[i][0]).toUpperCase() === salesCode) {
+    if (cleanText_(values[i][0]).toUpperCase() === salesCode && isSalesEnabled_(values[i][4])) {
       return {
         salesCode: salesCode,
         salesName: cleanText_(values[i][1]),
@@ -342,6 +327,26 @@ function findSales_(sheet, salesCode) {
     }
   }
   return null;
+}
+
+function getSalesOptions_() {
+  const sheet = requireSheet_(getSpreadsheet_(), SALES_SHEET);
+  if (sheet.getLastRow() < 2) return [];
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, SALES_HEADERS.length).getValues()
+    .filter(function (row) {
+      return cleanText_(row[0]) && cleanText_(row[1]) && /^https:\/\//i.test(cleanText_(row[3])) && isSalesEnabled_(row[4]);
+    })
+    .map(function (row) {
+      return {
+        value: cleanText_(row[0]).toUpperCase(),
+        label: cleanText_(row[1]),
+        lineUrl: cleanText_(row[3]),
+      };
+    });
+}
+
+function isSalesEnabled_(value) {
+  return value === true || cleanText_(value).toUpperCase() === 'TRUE';
 }
 
 function findSubmissionById_(sheet, submissionId) {

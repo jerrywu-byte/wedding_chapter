@@ -47,8 +47,8 @@ test("Google Apps Script POST 使用 simple request 並保留可讀 JSON 回應"
   assert.match(gas, /ContentService\.MimeType\.JSON/);
 });
 
-test("前端只有業務代碼，不含業務 Email", () => {
-  assert.match(planners, /APRIL/);
+test("前端動態讀取業務代碼與 LINE，不含業務 Email", () => {
+  assert.match(planners, /loadSalesOptions/);
   assert.match(planners, /getBanquetPlannerCode/);
   assert.doesNotMatch(planners, /@denwell\.com/);
 });
