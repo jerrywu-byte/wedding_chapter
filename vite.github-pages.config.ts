@@ -35,6 +35,12 @@ export default defineConfig(() => {
       outDir: resolve(process.cwd(), "dist"),
       emptyOutDir: true,
       sourcemap: false,
+      rollupOptions: {
+        input: {
+          main: resolve(process.cwd(), "github-pages/index.html"),
+          followup: resolve(process.cwd(), "github-pages/followup/index.html"),
+        },
+      },
     },
   };
 });
