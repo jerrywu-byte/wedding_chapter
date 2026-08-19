@@ -452,7 +452,7 @@ function writeCaseFields_(rowNumber, input) {
           values: [[input.estimatedTables]],
         },
         {
-          range: quoteSheetRange_('P' + rowNumber + ':T' + rowNumber),
+          range: quoteSheetRange_('P' + rowNumber),
           majorDimension: 'ROWS',
           values: [[
             input.firstConsultation,

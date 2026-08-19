@@ -237,7 +237,7 @@ test("Apps Script manifest 僅增加 Sheets 必要寫入 scope", () => {
   assert.equal(manifest.dependencies.enabledAdvancedServices[0].serviceId, "sheets");
 });
 
-test("Follow-up server 只提供固定 M 與 P:T batch 更新", () => {
+test("Follow-up server 只提供固定 M 與 P 起始儲存格 batch 更新", () => {
   assert.doesNotMatch(
     serverSource,
     /SpreadsheetApp|appendRow|setValue|setValues|clearContent|deleteRow|insertRow|Values\.append/,
@@ -245,7 +245,8 @@ test("Follow-up server 只提供固定 M 與 P:T batch 更新", () => {
   assert.match(serverSource, /Sheets\.Spreadsheets\.Values\.batchGet/);
   assert.match(serverSource, /Sheets\.Spreadsheets\.Values\.batchUpdate/);
   assert.match(serverSource, /quoteSheetRange_\('M' \+ rowNumber\)/);
-  assert.match(serverSource, /quoteSheetRange_\('P' \+ rowNumber \+ ':T' \+ rowNumber\)/);
+  assert.match(serverSource, /quoteSheetRange_\('P' \+ rowNumber\)/);
+  assert.doesNotMatch(serverSource, /quoteSheetRange_\('[NO]' \+ rowNumber\)/);
 });
 
 test("所有正式資料函式都先驗證授權", () => {

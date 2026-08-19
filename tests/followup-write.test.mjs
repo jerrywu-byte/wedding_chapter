@@ -157,9 +157,9 @@ function createRuntime(options = {}) {
             const tableUpdate = resource.data[0];
             const caseUpdate = resource.data[1];
             const tableMatch = tableUpdate.range.match(/!M(\d+)$/);
-            const caseMatch = caseUpdate.range.match(/!P(\d+):T\1$/);
+            const caseMatch = caseUpdate.range.match(/!P(\d+)$/);
             assert.ok(tableMatch, `Table count range must be M on one row: ${tableUpdate.range}`);
-            assert.ok(caseMatch, `Case write range must be P:T on one row: ${caseUpdate.range}`);
+            assert.ok(caseMatch, `Case write range must start at P on one row: ${caseUpdate.range}`);
             assert.equal(tableMatch[1], caseMatch[1]);
 
             const rowIndex = Number(tableMatch[1]) - 2;
@@ -387,16 +387,31 @@ test("21 CONFLICT 完全不得寫入", () => {
   assert.notDeepEqual(state.rows[0], before);
 });
 
-test("22 update 以單次 batch request 寫入 M 與 P:T", () => {
+test("22 update 以單次 batch request 指定 M 與 P 起始儲存格", () => {
   const { context, state } = createRuntime();
-  context.updateCase(payloadFor(context, { firstConsultation: "更新" }));
+  context.updateCase(payloadFor(context, {
+    estimatedTables: "26",
+    firstConsultation: "P 值",
+    secondConsultation: "Q 值",
+    thirdConsultation: "R 值",
+    status: "已訂",
+    closedDate: "2026-08-20",
+  }));
   assert.equal(state.updateCalls, 1);
   assert.deepEqual(state.updates.map((update) => update.range), [
     "'新人資料'!M2",
-    "'新人資料'!P2:T2",
+    "'新人資料'!P2",
   ]);
-  assert.equal(state.updates[0].values.length, 1);
+  assert.deepEqual(Array.from(state.updates[0].values), ["26"]);
+  assert.deepEqual(Array.from(state.updates[1].values), [
+    "P 值",
+    "Q 值",
+    "R 值",
+    "已訂",
+    "2026-08-20",
+  ]);
   assert.equal(state.updates[1].values.length, 5);
+  assert.equal(state.updates.some((update) => /![NO]\d/.test(update.range)), false);
   assert.equal(state.updateObservedLock, true);
   assert.equal(state.lockWaitCalls, 1);
   assert.equal(state.lockReleaseCalls, 1);
@@ -416,7 +431,7 @@ test("23 A:L 與 N:O 永遠不被修改", () => {
   assert.deepEqual(state.rows[0].slice(13, 15), beforeNO);
   assert.equal(state.rows[0][12], "26");
   assert.match(serverSource, /quoteSheetRange_\('M' \+ rowNumber\)/);
-  assert.match(serverSource, /quoteSheetRange_\('P' \+ rowNumber \+ ':T' \+ rowNumber\)/);
+  assert.match(serverSource, /quoteSheetRange_\('P' \+ rowNumber\)/);
 });
 
 test("24 儲存成功回傳新版 revisionToken", () => {
