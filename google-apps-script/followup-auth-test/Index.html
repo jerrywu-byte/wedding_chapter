@@ -80,22 +80,22 @@
                 <div>
                   <span class="followup-field-label">目前狀態</span>
                   <div class="followup-status-options" role="radiogroup" aria-label="案件狀態">
-                    <button type="button" data-status="洽談中" role="radio" disabled><i></i>洽談中</button>
-                    <button type="button" data-status="已訂" role="radio" disabled><i></i>已訂</button>
-                    <button type="button" data-status="退訂" role="radio" disabled><i></i>退訂</button>
-                    <button type="button" data-status="流失" role="radio" disabled><i></i>流失</button>
+                    <button type="button" data-status="洽談中" role="radio"><i></i>洽談中</button>
+                    <button type="button" data-status="已訂" role="radio"><i></i>已訂</button>
+                    <button type="button" data-status="退訂" role="radio"><i></i>退訂</button>
+                    <button type="button" data-status="流失" role="radio"><i></i>流失</button>
                   </div>
                 </div>
                 <div id="closedDateField" class="followup-close-date">
-                  <span class="followup-field-label">結案日期</span>
-                  <p id="closedDate">—</p>
+                  <label for="closedDate" class="followup-field-label">結案日期</label>
+                  <input id="closedDate" type="date" autocomplete="off">
                 </div>
               </div>
             </section>
 
             <footer class="followup-actions">
-              <p>Phase 1B-2 唯讀模式｜目前不會修改任何資料</p>
-              <button type="button" disabled>儲存洽談紀錄</button>
+              <p id="saveState" role="status">僅儲存三次洽談、案件狀態與結案日期</p>
+              <button id="saveCase" type="button" disabled>儲存洽談紀錄</button>
             </footer>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import test from "node:test";
 import vm from "node:vm";
@@ -87,6 +88,7 @@ function createRuntime(options = {}) {
       FOLLOWUP_ALLOWED_DOMAIN: "company.example",
       FOLLOWUP_ALLOWED_EMAILS: "jerry@company.example, april@company.example",
       FOLLOWUP_SPREADSHEET_ID: "test-spreadsheet-id",
+      FOLLOWUP_IDENTITY_SECRET: "test-only-identity-secret-at-least-32-characters",
       ...(options.properties ?? {}),
     },
   };
@@ -113,6 +115,15 @@ function createRuntime(options = {}) {
     Session: {
       getActiveUser() {
         return { getEmail: () => state.email };
+      },
+    },
+    Utilities: {
+      Charset: { UTF_8: "UTF_8" },
+      computeHmacSha256Signature(value, secret) {
+        return Array.from(crypto.createHmac("sha256", secret).update(value).digest());
+      },
+      base64EncodeWebSafe(bytes) {
+        return Buffer.from(bytes).toString("base64url");
       },
     },
     Sheets: {
@@ -219,23 +230,27 @@ test("正式二十欄 header 不符時停止讀取", () => {
   assert.throws(() => context.listCases(""), /DATA_SCHEMA_ERROR/);
 });
 
-test("Apps Script manifest 僅授予 Sheets 唯讀 scope", () => {
-  assert.ok(manifest.oauthScopes.includes("https://www.googleapis.com/auth/spreadsheets.readonly"));
-  assert.equal(manifest.oauthScopes.includes("https://www.googleapis.com/auth/spreadsheets"), false);
+test("Apps Script manifest 僅增加 Sheets 必要寫入 scope", () => {
+  assert.ok(manifest.oauthScopes.includes("https://www.googleapis.com/auth/spreadsheets"));
+  assert.equal(manifest.oauthScopes.includes("https://www.googleapis.com/auth/spreadsheets.readonly"), false);
+  assert.equal(manifest.oauthScopes.some((scope) => scope.includes("drive")), false);
   assert.equal(manifest.dependencies.enabledAdvancedServices[0].serviceId, "sheets");
 });
 
-test("Follow-up server 不提供任何 Sheet 寫入 API", () => {
+test("Follow-up server 只提供固定 P:T 單次更新", () => {
   assert.doesNotMatch(
     serverSource,
-    /SpreadsheetApp|appendRow|setValue|setValues|clearContent|deleteRow|insertRow|batchUpdate|Values\.update|Values\.append/,
+    /SpreadsheetApp|appendRow|setValue|setValues|clearContent|deleteRow|insertRow|batchUpdate|Values\.append/,
   );
   assert.match(serverSource, /Sheets\.Spreadsheets\.Values\.batchGet/);
+  assert.match(serverSource, /Sheets\.Spreadsheets\.Values\.update/);
+  assert.match(serverSource, /quoteSheetRange_\('P' \+ rowNumber \+ ':T' \+ rowNumber\)/);
 });
 
 test("所有正式資料函式都先驗證授權", () => {
   assert.match(serverSource, /function listCases\(query\) \{\s*requireAuthorizedUser_\(\);/);
   assert.match(serverSource, /function getCase\(serialNumber\) \{\s*requireAuthorizedUser_\(\);/);
+  assert.match(serverSource, /function updateCase\(payload\) \{\s*requireAuthorizedUser_\(\);/);
 });
 
 test("HTML 不含正式新人資料、duplicateKey 或 Spreadsheet ID", () => {
@@ -251,15 +266,17 @@ test("UI 統一顯示訪客編號且不出現舊稱", () => {
   assert.doesNotMatch(userVisibleSource, /流水/);
 });
 
-test("唯讀 UI 保留 loading、empty、error 與洽談狀態", () => {
+test("可編輯 UI 保留 loading、empty、error 與洽談狀態", () => {
   assert.match(indexHtml, /正在載入新人案件…/);
   assert.match(clientHtml, /目前沒有新人案件/);
   assert.match(clientHtml, /找不到符合條件的新人/);
   assert.match(clientHtml, /找不到這筆新人資料/);
   assert.match(clientHtml, /案件資料異常，請聯絡管理人員/);
   assert.match(clientHtml, /尚未建立洽談紀錄/);
-  assert.match(clientHtml, /textarea\.readOnly = true/);
-  assert.match(indexHtml, /data-status="洽談中"[^>]*disabled/);
+  assert.doesNotMatch(clientHtml, /textarea\.readOnly = true/);
+  assert.match(clientHtml, /textarea\.maxLength = 5000/);
+  assert.match(indexHtml, /id="saveCase"[^>]*disabled/);
+  assert.match(indexHtml, /id="closedDate" type="date"/);
 });
 
 test("公開 Follow-up route 已停用 mock 並只導向受保護 Web App", () => {

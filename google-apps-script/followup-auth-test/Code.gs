@@ -1,21 +1,37 @@
 /**
- * Wedding Chapter — Follow-up read-only web app (Phase 1B-2)
+ * Wedding Chapter — Follow-up authenticated case editor (Phase 1C)
  *
  * Required Script Properties:
  *   FOLLOWUP_ALLOWED_DOMAIN
  *   FOLLOWUP_ALLOWED_EMAILS
  *   FOLLOWUP_SPREADSHEET_ID
+ *   FOLLOWUP_IDENTITY_SECRET
  *
- * This project intentionally exposes no Sheet write function.
+ * Columns A:O remain read-only. The only write operation replaces P:T in one
+ * request after authorization, identity, revision, and validation checks.
  */
 
 const FOLLOWUP_SHEET_NAME_ = '新人資料';
 const FOLLOWUP_MAX_LIST_RESULTS_ = 100;
+const FOLLOWUP_MAX_CONSULTATION_LENGTH_ = 5000;
+const FOLLOWUP_LOCK_TIMEOUT_MS_ = 30000;
+const FOLLOWUP_ALLOWED_STATUSES_ = Object.freeze(['洽談中', '已訂', '退訂', '流失']);
+const FOLLOWUP_UPDATE_FIELDS_ = Object.freeze([
+  'serialNumber',
+  'identityToken',
+  'revisionToken',
+  'firstConsultation',
+  'secondConsultation',
+  'thirdConsultation',
+  'status',
+  'closedDate',
+]);
 
 const AUTH_PROPERTY_KEYS_ = Object.freeze({
   allowedDomain: 'FOLLOWUP_ALLOWED_DOMAIN',
   allowedEmails: 'FOLLOWUP_ALLOWED_EMAILS',
   spreadsheetId: 'FOLLOWUP_SPREADSHEET_ID',
+  identitySecret: 'FOLLOWUP_IDENTITY_SECRET',
 });
 
 const FOLLOWUP_EXPECTED_HEADERS_ = Object.freeze([
@@ -44,6 +60,7 @@ const FOLLOWUP_EXPECTED_HEADERS_ = Object.freeze([
 const FOLLOWUP_COLUMNS_ = Object.freeze({
   serialNumber: 0,
   submittedAt: 1,
+  duplicateKey: 2,
   groomName: 3,
   groomPhone: 4,
   brideName: 5,
@@ -119,14 +136,70 @@ function getCase(serialNumber) {
   if (!target) throw new Error('NOT_FOUND');
 
   const rows = readDetailRows_();
-  const matches = rows.filter(function (row) {
-    return normalizeSerialNumber_(row[FOLLOWUP_COLUMNS_.serialNumber]) === target;
-  });
+  const located = locateCaseBySerial_(rows, target);
+  const secret = requireIdentitySecret_();
 
-  if (matches.length === 0) throw new Error('NOT_FOUND');
-  if (matches.length > 1) throw new Error('DATA_INTEGRITY_ERROR');
+  validateDuplicateKeyUniqueness_(rows, located.row);
+  return mapCaseDetail_(located.row, secret);
+}
 
-  return mapCaseDetail_(matches[0]);
+/**
+ * Safely replaces only P:T for one case.
+ *
+ * @param {Object} payload
+ * @return {Object}
+ */
+function updateCase(payload) {
+  requireAuthorizedUser_();
+  validateUpdatePayloadShape_(payload);
+
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(FOLLOWUP_LOCK_TIMEOUT_MS_);
+  } catch (error) {
+    throw new Error('LOCK_TIMEOUT');
+  }
+
+  try {
+    const input = normalizeUpdatePayload_(payload);
+    const rows = readDetailRows_();
+    const secret = requireIdentitySecret_();
+    const serialMatch = locateCaseBySerial_(rows, input.serialNumber);
+    const identityMatch = locateCaseByIdentityToken_(rows, input.identityToken, secret);
+
+    if (serialMatch.index !== identityMatch.index) {
+      throw new Error('DATA_INTEGRITY_ERROR');
+    }
+
+    validateDuplicateKeyUniqueness_(rows, serialMatch.row);
+
+    const currentRevisionToken = createRevisionToken_(serialMatch.row, secret);
+    if (currentRevisionToken !== input.revisionToken) {
+      throw new Error('CONFLICT');
+    }
+
+    const updatedRow = serialMatch.row.slice();
+    updatedRow[FOLLOWUP_COLUMNS_.firstConsultation] = input.firstConsultation;
+    updatedRow[FOLLOWUP_COLUMNS_.secondConsultation] = input.secondConsultation;
+    updatedRow[FOLLOWUP_COLUMNS_.thirdConsultation] = input.thirdConsultation;
+    updatedRow[FOLLOWUP_COLUMNS_.status] = input.status;
+    updatedRow[FOLLOWUP_COLUMNS_.closedDate] = input.closedDate;
+
+    writeCaseFields_(serialMatch.rowNumber, input);
+
+    return {
+      serialNumber: input.serialNumber,
+      identityToken: input.identityToken,
+      revisionToken: createRevisionToken_(updatedRow, secret),
+      firstConsultation: input.firstConsultation,
+      secondConsultation: input.secondConsultation,
+      thirdConsultation: input.thirdConsultation,
+      status: input.status,
+      closedDate: input.closedDate,
+    };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 /**
@@ -235,7 +308,7 @@ function mapCaseSummary_(row) {
   };
 }
 
-function mapCaseDetail_(row) {
+function mapCaseDetail_(row, secret) {
   return {
     serialNumber: cleanText_(row[FOLLOWUP_COLUMNS_.serialNumber]),
     submittedAt: cleanText_(row[FOLLOWUP_COLUMNS_.submittedAt]),
@@ -255,8 +328,162 @@ function mapCaseDetail_(row) {
     secondConsultation: cleanText_(row[FOLLOWUP_COLUMNS_.secondConsultation]),
     thirdConsultation: cleanText_(row[FOLLOWUP_COLUMNS_.thirdConsultation]),
     status: normalizeStatus_(row[FOLLOWUP_COLUMNS_.status]),
-    closedDate: cleanText_(row[FOLLOWUP_COLUMNS_.closedDate]),
+    closedDate: normalizeStoredDate_(row[FOLLOWUP_COLUMNS_.closedDate]),
+    identityToken: createIdentityToken_(row[FOLLOWUP_COLUMNS_.duplicateKey], secret),
+    revisionToken: createRevisionToken_(row, secret),
   };
+}
+
+function locateCaseBySerial_(rows, serialNumber) {
+  const target = normalizeSerialNumber_(serialNumber);
+  const matches = [];
+
+  rows.forEach(function (row, index) {
+    if (normalizeSerialNumber_(row[FOLLOWUP_COLUMNS_.serialNumber]) === target) {
+      matches.push({ row: row, index: index, rowNumber: index + 2 });
+    }
+  });
+
+  if (matches.length === 0) throw new Error('NOT_FOUND');
+  if (matches.length > 1) throw new Error('DATA_INTEGRITY_ERROR');
+  return matches[0];
+}
+
+function locateCaseByIdentityToken_(rows, identityToken, secret) {
+  const matches = [];
+
+  rows.forEach(function (row, index) {
+    const duplicateKey = cleanText_(row[FOLLOWUP_COLUMNS_.duplicateKey]);
+    if (!duplicateKey) return;
+    if (createIdentityToken_(duplicateKey, secret) === identityToken) {
+      matches.push({ row: row, index: index, rowNumber: index + 2 });
+    }
+  });
+
+  if (matches.length === 0) throw new Error('NOT_FOUND');
+  if (matches.length > 1) throw new Error('DATA_INTEGRITY_ERROR');
+  return matches[0];
+}
+
+function validateDuplicateKeyUniqueness_(rows, targetRow) {
+  const duplicateKey = cleanText_(targetRow[FOLLOWUP_COLUMNS_.duplicateKey]);
+  if (!duplicateKey) throw new Error('NOT_FOUND');
+
+  const matches = rows.filter(function (row) {
+    return cleanText_(row[FOLLOWUP_COLUMNS_.duplicateKey]) === duplicateKey;
+  });
+
+  if (matches.length > 1) throw new Error('DATA_INTEGRITY_ERROR');
+}
+
+function validateUpdatePayloadShape_(payload) {
+  if (!payload || Object.prototype.toString.call(payload) !== '[object Object]') {
+    throw new Error('VALIDATION_ERROR');
+  }
+
+  const keys = Object.keys(payload);
+  const hasUnknownField = keys.some(function (key) {
+    return FOLLOWUP_UPDATE_FIELDS_.indexOf(key) === -1;
+  });
+  const hasMissingField = FOLLOWUP_UPDATE_FIELDS_.some(function (key) {
+    return !Object.prototype.hasOwnProperty.call(payload, key);
+  });
+
+  if (hasUnknownField || hasMissingField || keys.length !== FOLLOWUP_UPDATE_FIELDS_.length) {
+    throw new Error('VALIDATION_ERROR');
+  }
+}
+
+function normalizeUpdatePayload_(payload) {
+  FOLLOWUP_UPDATE_FIELDS_.forEach(function (key) {
+    if (typeof payload[key] !== 'string') throw new Error('VALIDATION_ERROR');
+  });
+
+  const input = {
+    serialNumber: normalizeSerialNumber_(payload.serialNumber),
+    identityToken: cleanText_(payload.identityToken),
+    revisionToken: cleanText_(payload.revisionToken),
+    firstConsultation: normalizeConsultationText_(payload.firstConsultation),
+    secondConsultation: normalizeConsultationText_(payload.secondConsultation),
+    thirdConsultation: normalizeConsultationText_(payload.thirdConsultation),
+    status: cleanText_(payload.status),
+    closedDate: cleanText_(payload.closedDate),
+  };
+
+  if (!input.serialNumber || !isSecureToken_(input.identityToken) || !isSecureToken_(input.revisionToken)) {
+    throw new Error('VALIDATION_ERROR');
+  }
+
+  [input.firstConsultation, input.secondConsultation, input.thirdConsultation]
+    .forEach(function (value) {
+      if (value.length > FOLLOWUP_MAX_CONSULTATION_LENGTH_) {
+        throw new Error('VALIDATION_ERROR');
+      }
+    });
+
+  if (FOLLOWUP_ALLOWED_STATUSES_.indexOf(input.status) === -1) {
+    throw new Error('VALIDATION_ERROR');
+  }
+
+  if (input.status === '洽談中') {
+    if (input.closedDate) throw new Error('VALIDATION_ERROR');
+  } else {
+    if (!isValidIsoDate_(input.closedDate)) throw new Error('VALIDATION_ERROR');
+  }
+
+  return input;
+}
+
+function writeCaseFields_(rowNumber, input) {
+  const spreadsheetId = requireSpreadsheetId_();
+  const range = quoteSheetRange_('P' + rowNumber + ':T' + rowNumber);
+
+  Sheets.Spreadsheets.Values.update(
+    {
+      majorDimension: 'ROWS',
+      values: [[
+        input.firstConsultation,
+        input.secondConsultation,
+        input.thirdConsultation,
+        input.status,
+        input.closedDate,
+      ]],
+    },
+    spreadsheetId,
+    range,
+    {
+      valueInputOption: 'USER_ENTERED',
+      includeValuesInResponse: false,
+    }
+  );
+}
+
+function createIdentityToken_(duplicateKey, secret) {
+  const value = cleanText_(duplicateKey);
+  if (!value) throw new Error('NOT_FOUND');
+  return createHmacToken_('identity\n' + value, secret);
+}
+
+function createRevisionToken_(row, secret) {
+  const revisionValues = [
+    normalizeSerialNumber_(row[FOLLOWUP_COLUMNS_.serialNumber]),
+    cleanText_(row[FOLLOWUP_COLUMNS_.duplicateKey]),
+    normalizeConsultationText_(row[FOLLOWUP_COLUMNS_.firstConsultation]),
+    normalizeConsultationText_(row[FOLLOWUP_COLUMNS_.secondConsultation]),
+    normalizeConsultationText_(row[FOLLOWUP_COLUMNS_.thirdConsultation]),
+    normalizeStatus_(row[FOLLOWUP_COLUMNS_.status]),
+    normalizeStoredDate_(row[FOLLOWUP_COLUMNS_.closedDate]),
+  ];
+  return createHmacToken_('revision\n' + JSON.stringify(revisionValues), secret);
+}
+
+function createHmacToken_(value, secret) {
+  const signature = Utilities.computeHmacSha256Signature(
+    value,
+    secret,
+    Utilities.Charset.UTF_8
+  );
+  return Utilities.base64EncodeWebSafe(signature).replace(/=+$/, '');
 }
 
 function rowMatchesQuery_(row, query) {
@@ -286,6 +513,14 @@ function requireSpreadsheetId_() {
   return spreadsheetId;
 }
 
+function requireIdentitySecret_() {
+  const secret = cleanText_(
+    PropertiesService.getScriptProperties().getProperty(AUTH_PROPERTY_KEYS_.identitySecret)
+  );
+  if (secret.length < 32) throw new Error('DATA_CONFIGURATION_ERROR');
+  return secret;
+}
+
 function quoteSheetRange_(range) {
   return "'" + FOLLOWUP_SHEET_NAME_.replace(/'/g, "''") + "'!" + range;
 }
@@ -306,6 +541,44 @@ function padRow_(row, length) {
 
 function normalizeStatus_(value) {
   return cleanText_(value) || '洽談中';
+}
+
+function normalizeConsultationText_(value) {
+  return String(value === null || value === undefined ? '' : value)
+    .replace(/\r\n?/g, '\n')
+    .trim();
+}
+
+function normalizeStoredDate_(value) {
+  const text = cleanText_(value);
+  if (!text) return '';
+
+  const match = text.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
+  if (!match) return text;
+
+  const normalized = [
+    match[1],
+    String(Number(match[2])).padStart(2, '0'),
+    String(Number(match[3])).padStart(2, '0'),
+  ].join('-');
+  return isValidIsoDate_(normalized) ? normalized : text;
+}
+
+function isValidIsoDate_(value) {
+  const match = cleanText_(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return false;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (year < 1000 || month < 1 || month > 12 || day < 1) return false;
+
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  return day <= daysInMonth;
+}
+
+function isSecureToken_(value) {
+  return /^[A-Za-z0-9_-]{40,}$/.test(cleanText_(value));
 }
 
 function parseBoolean_(value) {

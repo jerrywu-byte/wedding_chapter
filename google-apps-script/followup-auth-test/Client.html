@@ -3,6 +3,10 @@
     'use strict';
 
     const AUTH_MESSAGE = '您目前使用的 Google 帳號沒有 Follow-up 系統存取權限。';
+    const DIRTY_MESSAGE = '目前有尚未儲存的修改，確定要離開嗎？';
+    const REOPEN_MESSAGE = '重新開啟案件將清除原結案日期。';
+    const DEFAULT_SAVE_MESSAGE = '僅儲存三次洽談、案件狀態與結案日期';
+    const CLOSED_STATUSES = ['已訂', '退訂', '流失'];
     const STATUS_CLASS = {
       '洽談中': 'status-negotiating',
       '已訂': 'status-booked',
@@ -30,28 +34,72 @@
       closingGrid: document.getElementById('closingGrid'),
       closedDateField: document.getElementById('closedDateField'),
       closedDate: document.getElementById('closedDate'),
+      saveState: document.getElementById('saveState'),
+      saveCase: document.getElementById('saveCase'),
       statusButtons: Array.from(document.querySelectorAll('[data-status]')),
     };
 
     let cases = [];
     let selectedSerialNumber = '';
+    let currentCase = null;
+    let baseline = null;
+    let consultationInputs = {};
     let searchTimer = 0;
     let listRequestId = 0;
     let detailRequestId = 0;
+    let lastLoadedQuery = '';
+    let isSaving = false;
 
     elements.search.addEventListener('input', function () {
       window.clearTimeout(searchTimer);
       searchTimer = window.setTimeout(function () {
-        loadCases(elements.search.value);
+        const nextQuery = elements.search.value;
+        if (!confirmDiscardChanges_()) {
+          elements.search.value = lastLoadedQuery;
+          return;
+        }
+        loadCases(nextQuery);
       }, 300);
     });
 
     elements.back.addEventListener('click', function () {
+      if (!confirmDiscardChanges_()) return;
+      discardCurrentChanges_();
       elements.shell.classList.remove('followup-shell--detail');
+    });
+
+    elements.statusButtons.forEach(function (button) {
+      button.addEventListener('click', function () {
+        if (!currentCase || isSaving) return;
+
+        const nextStatus = button.dataset.status;
+        const currentStatus = getSelectedStatus_();
+        if (
+          nextStatus === '洽談中' &&
+          CLOSED_STATUSES.indexOf(currentStatus) !== -1 &&
+          !window.confirm(REOPEN_MESSAGE)
+        ) {
+          return;
+        }
+
+        if (nextStatus === '洽談中') elements.closedDate.value = '';
+        applyStatusVisual_(nextStatus);
+        handleEditorInput_();
+      });
+    });
+
+    elements.closedDate.addEventListener('input', handleEditorInput_);
+    elements.saveCase.addEventListener('click', saveCase_);
+
+    window.addEventListener('beforeunload', function (event) {
+      if (!isDirty_()) return;
+      event.preventDefault();
+      event.returnValue = '';
     });
 
     function loadCases(query) {
       const requestId = ++listRequestId;
+      lastLoadedQuery = String(query || '');
       setListState('正在載入新人案件…');
       elements.count.textContent = '—';
 
@@ -64,6 +112,8 @@
         .withFailureHandler(function (error) {
           if (requestId !== listRequestId) return;
           cases = [];
+          currentCase = null;
+          baseline = null;
           elements.list.replaceChildren();
           elements.count.textContent = '0 筆';
           setListState(messageForFailure_(error, '無法載入新人案件，請稍後再試。'));
@@ -82,6 +132,8 @@
           : '目前沒有新人案件';
         setListState(emptyMessage);
         selectedSerialNumber = '';
+        currentCase = null;
+        baseline = null;
         showDetailState(emptyMessage);
         return;
       }
@@ -101,6 +153,11 @@
         button.setAttribute('role', 'listitem');
         button.setAttribute('aria-current', item.serialNumber === selectedSerialNumber ? 'true' : 'false');
         button.addEventListener('click', function () {
+          if (item.serialNumber === selectedSerialNumber && currentCase) {
+            elements.shell.classList.add('followup-shell--detail');
+            return;
+          }
+          if (item.serialNumber !== selectedSerialNumber && !confirmDiscardChanges_()) return;
           selectedSerialNumber = item.serialNumber;
           elements.shell.classList.add('followup-shell--detail');
           renderCaseListSelection();
@@ -154,17 +211,26 @@
         })
         .withFailureHandler(function (error) {
           if (requestId !== detailRequestId) return;
+          currentCase = null;
+          baseline = null;
           showDetailState(messageForFailure_(error, '無法載入這筆新人資料，請稍後再試。'));
         })
         .getCase(serialNumber);
     }
 
     function renderCaseDetail(caseData) {
-      if (!caseData || !caseData.serialNumber) {
-        showDetailState('找不到這筆新人資料');
+      if (
+        !caseData ||
+        !caseData.serialNumber ||
+        !caseData.identityToken ||
+        !caseData.revisionToken
+      ) {
+        showDetailState('案件資料異常，請聯絡管理人員');
         return;
       }
 
+      currentCase = Object.assign({}, caseData);
+      isSaving = false;
       elements.detailState.hidden = true;
       elements.detailContent.hidden = false;
       elements.groomName.textContent = displayValue_(caseData.groomName);
@@ -172,9 +238,6 @@
       elements.caseNumber.textContent = '訪客編號 ' + caseData.serialNumber;
 
       const status = displayValue_(caseData.status);
-      elements.statusBadge.className = 'followup-status-badge ' + statusClass_(status);
-      elements.statusBadge.textContent = status;
-
       const weddingDate = caseData.dateUndecided ? '日期未定' : displayValue_(caseData.weddingDate);
       const estimatedTables = caseData.estimatedTables
         ? caseData.estimatedTables + (String(caseData.estimatedTables).includes('桌') ? '' : ' 桌')
@@ -194,7 +257,12 @@
       ]);
 
       renderConsultations_(caseData);
-      renderStatus_(status, caseData.closedDate);
+      elements.closedDate.value = normalizeDateForInput_(caseData.closedDate);
+      applyStatusVisual_(status);
+      baseline = editableSnapshot_(caseData);
+      setEditorDisabled_(false);
+      setSaveMessage_(DEFAULT_SAVE_MESSAGE, '');
+      updateSaveButton_();
     }
 
     function renderBasicInformation_(items) {
@@ -212,9 +280,10 @@
 
     function renderConsultations_(caseData) {
       elements.consultations.replaceChildren();
+      consultationInputs = {};
 
       CONSULTATION_KEYS.forEach(function (key, index) {
-        const content = String(caseData[key] || '').trim();
+        const content = normalizeConsultation_(caseData[key]);
         const details = document.createElement('details');
         details.open = index === 0;
 
@@ -225,15 +294,14 @@
 
         const meta = document.createElement('span');
         meta.className = 'followup-consultation-meta';
-        if (content) {
-          const badge = document.createElement('span');
-          badge.className = 'followup-filled-badge';
-          badge.textContent = '已填寫';
-          meta.append(badge);
-        }
+        const badge = document.createElement('span');
+        badge.className = 'followup-filled-badge';
+        badge.dataset.consultationBadge = key;
+        badge.textContent = '已填寫';
+        badge.hidden = !content;
         const arrow = document.createElement('i');
         arrow.setAttribute('aria-hidden', 'true');
-        meta.append(arrow);
+        meta.append(badge, arrow);
         summary.append(title, meta);
 
         const fields = document.createElement('div');
@@ -242,10 +310,15 @@
         const labelText = document.createElement('span');
         labelText.textContent = '洽談內容';
         const textarea = document.createElement('textarea');
-        textarea.readOnly = true;
         textarea.rows = 3;
+        textarea.maxLength = 5000;
         textarea.value = content;
         textarea.placeholder = '尚未建立洽談紀錄';
+        textarea.addEventListener('input', function () {
+          badge.hidden = !normalizeConsultation_(textarea.value);
+          handleEditorInput_();
+        });
+        consultationInputs[key] = textarea;
         label.append(labelText, textarea);
         fields.append(label);
 
@@ -254,7 +327,9 @@
       });
     }
 
-    function renderStatus_(status, closedDate) {
+    function applyStatusVisual_(status) {
+      elements.statusBadge.className = 'followup-status-badge ' + statusClass_(status);
+      elements.statusBadge.textContent = status;
       elements.statusButtons.forEach(function (button) {
         const active = button.dataset.status === status;
         button.classList.toggle('is-active', active);
@@ -264,7 +339,135 @@
       const isNegotiating = status === '洽談中';
       elements.closingGrid.classList.toggle('followup-closing-grid--single', isNegotiating);
       elements.closedDateField.hidden = isNegotiating;
-      elements.closedDate.textContent = closedDate ? String(closedDate) : '—';
+    }
+
+    function saveCase_() {
+      if (!currentCase || !isDirty_() || isSaving) return;
+
+      const values = getEditorValues_();
+      if (
+        (values.status === '洽談中' && values.closedDate) ||
+        (CLOSED_STATUSES.indexOf(values.status) !== -1 && !values.closedDate)
+      ) {
+        setSaveMessage_('請確認案件狀態與結案日期是否正確。', 'error');
+        return;
+      }
+
+      const payload = {
+        serialNumber: currentCase.serialNumber,
+        identityToken: currentCase.identityToken,
+        revisionToken: currentCase.revisionToken,
+        firstConsultation: values.firstConsultation,
+        secondConsultation: values.secondConsultation,
+        thirdConsultation: values.thirdConsultation,
+        status: values.status,
+        closedDate: values.closedDate,
+      };
+
+      isSaving = true;
+      setEditorDisabled_(true);
+      elements.saveCase.disabled = true;
+      elements.saveCase.textContent = '儲存中…';
+      setSaveMessage_('正在安全儲存這筆案件…', '');
+
+      google.script.run
+        .withSuccessHandler(function (result) {
+          currentCase = Object.assign({}, currentCase, result);
+          updateCaseSummary_(result);
+          renderCaseDetail(currentCase);
+          setSaveMessage_('已儲存', 'success');
+        })
+        .withFailureHandler(function (error) {
+          isSaving = false;
+          setEditorDisabled_(false);
+          elements.saveCase.textContent = '儲存洽談紀錄';
+          updateSaveButton_();
+          setSaveMessage_(saveMessageForFailure_(error), 'error');
+        })
+        .updateCase(payload);
+    }
+
+    function updateCaseSummary_(result) {
+      cases = cases.map(function (item) {
+        if (item.serialNumber !== result.serialNumber) return item;
+        return Object.assign({}, item, { status: result.status });
+      });
+
+      Array.from(elements.list.querySelectorAll('.followup-case')).forEach(function (button, index) {
+        const item = cases[index];
+        if (!item) return;
+        const badge = button.querySelector('.followup-status-dot');
+        if (!badge) return;
+        badge.className = 'followup-status-dot ' + statusClass_(item.status);
+        badge.textContent = item.status;
+      });
+    }
+
+    function handleEditorInput_() {
+      const dirty = isDirty_();
+      setSaveMessage_(dirty ? '目前有尚未儲存的修改' : DEFAULT_SAVE_MESSAGE, '');
+      updateSaveButton_();
+    }
+
+    function getEditorValues_() {
+      return {
+        firstConsultation: normalizeConsultation_(consultationInputs.firstConsultation.value),
+        secondConsultation: normalizeConsultation_(consultationInputs.secondConsultation.value),
+        thirdConsultation: normalizeConsultation_(consultationInputs.thirdConsultation.value),
+        status: getSelectedStatus_(),
+        closedDate: elements.closedDate.value,
+      };
+    }
+
+    function editableSnapshot_(caseData) {
+      return {
+        firstConsultation: normalizeConsultation_(caseData.firstConsultation),
+        secondConsultation: normalizeConsultation_(caseData.secondConsultation),
+        thirdConsultation: normalizeConsultation_(caseData.thirdConsultation),
+        status: String(caseData.status || '洽談中').trim(),
+        closedDate: normalizeDateForInput_(caseData.closedDate),
+      };
+    }
+
+    function getSelectedStatus_() {
+      const active = elements.statusButtons.find(function (button) {
+        return button.classList.contains('is-active');
+      });
+      return active ? active.dataset.status : '';
+    }
+
+    function isDirty_() {
+      if (!currentCase || !baseline || !consultationInputs.firstConsultation) return false;
+      return JSON.stringify(getEditorValues_()) !== JSON.stringify(baseline);
+    }
+
+    function confirmDiscardChanges_() {
+      return !isDirty_() || window.confirm(DIRTY_MESSAGE);
+    }
+
+    function discardCurrentChanges_() {
+      if (currentCase && baseline) renderCaseDetail(currentCase);
+    }
+
+    function setEditorDisabled_(disabled) {
+      Object.keys(consultationInputs).forEach(function (key) {
+        consultationInputs[key].disabled = disabled;
+      });
+      elements.statusButtons.forEach(function (button) {
+        button.disabled = disabled;
+      });
+      elements.closedDate.disabled = disabled;
+    }
+
+    function updateSaveButton_() {
+      elements.saveCase.disabled = isSaving || !isDirty_();
+      if (!isSaving) elements.saveCase.textContent = '儲存洽談紀錄';
+    }
+
+    function setSaveMessage_(message, type) {
+      elements.saveState.textContent = message;
+      elements.saveState.classList.toggle('is-success', type === 'success');
+      elements.saveState.classList.toggle('is-error', type === 'error');
     }
 
     function setListState(message) {
@@ -292,6 +495,22 @@
       return fallback;
     }
 
+    function saveMessageForFailure_(error) {
+      const code = String(error && error.message ? error.message : '');
+      if (code.includes('AUTH_')) return AUTH_MESSAGE;
+      if (code.includes('CONFLICT')) {
+        return '此案件已被其他人更新，請重新載入最新資料後再編輯。';
+      }
+      if (code.includes('NOT_FOUND')) return '找不到這筆新人資料';
+      if (code.includes('DATA_INTEGRITY_ERROR') || code.includes('DATA_SCHEMA_ERROR')) {
+        return '案件資料異常，請聯絡管理人員';
+      }
+      if (code.includes('VALIDATION_ERROR')) {
+        return '請確認洽談內容、案件狀態與結案日期是否正確。';
+      }
+      return '儲存失敗，請稍後再試。';
+    }
+
     function statusClass_(status) {
       return STATUS_CLASS[status] || 'status-negotiating';
     }
@@ -299,6 +518,21 @@
     function displayValue_(value) {
       const text = String(value || '').trim();
       return text || '—';
+    }
+
+    function normalizeConsultation_(value) {
+      return String(value || '').replace(/\r\n?/g, '\n').trim();
+    }
+
+    function normalizeDateForInput_(value) {
+      const text = String(value || '').trim();
+      const match = text.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
+      if (!match) return '';
+      return [
+        match[1],
+        String(Number(match[2])).padStart(2, '0'),
+        String(Number(match[3])).padStart(2, '0'),
+      ].join('-');
     }
 
     loadCases('');
