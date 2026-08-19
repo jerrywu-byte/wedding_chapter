@@ -175,6 +175,16 @@
     margin: 0; overflow-wrap: anywhere; font-family: var(--followup-font-sans);
     font-size: 14px; font-weight: 500; line-height: 1.55; letter-spacing: .01em;
   }
+  .followup-basic-grid dd input[type="number"] {
+    width: 100%; min-width: 0; height: 30px; padding: 3px 8px;
+    border: 1px solid #d8c7ad; border-radius: 7px; outline: none;
+    background: rgba(255,255,255,.72); color: var(--followup-ink);
+    font-family: var(--followup-font-sans); font-size: 14px; font-weight: 600;
+    line-height: 1.4; letter-spacing: .01em;
+  }
+  .followup-basic-grid dd input[type="number"]:focus {
+    border-color: var(--followup-gold); box-shadow: 0 0 0 2px rgba(161,126,73,.12);
+  }
   .followup-consultations { display: grid; gap: 8px; }
   .followup-consultations details {
     min-width: 0; border: 1px solid var(--followup-line); border-radius: 14px;

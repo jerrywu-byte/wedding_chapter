@@ -5,7 +5,7 @@
     const AUTH_MESSAGE = '您目前使用的 Google 帳號沒有 Follow-up 系統存取權限。';
     const DIRTY_MESSAGE = '目前有尚未儲存的修改，確定要離開嗎？';
     const REOPEN_MESSAGE = '重新開啟案件將清除原結案日期。';
-    const DEFAULT_SAVE_MESSAGE = '僅儲存三次洽談、案件狀態與結案日期';
+    const DEFAULT_SAVE_MESSAGE = '儲存桌數、三次洽談、案件狀態與結案日期';
     const CLOSED_STATUSES = ['已訂', '退訂', '流失'];
     const STATUS_CLASS = {
       '洽談中': 'status-negotiating',
@@ -43,6 +43,7 @@
     let selectedSerialNumber = '';
     let currentCase = null;
     let baseline = null;
+    let estimatedTablesInput = null;
     let consultationInputs = {};
     let searchTimer = 0;
     let listRequestId = 0;
@@ -239,15 +240,12 @@
 
       const status = displayValue_(caseData.status);
       const weddingDate = caseData.dateUndecided ? '日期未定' : displayValue_(caseData.weddingDate);
-      const estimatedTables = caseData.estimatedTables
-        ? caseData.estimatedTables + (String(caseData.estimatedTables).includes('桌') ? '' : ' 桌')
-        : '—';
       const salesName = caseData.salesName || caseData.salesCode || '—';
 
       renderBasicInformation_([
         ['婚宴日期', weddingDate],
         ['宴別', displayValue_(caseData.banquetSession)],
-        ['桌數', estimatedTables],
+        ['桌數', String(caseData.estimatedTables || ''), 'number'],
         ['接待業務', salesName],
         ['新郎姓名', displayValue_(caseData.groomName)],
         ['新郎電話', displayValue_(caseData.groomPhone)],
@@ -272,7 +270,21 @@
         const term = document.createElement('dt');
         const description = document.createElement('dd');
         term.textContent = item[0];
-        description.textContent = item[1];
+        if (item[2] === 'number') {
+          const input = document.createElement('input');
+          input.type = 'number';
+          input.min = '1';
+          input.max = '200';
+          input.step = '1';
+          input.inputMode = 'numeric';
+          input.value = item[1];
+          input.setAttribute('aria-label', item[0]);
+          input.addEventListener('input', handleEditorInput_);
+          estimatedTablesInput = input;
+          description.append(input);
+        } else {
+          description.textContent = item[1];
+        }
         wrapper.append(term, description);
         elements.basicInformation.append(wrapper);
       });
@@ -345,6 +357,10 @@
       if (!currentCase || !isDirty_() || isSaving) return;
 
       const values = getEditorValues_();
+      if (!isValidEstimatedTables_(values.estimatedTables)) {
+        setSaveMessage_('請輸入正確桌數。', 'error');
+        return;
+      }
       if (
         (values.status === '洽談中' && values.closedDate) ||
         (CLOSED_STATUSES.indexOf(values.status) !== -1 && !values.closedDate)
@@ -357,6 +373,7 @@
         serialNumber: currentCase.serialNumber,
         identityToken: currentCase.identityToken,
         revisionToken: currentCase.revisionToken,
+        estimatedTables: values.estimatedTables,
         firstConsultation: values.firstConsultation,
         secondConsultation: values.secondConsultation,
         thirdConsultation: values.thirdConsultation,
@@ -390,7 +407,10 @@
     function updateCaseSummary_(result) {
       cases = cases.map(function (item) {
         if (item.serialNumber !== result.serialNumber) return item;
-        return Object.assign({}, item, { status: result.status });
+        return Object.assign({}, item, {
+          estimatedTables: result.estimatedTables,
+          status: result.status,
+        });
       });
 
       Array.from(elements.list.querySelectorAll('.followup-case')).forEach(function (button, index) {
@@ -411,6 +431,7 @@
 
     function getEditorValues_() {
       return {
+        estimatedTables: String(estimatedTablesInput ? estimatedTablesInput.value : '').trim(),
         firstConsultation: normalizeConsultation_(consultationInputs.firstConsultation.value),
         secondConsultation: normalizeConsultation_(consultationInputs.secondConsultation.value),
         thirdConsultation: normalizeConsultation_(consultationInputs.thirdConsultation.value),
@@ -421,6 +442,7 @@
 
     function editableSnapshot_(caseData) {
       return {
+        estimatedTables: String(caseData.estimatedTables || '').trim(),
         firstConsultation: normalizeConsultation_(caseData.firstConsultation),
         secondConsultation: normalizeConsultation_(caseData.secondConsultation),
         thirdConsultation: normalizeConsultation_(caseData.thirdConsultation),
@@ -453,6 +475,7 @@
       Object.keys(consultationInputs).forEach(function (key) {
         consultationInputs[key].disabled = disabled;
       });
+      if (estimatedTablesInput) estimatedTablesInput.disabled = disabled;
       elements.statusButtons.forEach(function (button) {
         button.disabled = disabled;
       });
@@ -522,6 +545,13 @@
 
     function normalizeConsultation_(value) {
       return String(value || '').replace(/\r\n?/g, '\n').trim();
+    }
+
+    function isValidEstimatedTables_(value) {
+      const text = String(value || '').trim();
+      if (!/^[1-9]\d{0,2}$/.test(text)) return false;
+      const number = Number(text);
+      return Number.isInteger(number) && number >= 1 && number <= 200;
     }
 
     function normalizeDateForInput_(value) {

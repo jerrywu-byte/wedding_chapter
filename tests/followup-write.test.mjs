@@ -146,21 +146,34 @@ function createRuntime(options = {}) {
               })),
             };
           },
-          update(resource, spreadsheetId, range, request) {
+          batchUpdate(resource, spreadsheetId) {
             state.updateCalls += 1;
             state.updateObservedLock = state.locked;
             assert.equal(spreadsheetId, "test-spreadsheet-id");
-            assert.equal(request.valueInputOption, "USER_ENTERED");
-            assert.equal(request.includeValuesInResponse, false);
+            assert.equal(resource.valueInputOption, "USER_ENTERED");
+            assert.equal(resource.includeValuesInResponse, false);
+            assert.equal(resource.data.length, 2);
 
-            const match = range.match(/!P(\d+):T\1$/);
-            assert.ok(match, `Write range must be P:T on one row: ${range}`);
-            const rowIndex = Number(match[1]) - 2;
-            const values = resource.values[0].slice();
-            assert.equal(values.length, 5);
-            state.rows[rowIndex].splice(15, 5, ...values);
-            state.updates.push({ range, values });
-            return { updatedRange: range };
+            const tableUpdate = resource.data[0];
+            const caseUpdate = resource.data[1];
+            const tableMatch = tableUpdate.range.match(/!M(\d+)$/);
+            const caseMatch = caseUpdate.range.match(/!P(\d+):T\1$/);
+            assert.ok(tableMatch, `Table count range must be M on one row: ${tableUpdate.range}`);
+            assert.ok(caseMatch, `Case write range must be P:T on one row: ${caseUpdate.range}`);
+            assert.equal(tableMatch[1], caseMatch[1]);
+
+            const rowIndex = Number(tableMatch[1]) - 2;
+            const tableValues = tableUpdate.values[0].slice();
+            const caseValues = caseUpdate.values[0].slice();
+            assert.equal(tableValues.length, 1);
+            assert.equal(caseValues.length, 5);
+            state.rows[rowIndex][12] = tableValues[0];
+            state.rows[rowIndex].splice(15, 5, ...caseValues);
+            state.updates.push(
+              { range: tableUpdate.range, values: tableValues },
+              { range: caseUpdate.range, values: caseValues },
+            );
+            return { totalUpdatedRanges: 2 };
           },
         },
       },
@@ -177,6 +190,7 @@ function payloadFor(context, overrides = {}) {
     serialNumber: detail.serialNumber,
     identityToken: detail.identityToken,
     revisionToken: detail.revisionToken,
+    estimatedTables: detail.estimatedTables,
     firstConsultation: detail.firstConsultation,
     secondConsultation: detail.secondConsultation,
     thirdConsultation: detail.thirdConsultation,
@@ -200,6 +214,7 @@ test("2 未授權帳號不可 update 且不讀寫 Sheet", () => {
     serialNumber: "115DX2031",
     identityToken: "a".repeat(43),
     revisionToken: "b".repeat(43),
+    estimatedTables: "20",
     firstConsultation: "",
     secondConsultation: "",
     thirdConsultation: "",
@@ -212,11 +227,12 @@ test("2 未授權帳號不可 update 且不讀寫 Sheet", () => {
   assert.equal(state.lockWaitCalls, 0);
 });
 
-test("3 payload 只允許固定 P:T 編輯欄位與安全識別欄位", () => {
+test("3 payload 只允許固定 M、P:T 編輯欄位與安全識別欄位", () => {
   const { context } = createRuntime();
   const payload = payloadFor(context);
   assert.deepEqual(Object.keys(payload).sort(), [
     "closedDate",
+    "estimatedTables",
     "firstConsultation",
     "identityToken",
     "revisionToken",
@@ -227,7 +243,7 @@ test("3 payload 只允許固定 P:T 編輯欄位與安全識別欄位", () => {
   ]);
 });
 
-test("4 payload 含 A:O 欄位更新值會拒絕", () => {
+test("4 payload 含 M 以外的 A:O 欄位更新值會拒絕", () => {
   const { context, state } = createRuntime();
   const payload = payloadFor(context);
   payload.groomName = "不可修改";
@@ -371,26 +387,35 @@ test("21 CONFLICT 完全不得寫入", () => {
   assert.notDeepEqual(state.rows[0], before);
 });
 
-test("22 update 僅以單次 P:T 寫入", () => {
+test("22 update 以單次 batch request 寫入 M 與 P:T", () => {
   const { context, state } = createRuntime();
   context.updateCase(payloadFor(context, { firstConsultation: "更新" }));
   assert.equal(state.updateCalls, 1);
-  assert.equal(state.updates[0].range, "'新人資料'!P2:T2");
-  assert.equal(state.updates[0].values.length, 5);
+  assert.deepEqual(state.updates.map((update) => update.range), [
+    "'新人資料'!M2",
+    "'新人資料'!P2:T2",
+  ]);
+  assert.equal(state.updates[0].values.length, 1);
+  assert.equal(state.updates[1].values.length, 5);
   assert.equal(state.updateObservedLock, true);
   assert.equal(state.lockWaitCalls, 1);
   assert.equal(state.lockReleaseCalls, 1);
 });
 
-test("23 A:O 永遠不被修改", () => {
+test("23 A:L 與 N:O 永遠不被修改", () => {
   const { context, state } = createRuntime();
-  const before = state.rows[0].slice(0, 15);
+  const beforeAL = state.rows[0].slice(0, 12);
+  const beforeNO = state.rows[0].slice(13, 15);
   context.updateCase(payloadFor(context, {
+    estimatedTables: "26",
     firstConsultation: "P",
     secondConsultation: "Q",
     thirdConsultation: "R",
   }));
-  assert.deepEqual(state.rows[0].slice(0, 15), before);
+  assert.deepEqual(state.rows[0].slice(0, 12), beforeAL);
+  assert.deepEqual(state.rows[0].slice(13, 15), beforeNO);
+  assert.equal(state.rows[0][12], "26");
+  assert.match(serverSource, /quoteSheetRange_\('M' \+ rowNumber\)/);
   assert.match(serverSource, /quoteSheetRange_\('P' \+ rowNumber \+ ':T' \+ rowNumber\)/);
 });
 
@@ -425,13 +450,79 @@ test("27 儲存錯誤後保留使用者輸入", () => {
   assert.doesNotMatch(failureHandler, /renderCaseDetail|textarea\.value|loadCase/);
 });
 
-test("revisionToken deterministic 涵蓋 A、C、P、Q、R、S、T 且不含 row number", () => {
+test("revisionToken deterministic 涵蓋 A、C、M、P、Q、R、S、T 且不含 row number", () => {
   const { context } = createRuntime();
   const first = context.getCase("115DX2031");
   const second = context.getCase("115DX2031");
   assert.equal(first.revisionToken, second.revisionToken);
   assert.equal("duplicateKey" in first, false);
   assert.equal("rowNumber" in first, false);
+});
+
+test("28 合法桌數可與 P 同時儲存並由 getCase 讀回", () => {
+  const { context, state } = createRuntime();
+  const result = context.updateCase(payloadFor(context, {
+    estimatedTables: "35",
+    firstConsultation: "同步更新",
+  }));
+  assert.equal(state.rows[0][12], "35");
+  assert.equal(state.rows[0][15], "同步更新");
+  assert.equal(result.estimatedTables, "35");
+  assert.equal(context.getCase("115DX2031").estimatedTables, "35");
+});
+
+for (const [label, value] of [
+  ["0", "0"],
+  ["負數", "-1"],
+  ["小數", "1.5"],
+  ["文字", "二十"],
+  ["空白", ""],
+  ["超過 200", "201"],
+]) {
+  test(`29 桌數 ${label} 會拒絕且完全不寫入`, () => {
+    const { context, state } = createRuntime();
+    const before = state.rows[0].slice();
+    assert.throws(
+      () => context.updateCase(payloadFor(context, { estimatedTables: value })),
+      /VALIDATION_ERROR/,
+    );
+    assert.equal(state.updateCalls, 0);
+    assert.deepEqual(state.rows[0], before);
+  });
+}
+
+test("30 revisionToken 納入 M，其他人先改 M 會 CONFLICT 且 M/P 都不寫入", () => {
+  const { context, state } = createRuntime();
+  const payload = payloadFor(context, {
+    estimatedTables: "30",
+    firstConsultation: "舊畫面內容",
+  });
+  state.rows[0][12] = "28";
+  const current = state.rows[0].slice();
+  assert.throws(() => context.updateCase(payload), /CONFLICT/);
+  assert.equal(state.updateCalls, 0);
+  assert.deepEqual(state.rows[0], current);
+});
+
+test("31 payload 含 N/O 或其他唯讀欄位會拒絕", () => {
+  for (const field of ["salesCode", "salesName", "weddingDate", "row", "range"]) {
+    const { context, state } = createRuntime();
+    const payload = payloadFor(context);
+    payload[field] = "不可修改";
+    assert.throws(() => context.updateCase(payload), /VALIDATION_ERROR/);
+    assert.equal(state.updateCalls, 0);
+  }
+});
+
+test("32 UI 桌數輸入、dirty state、成功 baseline 與錯誤訊息完整", () => {
+  assert.match(clientHtml, /\['桌數', String\(caseData\.estimatedTables \|\| ''\), 'number'\]/);
+  assert.match(clientHtml, /input\.type = 'number'/);
+  assert.match(clientHtml, /input\.min = '1'/);
+  assert.match(clientHtml, /input\.max = '200'/);
+  assert.match(clientHtml, /input\.addEventListener\('input', handleEditorInput_\)/);
+  assert.match(clientHtml, /estimatedTables: String\(estimatedTablesInput/);
+  assert.match(clientHtml, /baseline = editableSnapshot_\(caseData\)/);
+  assert.match(clientHtml, /請輸入正確桌數。/);
 });
 
 test("closedDate 僅接受有效 YYYY-MM-DD", () => {

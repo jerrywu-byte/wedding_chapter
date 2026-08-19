@@ -237,13 +237,14 @@ test("Apps Script manifest 僅增加 Sheets 必要寫入 scope", () => {
   assert.equal(manifest.dependencies.enabledAdvancedServices[0].serviceId, "sheets");
 });
 
-test("Follow-up server 只提供固定 P:T 單次更新", () => {
+test("Follow-up server 只提供固定 M 與 P:T batch 更新", () => {
   assert.doesNotMatch(
     serverSource,
-    /SpreadsheetApp|appendRow|setValue|setValues|clearContent|deleteRow|insertRow|batchUpdate|Values\.append/,
+    /SpreadsheetApp|appendRow|setValue|setValues|clearContent|deleteRow|insertRow|Values\.append/,
   );
   assert.match(serverSource, /Sheets\.Spreadsheets\.Values\.batchGet/);
-  assert.match(serverSource, /Sheets\.Spreadsheets\.Values\.update/);
+  assert.match(serverSource, /Sheets\.Spreadsheets\.Values\.batchUpdate/);
+  assert.match(serverSource, /quoteSheetRange_\('M' \+ rowNumber\)/);
   assert.match(serverSource, /quoteSheetRange_\('P' \+ rowNumber \+ ':T' \+ rowNumber\)/);
 });
 
@@ -309,7 +310,7 @@ test("基本資料卡依三行規格排列且只顯示 M 欄桌數", () => {
 
   assert.doesNotMatch(cardMapping, /主要聯絡人/);
   assert.doesNotMatch(cardMapping, /預計桌數|確認桌數/);
-  assert.match(cardMapping, /\['桌數', estimatedTables\]/);
+  assert.match(cardMapping, /\['桌數', String\(caseData\.estimatedTables \|\| ''\), 'number'\]/);
   assert.doesNotMatch(serverSource, /confirmedTables|A1:U1|A2:U|P\d+:U/);
   assert.match(serverSource, /estimatedTables: cleanText_\(row\[FOLLOWUP_COLUMNS_\.estimatedTables\]\)/);
 });

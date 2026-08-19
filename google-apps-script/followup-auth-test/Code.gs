@@ -7,8 +7,9 @@
  *   FOLLOWUP_SPREADSHEET_ID
  *   FOLLOWUP_IDENTITY_SECRET
  *
- * Columns A:O remain read-only. The only write operation replaces P:T in one
- * request after authorization, identity, revision, and validation checks.
+ * Columns A:L and N:O remain read-only. The only write operation replaces M
+ * and P:T in one batch request after authorization, identity, revision, and
+ * validation checks.
  */
 
 const FOLLOWUP_SHEET_NAME_ = '新人資料';
@@ -20,6 +21,7 @@ const FOLLOWUP_UPDATE_FIELDS_ = Object.freeze([
   'serialNumber',
   'identityToken',
   'revisionToken',
+  'estimatedTables',
   'firstConsultation',
   'secondConsultation',
   'thirdConsultation',
@@ -144,7 +146,7 @@ function getCase(serialNumber) {
 }
 
 /**
- * Safely replaces only P:T for one case.
+ * Safely replaces only M and P:T for one case.
  *
  * @param {Object} payload
  * @return {Object}
@@ -179,6 +181,7 @@ function updateCase(payload) {
     }
 
     const updatedRow = serialMatch.row.slice();
+    updatedRow[FOLLOWUP_COLUMNS_.estimatedTables] = input.estimatedTables;
     updatedRow[FOLLOWUP_COLUMNS_.firstConsultation] = input.firstConsultation;
     updatedRow[FOLLOWUP_COLUMNS_.secondConsultation] = input.secondConsultation;
     updatedRow[FOLLOWUP_COLUMNS_.thirdConsultation] = input.thirdConsultation;
@@ -191,6 +194,7 @@ function updateCase(payload) {
       serialNumber: input.serialNumber,
       identityToken: input.identityToken,
       revisionToken: createRevisionToken_(updatedRow, secret),
+      estimatedTables: input.estimatedTables,
       firstConsultation: input.firstConsultation,
       secondConsultation: input.secondConsultation,
       thirdConsultation: input.thirdConsultation,
@@ -403,6 +407,7 @@ function normalizeUpdatePayload_(payload) {
     serialNumber: normalizeSerialNumber_(payload.serialNumber),
     identityToken: cleanText_(payload.identityToken),
     revisionToken: cleanText_(payload.revisionToken),
+    estimatedTables: normalizeEstimatedTables_(payload.estimatedTables),
     firstConsultation: normalizeConsultationText_(payload.firstConsultation),
     secondConsultation: normalizeConsultationText_(payload.secondConsultation),
     thirdConsultation: normalizeConsultationText_(payload.thirdConsultation),
@@ -436,25 +441,30 @@ function normalizeUpdatePayload_(payload) {
 
 function writeCaseFields_(rowNumber, input) {
   const spreadsheetId = requireSpreadsheetId_();
-  const range = quoteSheetRange_('P' + rowNumber + ':T' + rowNumber);
-
-  Sheets.Spreadsheets.Values.update(
-    {
-      majorDimension: 'ROWS',
-      values: [[
-        input.firstConsultation,
-        input.secondConsultation,
-        input.thirdConsultation,
-        input.status,
-        input.closedDate,
-      ]],
-    },
-    spreadsheetId,
-    range,
+  Sheets.Spreadsheets.Values.batchUpdate(
     {
       valueInputOption: 'USER_ENTERED',
       includeValuesInResponse: false,
-    }
+      data: [
+        {
+          range: quoteSheetRange_('M' + rowNumber),
+          majorDimension: 'ROWS',
+          values: [[input.estimatedTables]],
+        },
+        {
+          range: quoteSheetRange_('P' + rowNumber + ':T' + rowNumber),
+          majorDimension: 'ROWS',
+          values: [[
+            input.firstConsultation,
+            input.secondConsultation,
+            input.thirdConsultation,
+            input.status,
+            input.closedDate,
+          ]],
+        },
+      ],
+    },
+    spreadsheetId
   );
 }
 
@@ -468,6 +478,7 @@ function createRevisionToken_(row, secret) {
   const revisionValues = [
     normalizeSerialNumber_(row[FOLLOWUP_COLUMNS_.serialNumber]),
     cleanText_(row[FOLLOWUP_COLUMNS_.duplicateKey]),
+    cleanText_(row[FOLLOWUP_COLUMNS_.estimatedTables]),
     normalizeConsultationText_(row[FOLLOWUP_COLUMNS_.firstConsultation]),
     normalizeConsultationText_(row[FOLLOWUP_COLUMNS_.secondConsultation]),
     normalizeConsultationText_(row[FOLLOWUP_COLUMNS_.thirdConsultation]),
@@ -475,6 +486,20 @@ function createRevisionToken_(row, secret) {
     normalizeStoredDate_(row[FOLLOWUP_COLUMNS_.closedDate]),
   ];
   return createHmacToken_('revision\n' + JSON.stringify(revisionValues), secret);
+}
+
+function normalizeEstimatedTables_(value) {
+  const text = cleanText_(value);
+  if (!/^[1-9]\d{0,2}$/.test(text)) {
+    throw new Error('VALIDATION_ERROR');
+  }
+
+  const number = Number(text);
+  if (!Number.isFinite(number) || !Number.isInteger(number) || number < 1 || number > 200) {
+    throw new Error('VALIDATION_ERROR');
+  }
+
+  return String(number);
 }
 
 function createHmacToken_(value, secret) {
