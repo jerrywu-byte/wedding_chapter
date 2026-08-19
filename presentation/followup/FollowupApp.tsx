@@ -43,6 +43,7 @@ export default function FollowupApp() {
   const [mobileDetail, setMobileDetail] = useState(false);
   const [cases, setCases] = useState(mockFollowupCases);
   const [notice, setNotice] = useState("");
+  const [openConsultations, setOpenConsultations] = useState<Record<string, boolean>>({});
 
   const filteredCases = useMemo(() => {
     const keyword = query.trim().toLocaleLowerCase("zh-Hant");
@@ -135,7 +136,7 @@ export default function FollowupApp() {
               <div><dt>預計婚期</dt><dd>{displayDate(selectedCase.eventDate)}</dd></div>
               <div><dt>預計桌數</dt><dd>{selectedCase.tableCount} 桌</dd></div>
               <div><dt>婚禮人格</dt><dd>{selectedCase.personality}</dd></div>
-              <div className="followup-basic-grid__wide"><dt>推薦廳房</dt><dd>{selectedCase.recommendedHall}</dd></div>
+              <div><dt>推薦廳房</dt><dd>{selectedCase.recommendedHall}</dd></div>
             </dl>
           </section>
 
@@ -145,38 +146,63 @@ export default function FollowupApp() {
               <div><p>CONSULTATION NOTES</p><h3>三次洽談紀錄</h3></div>
             </div>
             <div className="followup-consultations">
-              {selectedCase.consultations.map((consultation, index) => (
-                <fieldset key={index}>
-                  <legend>第{["一", "二", "三"][index]}次洽談</legend>
-                  <label>
-                    <span>洽談日期</span>
-                    <input
-                      type="date"
-                      value={consultation.date}
-                      onChange={(event) => updateSelectedCase((item) => ({
-                        ...item,
-                        consultations: item.consultations.map((entry, entryIndex) =>
-                          entryIndex === index ? { ...entry, date: event.target.value } : entry,
-                        ) as FollowupCase["consultations"],
-                      }))}
-                    />
-                  </label>
-                  <label>
-                    <span>洽談內容</span>
-                    <textarea
-                      value={consultation.note}
-                      onChange={(event) => updateSelectedCase((item) => ({
-                        ...item,
-                        consultations: item.consultations.map((entry, entryIndex) =>
-                          entryIndex === index ? { ...entry, note: event.target.value } : entry,
-                        ) as FollowupCase["consultations"],
-                      }))}
-                      placeholder="記錄本次洽談重點…"
-                      rows={4}
-                    />
-                  </label>
-                </fieldset>
-              ))}
+              {selectedCase.consultations.map((consultation, index) => {
+                const isFilled = Boolean(consultation.date || consultation.note.trim());
+                const consultationKey = `${selectedCase.id}-${index}`;
+                const isOpen = openConsultations[consultationKey] ?? index === 0;
+                return (
+                  <details
+                    key={consultationKey}
+                    open={isOpen}
+                    onToggle={(event) => setOpenConsultations((current) => ({
+                      ...current,
+                      [consultationKey]: event.currentTarget.open,
+                    }))}
+                  >
+                    <summary>
+                      <span className="followup-consultation-title">
+                        第{["一", "二", "三"][index]}次洽談
+                      </span>
+                      <span className="followup-consultation-meta">
+                        {isFilled && <span className="followup-filled-badge">已填寫</span>}
+                        <span className="followup-consultation-date">
+                          {consultation.date ? displayDate(consultation.date) : "尚未填寫"}
+                        </span>
+                        <i aria-hidden="true" />
+                      </span>
+                    </summary>
+                    <div className="followup-consultation-fields">
+                      <label>
+                        <span>洽談日期</span>
+                        <input
+                          type="date"
+                          value={consultation.date}
+                          onChange={(event) => updateSelectedCase((item) => ({
+                            ...item,
+                            consultations: item.consultations.map((entry, entryIndex) =>
+                              entryIndex === index ? { ...entry, date: event.target.value } : entry,
+                            ) as FollowupCase["consultations"],
+                          }))}
+                        />
+                      </label>
+                      <label>
+                        <span>洽談內容</span>
+                        <textarea
+                          value={consultation.note}
+                          onChange={(event) => updateSelectedCase((item) => ({
+                            ...item,
+                            consultations: item.consultations.map((entry, entryIndex) =>
+                              entryIndex === index ? { ...entry, note: event.target.value } : entry,
+                            ) as FollowupCase["consultations"],
+                          }))}
+                          placeholder="記錄本次洽談重點…"
+                          rows={3}
+                        />
+                      </label>
+                    </div>
+                  </details>
+                );
+              })}
             </div>
           </section>
 
@@ -185,7 +211,7 @@ export default function FollowupApp() {
               <span>03</span>
               <div><p>CASE STATUS</p><h3>案件狀態</h3></div>
             </div>
-            <div className="followup-closing-grid">
+            <div className={`followup-closing-grid${selectedCase.status === "洽談中" ? " followup-closing-grid--single" : ""}`}>
               <div>
                 <span className="followup-field-label">目前狀態</span>
                 <div className="followup-status-options" role="radiogroup" aria-label="案件狀態">
@@ -203,17 +229,19 @@ export default function FollowupApp() {
                   ))}
                 </div>
               </div>
-              <label className="followup-close-date">
-                <span className="followup-field-label">結案日期</span>
-                <input
-                  type="date"
-                  value={selectedCase.closedDate}
-                  onChange={(event) => updateSelectedCase((item) => ({
-                    ...item,
-                    closedDate: event.target.value,
-                  }))}
-                />
-              </label>
+              {selectedCase.status !== "洽談中" && (
+                <label className="followup-close-date">
+                  <span className="followup-field-label">結案日期</span>
+                  <input
+                    type="date"
+                    value={selectedCase.closedDate}
+                    onChange={(event) => updateSelectedCase((item) => ({
+                      ...item,
+                      closedDate: event.target.value,
+                    }))}
+                  />
+                </label>
+              )}
             </div>
           </section>
 
