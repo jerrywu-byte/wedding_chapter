@@ -284,3 +284,32 @@ test("公開 Follow-up route 已停用 mock 並只導向受保護 Web App", () =
   assert.match(publicGateway, /VITE_FOLLOWUP_APPS_SCRIPT_WEB_APP_URL/);
   assert.match(publicGateway, /window\.location\.replace/);
 });
+
+test("基本資料卡依三行規格排列且只顯示 M 欄桌數", () => {
+  const start = clientHtml.indexOf("renderBasicInformation_([");
+  const end = clientHtml.indexOf("]);", start);
+  const cardMapping = clientHtml.slice(start, end);
+  const labels = [
+    "婚宴日期",
+    "宴別",
+    "桌數",
+    "接待業務",
+    "新郎姓名",
+    "新郎電話",
+    "新娘姓名",
+    "新娘電話",
+    "提交時間",
+  ];
+
+  labels.reduce((previousIndex, label) => {
+    const nextIndex = cardMapping.indexOf(`['${label}'`);
+    assert.ok(nextIndex > previousIndex, `${label} 應依指定順序顯示`);
+    return nextIndex;
+  }, -1);
+
+  assert.doesNotMatch(cardMapping, /主要聯絡人/);
+  assert.doesNotMatch(cardMapping, /預計桌數|確認桌數/);
+  assert.match(cardMapping, /\['桌數', estimatedTables\]/);
+  assert.doesNotMatch(serverSource, /confirmedTables|A1:U1|A2:U|P\d+:U/);
+  assert.match(serverSource, /estimatedTables: cleanText_\(row\[FOLLOWUP_COLUMNS_\.estimatedTables\]\)/);
+});
