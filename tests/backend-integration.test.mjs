@@ -9,7 +9,7 @@ const planners = readFileSync("lib/banquetPlanners.ts", "utf8");
 const gas = readFileSync("google-apps-script/Code.gs", "utf8");
 const deployDocs = readFileSync("docs/Backend-Deployment.md", "utf8");
 
-test("完成按鈕只在正式儲存成功後顯示流水號", () => {
+test("完成按鈕只在正式儲存成功後顯示訪客編號", () => {
   assert.match(runner, /await submitWeddingChapter/);
   assert.match(runner, /saved\.serialNumber/);
   assert.doesNotMatch(runner, /PDF|寄給|plannerEmail/);

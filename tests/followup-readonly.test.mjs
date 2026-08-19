@@ -1,0 +1,269 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import test from "node:test";
+import vm from "node:vm";
+
+const read = (path) => fs.readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+const serverSource = read("google-apps-script/followup-auth-test/Code.gs");
+const manifest = JSON.parse(read("google-apps-script/followup-auth-test/appsscript.json"));
+const indexHtml = read("google-apps-script/followup-auth-test/Index.html");
+const clientHtml = read("google-apps-script/followup-auth-test/Client.html");
+const unauthorizedHtml = read("google-apps-script/followup-auth-test/Unauthorized.html");
+const publicGateway = read("presentation/followup/FollowupApp.tsx");
+
+const HEADERS = [
+  "正式流水號",
+  "提交時間",
+  "防重複識別碼",
+  "新郎姓名",
+  "新郎電話",
+  "新娘姓名",
+  "新娘電話",
+  "主要聯絡人姓名",
+  "主要聯絡人電話",
+  "婚宴日期",
+  "日期未定",
+  "婚宴時段",
+  "預計桌數",
+  "業務代碼",
+  "業務姓名",
+  "第一次洽談",
+  "第二次洽談",
+  "第三次洽談",
+  "狀態",
+  "結案日期",
+];
+
+function makeRow(overrides = {}) {
+  const row = [
+    "115DX2031",
+    "2026/08/19 10:00:00",
+    "private-duplicate-key",
+    "王大明",
+    "0911-111-111",
+    "林小美",
+    "0922-222-222",
+    "林小美",
+    "0922-222-222",
+    "2027/03/20",
+    "FALSE",
+    "晚",
+    "20",
+    "JW",
+    "Jerry",
+    "已完成第一次洽談",
+    "",
+    "第三次洽談補充",
+    "",
+    "",
+  ];
+  Object.entries(overrides).forEach(([index, value]) => {
+    row[Number(index)] = value;
+  });
+  return row;
+}
+
+function createRuntime(options = {}) {
+  const state = {
+    email: options.email ?? "jerry@company.example",
+    rows: options.rows ?? [
+      makeRow(),
+      makeRow({
+        0: "115DX2032",
+        2: "another-private-key",
+        3: "陳志明",
+        4: "0933-333-333",
+        5: "周雅婷",
+        6: "0944-444-444",
+        7: "陳志明",
+        8: "0933-333-333",
+        18: "已訂",
+        19: "2026/08/20",
+      }),
+    ],
+    headers: options.headers ?? HEADERS,
+    batchGetCalls: 0,
+    properties: {
+      FOLLOWUP_ALLOWED_DOMAIN: "company.example",
+      FOLLOWUP_ALLOWED_EMAILS: "jerry@company.example, april@company.example",
+      FOLLOWUP_SPREADSHEET_ID: "test-spreadsheet-id",
+      ...(options.properties ?? {}),
+    },
+  };
+
+  function valuesForRange(range) {
+    if (range.endsWith("A1:T1")) return [state.headers];
+    if (range.endsWith("A2:O")) return state.rows.map((row) => row.slice(0, 15));
+    if (range.endsWith("S2:S")) return state.rows.map((row) => [row[18]]);
+    if (range.endsWith("A2:T")) return state.rows.map((row) => row.slice(0, 20));
+    throw new Error(`Unexpected test range: ${range}`);
+  }
+
+  const context = vm.createContext({
+    console: { warn() {} },
+    PropertiesService: {
+      getScriptProperties() {
+        return {
+          getProperty(key) {
+            return state.properties[key] ?? null;
+          },
+        };
+      },
+    },
+    Session: {
+      getActiveUser() {
+        return { getEmail: () => state.email };
+      },
+    },
+    Sheets: {
+      Spreadsheets: {
+        Values: {
+          batchGet(spreadsheetId, request) {
+            state.batchGetCalls += 1;
+            assert.equal(spreadsheetId, "test-spreadsheet-id");
+            return {
+              valueRanges: request.ranges.map((range) => ({
+                range,
+                values: valuesForRange(range),
+              })),
+            };
+          },
+        },
+      },
+    },
+  });
+
+  vm.runInContext(serverSource, context, { filename: "Code.gs" });
+  return { context, state };
+}
+
+test("授權帳號可以取得案件摘要", () => {
+  const { context, state } = createRuntime();
+  const result = context.listCases("");
+  assert.equal(result.length, 2);
+  assert.equal(state.batchGetCalls, 1);
+});
+
+test("非授權帳號在讀取 Sheet 前即被拒絕", () => {
+  const { context, state } = createRuntime({ email: "other@company.example" });
+  assert.throws(() => context.listCases(""), /AUTH_EMAIL_DENIED/);
+  assert.equal(state.batchGetCalls, 0);
+});
+
+test("listCases 只回傳最小摘要且不含電話", () => {
+  const { context } = createRuntime();
+  const [summary] = context.listCases("");
+  assert.deepEqual(Object.keys(summary).sort(), [
+    "banquetSession",
+    "brideName",
+    "dateUndecided",
+    "estimatedTables",
+    "groomName",
+    "salesCode",
+    "salesName",
+    "serialNumber",
+    "status",
+    "weddingDate",
+  ]);
+  assert.equal(Object.keys(summary).some((key) => /phone/i.test(key)), false);
+});
+
+test("搜尋支援訪客編號、新郎姓名、新娘姓名與電話", () => {
+  const { context } = createRuntime();
+  assert.equal(context.listCases("115DX2031")[0].serialNumber, "115DX2031");
+  assert.equal(context.listCases("王大明")[0].serialNumber, "115DX2031");
+  assert.equal(context.listCases("周雅婷")[0].serialNumber, "115DX2032");
+  assert.equal(context.listCases("0922222222")[0].serialNumber, "115DX2031");
+});
+
+test("搜尋無結果回傳空摘要列表", () => {
+  const { context } = createRuntime();
+  assert.equal(context.listCases("不存在的新人").length, 0);
+});
+
+test("getCase 依訪客編號重新查找並回傳完整唯讀內容", () => {
+  const { context } = createRuntime();
+  const result = context.getCase("115DX2031");
+  assert.equal(result.primaryContactName, "林小美");
+  assert.equal(result.primaryContactPhone, "0922-222-222");
+  assert.equal(result.firstConsultation, "已完成第一次洽談");
+  assert.equal(result.secondConsultation, "");
+  assert.equal(result.thirdConsultation, "第三次洽談補充");
+  assert.equal("duplicateKey" in result, false);
+  assert.equal("rowNumber" in result, false);
+  assert.equal("spreadsheetId" in result, false);
+});
+
+test("getCase 找不到訪客編號時回傳 NOT_FOUND", () => {
+  const { context } = createRuntime();
+  assert.throws(() => context.getCase("115DX9999"), /NOT_FOUND/);
+});
+
+test("重複訪客編號會 fail closed", () => {
+  const duplicate = makeRow({ 2: "different-private-key" });
+  const { context } = createRuntime({ rows: [makeRow(), duplicate] });
+  assert.throws(() => context.getCase("115DX2031"), /DATA_INTEGRITY_ERROR/);
+});
+
+test("空白狀態只在回傳內容中顯示為洽談中", () => {
+  const { context, state } = createRuntime({ rows: [makeRow()] });
+  assert.equal(context.listCases("")[0].status, "洽談中");
+  assert.equal(context.getCase("115DX2031").status, "洽談中");
+  assert.equal(state.rows[0][18], "");
+});
+
+test("正式二十欄 header 不符時停止讀取", () => {
+  const badHeaders = HEADERS.slice();
+  badHeaders[7] = "緊急聯絡人姓名";
+  const { context } = createRuntime({ headers: badHeaders });
+  assert.throws(() => context.listCases(""), /DATA_SCHEMA_ERROR/);
+});
+
+test("Apps Script manifest 僅授予 Sheets 唯讀 scope", () => {
+  assert.ok(manifest.oauthScopes.includes("https://www.googleapis.com/auth/spreadsheets.readonly"));
+  assert.equal(manifest.oauthScopes.includes("https://www.googleapis.com/auth/spreadsheets"), false);
+  assert.equal(manifest.dependencies.enabledAdvancedServices[0].serviceId, "sheets");
+});
+
+test("Follow-up server 不提供任何 Sheet 寫入 API", () => {
+  assert.doesNotMatch(
+    serverSource,
+    /SpreadsheetApp|appendRow|setValue|setValues|clearContent|deleteRow|insertRow|batchUpdate|Values\.update|Values\.append/,
+  );
+  assert.match(serverSource, /Sheets\.Spreadsheets\.Values\.batchGet/);
+});
+
+test("所有正式資料函式都先驗證授權", () => {
+  assert.match(serverSource, /function listCases\(query\) \{\s*requireAuthorizedUser_\(\);/);
+  assert.match(serverSource, /function getCase\(serialNumber\) \{\s*requireAuthorizedUser_\(\);/);
+});
+
+test("HTML 不含正式新人資料、duplicateKey 或 Spreadsheet ID", () => {
+  const browserSource = [indexHtml, clientHtml, unauthorizedHtml].join("\n");
+  assert.doesNotMatch(browserSource, /private-duplicate-key|FOLLOWUP_SPREADSHEET_ID|1Th5K-/);
+  assert.doesNotMatch(clientHtml, /duplicateKey|rowNumber/);
+});
+
+test("UI 統一顯示訪客編號且不出現舊稱", () => {
+  const userVisibleSource = [indexHtml, clientHtml, unauthorizedHtml].join("\n");
+  assert.match(userVisibleSource, /搜尋訪客編號、姓名或電話/);
+  assert.match(clientHtml, /訪客編號 /);
+  assert.doesNotMatch(userVisibleSource, /流水/);
+});
+
+test("唯讀 UI 保留 loading、empty、error 與洽談狀態", () => {
+  assert.match(indexHtml, /正在載入新人案件…/);
+  assert.match(clientHtml, /目前沒有新人案件/);
+  assert.match(clientHtml, /找不到符合條件的新人/);
+  assert.match(clientHtml, /找不到這筆新人資料/);
+  assert.match(clientHtml, /案件資料異常，請聯絡管理人員/);
+  assert.match(clientHtml, /尚未建立洽談紀錄/);
+  assert.match(clientHtml, /textarea\.readOnly = true/);
+  assert.match(indexHtml, /data-status="洽談中"[^>]*disabled/);
+});
+
+test("公開 Follow-up route 已停用 mock 並只導向受保護 Web App", () => {
+  assert.doesNotMatch(publicGateway, /mockFollowupCases|listCases|getCase/);
+  assert.match(publicGateway, /VITE_FOLLOWUP_APPS_SCRIPT_WEB_APP_URL/);
+  assert.match(publicGateway, /window\.location\.replace/);
+});

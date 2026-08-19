@@ -39,7 +39,7 @@ test("送至 Sheet 的值由目前業務名單轉為大寫 salesCode", () => {
   assert.match(gas, /cleanText_\(row\[0\]\)\.toUpperCase\(\)/);
 });
 
-test("LINE 按鈕只在 Sheet 成功並取得流水號後顯示", () => {
+test("LINE 按鈕只在 Sheet 成功並取得訪客編號後顯示", () => {
   assert.match(runner, /await submitWeddingChapter\(payload\)/);
   assert.match(runner, /update\(\{ submissionNumber: saved\.serialNumber/);
   assert.match(runner, /session\.submissionNumber \? <div className="wx-submission-success"/);
@@ -55,7 +55,7 @@ test("成功頁將 serialNumber 顯示為訪客編號", () => {
   assert.doesNotMatch(runner, /流水編號：/);
 });
 
-test("找不到業務網址時保留成功與流水號但不建立錯誤連結", () => {
+test("找不到業務網址時保留成功與訪客編號但不建立錯誤連結", () => {
   assert.match(runner, /資料已成功送出，請由現場服務人員協助加入官方 LINE。/);
   assert.match(runner, /console\.warn\("Wedding Chapter 無法識別業務 LINE 網址"/);
   assert.doesNotMatch(sales, /fallback/i);

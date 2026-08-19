@@ -37,6 +37,7 @@ jobs:
         env:
           VITE_APP_ENV: production
           VITE_GOOGLE_APPS_SCRIPT_WEB_APP_URL: ${{ vars.GOOGLE_APPS_SCRIPT_WEB_APP_URL }}
+          VITE_FOLLOWUP_APPS_SCRIPT_WEB_APP_URL: ${{ vars.FOLLOWUP_APPS_SCRIPT_WEB_APP_URL }}
         run: npm run build
 
       - name: Upload Pages artifact

@@ -3,93 +3,104 @@
   <head>
     <base target="_top">
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-      :root {
-        color: #403a30;
-        background: #f7f3ea;
-        font-family: Arial, "Noto Sans TC", sans-serif;
-      }
-
-      body {
-        margin: 0;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-      }
-
-      main {
-        box-sizing: border-box;
-        width: min(560px, calc(100% - 32px));
-        padding: 32px;
-        border: 1px solid #d8c9aa;
-        border-radius: 16px;
-        background: #fffdf8;
-        box-shadow: 0 12px 36px rgb(92 76 48 / 10%);
-      }
-
-      h1 {
-        margin: 0 0 24px;
-        color: #6f5b35;
-        font-family: Georgia, "Noto Serif TC", serif;
-        font-size: 28px;
-      }
-
-      dl {
-        margin: 0;
-      }
-
-      div {
-        display: grid;
-        grid-template-columns: 180px 1fr;
-        gap: 16px;
-        padding: 14px 0;
-        border-top: 1px solid #ebe3d3;
-      }
-
-      dt {
-        font-weight: 700;
-      }
-
-      dd {
-        margin: 0;
-        overflow-wrap: anywhere;
-      }
-
-      .pass {
-        color: #3f6c4c;
-        font-weight: 700;
-      }
-
-      @media (max-width: 520px) {
-        main {
-          padding: 24px;
-        }
-
-        div {
-          grid-template-columns: 1fr;
-          gap: 6px;
-        }
-      }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <?!= include_('Styles'); ?>
   </head>
   <body>
-    <main>
-      <h1>Authentication Test</h1>
-      <dl>
-        <div>
-          <dt>Active user email</dt>
-          <dd><?= email ?></dd>
+    <main id="followupShell" class="followup-shell">
+      <aside class="followup-list-panel" aria-label="新人案件列表">
+        <header class="followup-list-header">
+          <p class="followup-brand">WEDDING CHAPTER</p>
+          <h1>新人案件</h1>
+          <p>快速查看每一筆正式新人資料。</p>
+        </header>
+
+        <label class="followup-search">
+          <span class="sr-only">搜尋新人案件</span>
+          <span aria-hidden="true">⌕</span>
+          <input
+            id="caseSearch"
+            type="search"
+            autocomplete="off"
+            placeholder="搜尋訪客編號、姓名或電話"
+          >
+        </label>
+
+        <div class="followup-list-summary">
+          <span>案件列表</span>
+          <span id="caseCount">—</span>
         </div>
-        <div>
-          <dt>Domain validation</dt>
-          <dd class="pass"><?= domainValid ? '通過' : '未通過' ?></dd>
+
+        <p id="listState" class="followup-state" role="status">正在載入新人案件…</p>
+        <div id="caseList" class="followup-case-list" role="list"></div>
+      </aside>
+
+      <section class="followup-detail-panel" aria-label="案件詳細資料">
+        <div class="followup-detail-wrap">
+          <button id="backToList" type="button" class="followup-back">
+            <span aria-hidden="true">←</span> 返回案件列表
+          </button>
+
+          <p id="detailState" class="followup-state followup-detail-state" role="status">
+            正在載入新人案件…
+          </p>
+
+          <div id="detailContent" hidden>
+            <header class="followup-detail-header">
+              <div>
+                <p class="followup-eyebrow">CASE DETAIL</p>
+                <h2><span id="groomName"></span><i>×</i><span id="brideName"></span></h2>
+                <p id="caseNumber"></p>
+              </div>
+              <span id="statusBadge" class="followup-status-badge"></span>
+            </header>
+
+            <section class="followup-card followup-basic-card">
+              <div class="followup-section-heading">
+                <span>01</span>
+                <div><p>BASIC INFORMATION</p><h3>新人基本資料</h3></div>
+              </div>
+              <dl id="basicInformation" class="followup-basic-grid"></dl>
+            </section>
+
+            <section class="followup-card">
+              <div class="followup-section-heading">
+                <span>02</span>
+                <div><p>CONSULTATION NOTES</p><h3>三次洽談紀錄</h3></div>
+              </div>
+              <div id="consultations" class="followup-consultations"></div>
+            </section>
+
+            <section class="followup-card">
+              <div class="followup-section-heading">
+                <span>03</span>
+                <div><p>CASE STATUS</p><h3>案件狀態</h3></div>
+              </div>
+              <div id="closingGrid" class="followup-closing-grid">
+                <div>
+                  <span class="followup-field-label">目前狀態</span>
+                  <div class="followup-status-options" role="radiogroup" aria-label="案件狀態">
+                    <button type="button" data-status="洽談中" role="radio" disabled><i></i>洽談中</button>
+                    <button type="button" data-status="已訂" role="radio" disabled><i></i>已訂</button>
+                    <button type="button" data-status="退訂" role="radio" disabled><i></i>退訂</button>
+                    <button type="button" data-status="流失" role="radio" disabled><i></i>流失</button>
+                  </div>
+                </div>
+                <div id="closedDateField" class="followup-close-date">
+                  <span class="followup-field-label">結案日期</span>
+                  <p id="closedDate">—</p>
+                </div>
+              </div>
+            </section>
+
+            <footer class="followup-actions">
+              <p>Phase 1B-2 唯讀模式｜目前不會修改任何資料</p>
+              <button type="button" disabled>儲存洽談紀錄</button>
+            </footer>
+          </div>
         </div>
-        <div>
-          <dt>Email allowlist</dt>
-          <dd class="pass"><?= emailAllowlisted ? '通過' : '未通過' ?></dd>
-        </div>
-      </dl>
+      </section>
     </main>
+    <?!= include_('Client'); ?>
   </body>
 </html>

@@ -5,7 +5,7 @@ import "@fontsource-variable/noto-serif-tc";
 import FollowupApp from "../../presentation/followup/FollowupApp";
 
 const root = document.getElementById("root");
-if (!root) throw new Error("找不到 Follow-up Prototype 掛載節點。");
+if (!root) throw new Error("找不到 Follow-up 系統入口掛載節點。");
 
 createRoot(root).render(
   <StrictMode>
