@@ -35,6 +35,16 @@ const HEADERS = [
   "結案日期",
 ];
 
+const SALES_HEADERS = ["業務代碼", "業務姓名", "業務Email", "LINE連結", "啟用", "Follow-up角色"];
+
+function makeSalesRow(overrides = {}) {
+  const row = ["JW", "Jerry", "jerry@company.example", "", "TRUE", "SALES"];
+  Object.entries(overrides).forEach(([index, value]) => {
+    row[Number(index)] = value;
+  });
+  return row;
+}
+
 function makeRow(overrides = {}) {
   const row = [
     "115DX2031",
@@ -83,10 +93,14 @@ function createRuntime(options = {}) {
       }),
     ],
     headers: options.headers ?? HEADERS,
+    salesHeaders: options.salesHeaders ?? SALES_HEADERS,
+    salesRows: options.salesRows ?? [
+      makeSalesRow(),
+      makeSalesRow({ 0: "AP", 1: "April", 2: "april@company.example", 5: "MANAGER" }),
+    ],
     batchGetCalls: 0,
     properties: {
       FOLLOWUP_ALLOWED_DOMAIN: "company.example",
-      FOLLOWUP_ALLOWED_EMAILS: "jerry@company.example, april@company.example",
       FOLLOWUP_SPREADSHEET_ID: "test-spreadsheet-id",
       FOLLOWUP_IDENTITY_SECRET: "test-only-identity-secret-at-least-32-characters",
       ...(options.properties ?? {}),
@@ -94,6 +108,7 @@ function createRuntime(options = {}) {
   };
 
   function valuesForRange(range) {
+    if (range.endsWith("業務資料'!A1:F")) return [state.salesHeaders, ...state.salesRows];
     if (range.endsWith("A1:T1")) return [state.headers];
     if (range.endsWith("A2:O")) return state.rows.map((row) => row.slice(0, 15));
     if (range.endsWith("S2:S")) return state.rows.map((row) => [row[18]]);
@@ -152,12 +167,12 @@ test("授權帳號可以取得案件摘要", () => {
   const { context, state } = createRuntime();
   const result = context.listCases("");
   assert.equal(result.length, 2);
-  assert.equal(state.batchGetCalls, 1);
+  assert.equal(state.batchGetCalls, 2);
 });
 
 test("非授權帳號在讀取 Sheet 前即被拒絕", () => {
-  const { context, state } = createRuntime({ email: "other@company.example" });
-  assert.throws(() => context.listCases(""), /AUTH_EMAIL_DENIED/);
+  const { context, state } = createRuntime({ email: "other@outside.example" });
+  assert.throws(() => context.listCases(""), /UNAUTHORIZED/);
   assert.equal(state.batchGetCalls, 0);
 });
 
@@ -250,9 +265,9 @@ test("Follow-up server 只提供固定 M 與 P 起始儲存格 batch 更新", ()
 });
 
 test("所有正式資料函式都先驗證授權", () => {
-  assert.match(serverSource, /function listCases\(query\) \{\s*requireAuthorizedUser_\(\);/);
-  assert.match(serverSource, /function getCase\(serialNumber\) \{\s*requireAuthorizedUser_\(\);/);
-  assert.match(serverSource, /function updateCase\(payload\) \{\s*requireAuthorizedUser_\(\);/);
+  assert.match(serverSource, /function listCases\(query\) \{\s*const currentUser = getCurrentFollowupUser_\(\);/);
+  assert.match(serverSource, /function getCase\(serialNumber\) \{\s*const currentUser = getCurrentFollowupUser_\(\);/);
+  assert.match(serverSource, /function updateCase\(payload\) \{\s*const currentUser = getCurrentFollowupUser_\(\);/);
 });
 
 test("HTML 不含正式新人資料、duplicateKey 或 Spreadsheet ID", () => {
@@ -314,4 +329,94 @@ test("基本資料卡依三行規格排列且只顯示 M 欄桌數", () => {
   assert.match(cardMapping, /\['桌數', String\(caseData\.estimatedTables \|\| ''\), 'number'\]/);
   assert.doesNotMatch(serverSource, /confirmedTables|A1:U1|A2:U|P\d+:U/);
   assert.match(serverSource, /estimatedTables: cleanText_\(row\[FOLLOWUP_COLUMNS_\.estimatedTables\]\)/);
+});
+
+test("MANAGER listCases 可查看全部案件", () => {
+  const rows = [
+    makeRow(),
+    makeRow({ 0: "115DX2032", 2: "another-key", 13: "AP", 14: "April" }),
+  ];
+  const { context } = createRuntime({ email: "april@company.example", rows });
+  assert.deepEqual(
+    Array.from(context.listCases("")).map((item) => item.serialNumber),
+    ["115DX2032", "115DX2031"],
+  );
+});
+
+test("SALES listCases 與搜尋只回傳自己的案件", () => {
+  const rows = [
+    makeRow(),
+    makeRow({
+      0: "115DX2032",
+      2: "another-key",
+      3: "其他業務新郎",
+      4: "0988-888-888",
+      13: "AP",
+      14: "April",
+    }),
+  ];
+  const { context } = createRuntime({ rows });
+  assert.deepEqual(Array.from(context.listCases("")).map((item) => item.serialNumber), ["115DX2031"]);
+  assert.equal(context.listCases("其他業務新郎").length, 0);
+  assert.equal(context.listCases("0988888888").length, 0);
+  assert.equal(context.listCases("115DX2032").length, 0);
+});
+
+test("SALES getCase 只能讀取自己案件", () => {
+  const rows = [
+    makeRow(),
+    makeRow({ 0: "115DX2032", 2: "another-key", 13: "AP", 14: "April" }),
+  ];
+  const { context } = createRuntime({ rows });
+  assert.equal(context.getCase("115DX2031").serialNumber, "115DX2031");
+  assert.throws(() => context.getCase("115DX2032"), /FORBIDDEN/);
+});
+
+test("業務資料啟用 FALSE、Email 不存在、role 空白或非法時全部拒絕", () => {
+  const cases = [
+    { salesRows: [makeSalesRow({ 4: "FALSE" })] },
+    { salesRows: [makeSalesRow({ 2: "someone@company.example" })] },
+    { salesRows: [makeSalesRow({ 5: "" })] },
+    { salesRows: [makeSalesRow({ 5: "ADMIN" })] },
+  ];
+  for (const options of cases) {
+    const { context } = createRuntime(options);
+    assert.throws(() => context.listCases(""), /UNAUTHORIZED/);
+  }
+});
+
+test("業務 Email 或 salesCode 重複時 fail closed", () => {
+  const duplicateEmail = createRuntime({
+    salesRows: [makeSalesRow(), makeSalesRow({ 0: "J2" })],
+  });
+  assert.throws(() => duplicateEmail.context.listCases(""), /DATA_INTEGRITY_ERROR/);
+
+  const duplicateCode = createRuntime({
+    salesRows: [makeSalesRow(), makeSalesRow({ 2: "other@company.example" })],
+  });
+  assert.throws(() => duplicateCode.context.listCases(""), /DATA_INTEGRITY_ERROR/);
+});
+
+test("SALES 不得讀取 N 空白案件，MANAGER 仍可讀取", () => {
+  const rows = [makeRow({ 13: "", 14: "" })];
+  const sales = createRuntime({ rows });
+  assert.equal(sales.context.listCases("").length, 0);
+  assert.throws(() => sales.context.getCase("115DX2031"), /FORBIDDEN/);
+
+  const manager = createRuntime({ email: "april@company.example", rows });
+  assert.equal(manager.context.getCase("115DX2031").serialNumber, "115DX2031");
+});
+
+test("正式授權不再依賴 FOLLOWUP_ALLOWED_EMAILS 或前端 email", () => {
+  assert.doesNotMatch(serverSource, /FOLLOWUP_ALLOWED_EMAILS|allowedEmails|parseAllowedEmails_/);
+  assert.doesNotMatch(clientHtml, /salesCode\s*:|email\s*:/);
+  assert.match(serverSource, /Session\.getActiveUser\(\)\.getEmail\(\)/);
+  assert.match(serverSource, /FOLLOWUP_SALES_SHEET_NAME_ = '業務資料'/);
+});
+
+test("Client 將 FORBIDDEN 與 UNAUTHORIZED 轉為一般訊息", () => {
+  assert.match(clientHtml, /您沒有權限查看或修改此案件。/);
+  assert.match(clientHtml, /您目前使用的 Google 帳號沒有 Follow-up 系統存取權限。/);
+  assert.match(clientHtml, /code\.includes\('FORBIDDEN'\)/);
+  assert.match(clientHtml, /code\.includes\('UNAUTHORIZED'\)/);
 });

@@ -3,6 +3,7 @@
     'use strict';
 
     const AUTH_MESSAGE = '您目前使用的 Google 帳號沒有 Follow-up 系統存取權限。';
+    const FORBIDDEN_MESSAGE = '您沒有權限查看或修改此案件。';
     const DIRTY_MESSAGE = '目前有尚未儲存的修改，確定要離開嗎？';
     const REOPEN_MESSAGE = '重新開啟案件將清除原結案日期。';
     const DEFAULT_SAVE_MESSAGE = '儲存桌數、三次洽談、案件狀態與結案日期';
@@ -510,7 +511,8 @@
 
     function messageForFailure_(error, fallback) {
       const code = String(error && error.message ? error.message : '');
-      if (code.includes('AUTH_')) return AUTH_MESSAGE;
+      if (code.includes('UNAUTHORIZED') || code.includes('AUTH_')) return AUTH_MESSAGE;
+      if (code.includes('FORBIDDEN')) return FORBIDDEN_MESSAGE;
       if (code.includes('NOT_FOUND')) return '找不到這筆新人資料';
       if (code.includes('DATA_INTEGRITY_ERROR') || code.includes('DATA_SCHEMA_ERROR')) {
         return '案件資料異常，請聯絡管理人員';
@@ -520,7 +522,8 @@
 
     function saveMessageForFailure_(error) {
       const code = String(error && error.message ? error.message : '');
-      if (code.includes('AUTH_')) return AUTH_MESSAGE;
+      if (code.includes('UNAUTHORIZED') || code.includes('AUTH_')) return AUTH_MESSAGE;
+      if (code.includes('FORBIDDEN')) return FORBIDDEN_MESSAGE;
       if (code.includes('CONFLICT')) {
         return '此案件已被其他人更新，請重新載入最新資料後再編輯。';
       }

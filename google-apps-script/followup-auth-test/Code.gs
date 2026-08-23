@@ -3,7 +3,6 @@
  *
  * Required Script Properties:
  *   FOLLOWUP_ALLOWED_DOMAIN
- *   FOLLOWUP_ALLOWED_EMAILS
  *   FOLLOWUP_SPREADSHEET_ID
  *   FOLLOWUP_IDENTITY_SECRET
  *
@@ -13,10 +12,12 @@
  */
 
 const FOLLOWUP_SHEET_NAME_ = '新人資料';
+const FOLLOWUP_SALES_SHEET_NAME_ = '業務資料';
 const FOLLOWUP_MAX_LIST_RESULTS_ = 100;
 const FOLLOWUP_MAX_CONSULTATION_LENGTH_ = 5000;
 const FOLLOWUP_LOCK_TIMEOUT_MS_ = 30000;
 const FOLLOWUP_ALLOWED_STATUSES_ = Object.freeze(['洽談中', '已訂', '退訂', '流失']);
+const FOLLOWUP_ALLOWED_ROLES_ = Object.freeze(['MANAGER', 'SALES']);
 const FOLLOWUP_UPDATE_FIELDS_ = Object.freeze([
   'serialNumber',
   'identityToken',
@@ -31,9 +32,25 @@ const FOLLOWUP_UPDATE_FIELDS_ = Object.freeze([
 
 const AUTH_PROPERTY_KEYS_ = Object.freeze({
   allowedDomain: 'FOLLOWUP_ALLOWED_DOMAIN',
-  allowedEmails: 'FOLLOWUP_ALLOWED_EMAILS',
   spreadsheetId: 'FOLLOWUP_SPREADSHEET_ID',
   identitySecret: 'FOLLOWUP_IDENTITY_SECRET',
+});
+
+const FOLLOWUP_SALES_EXPECTED_HEADERS_ = Object.freeze([
+  '業務代碼',
+  '業務姓名',
+  '業務Email',
+  'LINE連結',
+  '啟用',
+  'Follow-up角色',
+]);
+
+const FOLLOWUP_SALES_COLUMNS_ = Object.freeze({
+  salesCode: 0,
+  salesName: 1,
+  email: 2,
+  enabled: 4,
+  role: 5,
 });
 
 const FOLLOWUP_EXPECTED_HEADERS_ = Object.freeze([
@@ -84,7 +101,7 @@ const FOLLOWUP_COLUMNS_ = Object.freeze({
 
 function doGet() {
   try {
-    requireAuthorizedUser_();
+    getCurrentFollowupUser_();
     return HtmlService.createTemplateFromFile('Index')
       .evaluate()
       .setTitle('Wedding Chapter｜新人案件');
@@ -106,7 +123,7 @@ function doGet() {
  * @return {Array<Object>}
  */
 function listCases(query) {
-  requireAuthorizedUser_();
+  const currentUser = getCurrentFollowupUser_();
 
   const normalizedQuery = normalizeSearchQuery_(query);
   const rows = readListRows_();
@@ -115,6 +132,7 @@ function listCases(query) {
   for (let index = rows.length - 1; index >= 0; index -= 1) {
     const row = rows[index];
     if (!cleanText_(row[FOLLOWUP_COLUMNS_.serialNumber])) continue;
+    if (!canAccessCase_(currentUser, row)) continue;
     if (normalizedQuery && !rowMatchesQuery_(row, normalizedQuery)) continue;
 
     results.push(mapCaseSummary_(row));
@@ -132,15 +150,16 @@ function listCases(query) {
  * @return {Object}
  */
 function getCase(serialNumber) {
-  requireAuthorizedUser_();
+  const currentUser = getCurrentFollowupUser_();
 
   const target = normalizeSerialNumber_(serialNumber);
   if (!target) throw new Error('NOT_FOUND');
 
   const rows = readDetailRows_();
   const located = locateCaseBySerial_(rows, target);
-  const secret = requireIdentitySecret_();
+  assertCaseAccess_(currentUser, located.row);
 
+  const secret = requireIdentitySecret_();
   validateDuplicateKeyUniqueness_(rows, located.row);
   return mapCaseDetail_(located.row, secret);
 }
@@ -152,7 +171,7 @@ function getCase(serialNumber) {
  * @return {Object}
  */
 function updateCase(payload) {
-  requireAuthorizedUser_();
+  const currentUser = getCurrentFollowupUser_();
   validateUpdatePayloadShape_(payload);
 
   const lock = LockService.getScriptLock();
@@ -163,17 +182,20 @@ function updateCase(payload) {
   }
 
   try {
-    const input = normalizeUpdatePayload_(payload);
+    const identity = normalizeUpdateIdentity_(payload);
     const rows = readDetailRows_();
     const secret = requireIdentitySecret_();
-    const serialMatch = locateCaseBySerial_(rows, input.serialNumber);
-    const identityMatch = locateCaseByIdentityToken_(rows, input.identityToken, secret);
+    const serialMatch = locateCaseBySerial_(rows, identity.serialNumber);
+    const identityMatch = locateCaseByIdentityToken_(rows, identity.identityToken, secret);
 
     if (serialMatch.index !== identityMatch.index) {
       throw new Error('DATA_INTEGRITY_ERROR');
     }
 
     validateDuplicateKeyUniqueness_(rows, serialMatch.row);
+    assertCaseAccess_(currentUser, serialMatch.row);
+
+    const input = normalizeUpdatePayload_(payload);
 
     const currentRevisionToken = createRevisionToken_(serialMatch.row, secret);
     if (currentRevisionToken !== input.revisionToken) {
@@ -207,40 +229,85 @@ function updateCase(payload) {
 }
 
 /**
- * Rejects unless the active Google account belongs to the configured
- * Workspace domain and exact server-side email allowlist.
+ * Resolves the active Workspace account against the formal sales sheet.
  *
- * @return {{email: string, domainValid: boolean, emailAllowlisted: boolean}}
+ * @return {{salesCode: string, salesName: string, email: string, role: string}}
  */
-function requireAuthorizedUser_() {
+function getCurrentFollowupUser_() {
   const properties = PropertiesService.getScriptProperties();
   const allowedDomain = normalizeDomain_(
     properties.getProperty(AUTH_PROPERTY_KEYS_.allowedDomain)
   );
-  const allowedEmails = parseAllowedEmails_(
-    properties.getProperty(AUTH_PROPERTY_KEYS_.allowedEmails)
-  );
 
-  if (!allowedDomain || allowedEmails.length === 0) {
-    throw new Error('AUTH_CONFIGURATION_MISSING');
-  }
+  if (!allowedDomain) throw new Error('AUTH_CONFIGURATION_MISSING');
 
   const email = normalizeEmail_(Session.getActiveUser().getEmail());
-  if (!email) throw new Error('AUTH_EMAIL_UNAVAILABLE');
+  if (!email) throw new Error('UNAUTHORIZED');
 
   const emailDomain = email.split('@')[1] || '';
-  if (emailDomain !== allowedDomain) throw new Error('AUTH_DOMAIN_DENIED');
-  if (allowedEmails.indexOf(email) === -1) throw new Error('AUTH_EMAIL_DENIED');
+  if (emailDomain !== allowedDomain) throw new Error('UNAUTHORIZED');
+
+  const rows = readFollowupUsers_();
+  const matches = rows.filter(function (row) {
+    return normalizeEmail_(row[FOLLOWUP_SALES_COLUMNS_.email]) === email;
+  });
+
+  if (matches.length === 0) throw new Error('UNAUTHORIZED');
+  if (matches.length > 1) throw new Error('DATA_INTEGRITY_ERROR');
+
+  const userRow = matches[0];
+  const salesCode = normalizeSalesCode_(userRow[FOLLOWUP_SALES_COLUMNS_.salesCode]);
+  const salesName = cleanText_(userRow[FOLLOWUP_SALES_COLUMNS_.salesName]);
+  const role = cleanText_(userRow[FOLLOWUP_SALES_COLUMNS_.role]).toUpperCase();
+
+  if (!salesCode || !isFollowupUserEnabled_(userRow[FOLLOWUP_SALES_COLUMNS_.enabled])) {
+    throw new Error('UNAUTHORIZED');
+  }
+  if (FOLLOWUP_ALLOWED_ROLES_.indexOf(role) === -1) throw new Error('UNAUTHORIZED');
+
+  const duplicateSalesCodes = rows.filter(function (row) {
+    return normalizeSalesCode_(row[FOLLOWUP_SALES_COLUMNS_.salesCode]) === salesCode;
+  });
+  if (duplicateSalesCodes.length > 1) throw new Error('DATA_INTEGRITY_ERROR');
 
   return {
+    salesCode: salesCode,
+    salesName: salesName,
     email: email,
-    domainValid: true,
-    emailAllowlisted: true,
+    role: role,
   };
+}
+
+function requireAuthorizedUser_() {
+  return getCurrentFollowupUser_();
 }
 
 function include_(filename) {
   return HtmlService.createHtmlOutputFromFile(filename).getContent();
+}
+
+function readFollowupUsers_() {
+  const spreadsheetId = requireSpreadsheetId_();
+  const response = Sheets.Spreadsheets.Values.batchGet(spreadsheetId, {
+    ranges: [quoteNamedSheetRange_(FOLLOWUP_SALES_SHEET_NAME_, 'A1:F')],
+    majorDimension: 'ROWS',
+    valueRenderOption: 'FORMATTED_VALUE',
+    dateTimeRenderOption: 'FORMATTED_STRING',
+  });
+  const rows = valuesFrom_((response.valueRanges || [])[0]);
+  const header = rows[0] || [];
+  const actual = padRow_(header, FOLLOWUP_SALES_EXPECTED_HEADERS_.length).map(cleanText_);
+  const valid = FOLLOWUP_SALES_EXPECTED_HEADERS_.every(function (expected, index) {
+    return actual[index] === expected;
+  });
+
+  if (!valid || header.length !== FOLLOWUP_SALES_EXPECTED_HEADERS_.length) {
+    throw new Error('DATA_INTEGRITY_ERROR');
+  }
+
+  return rows.slice(1).map(function (row) {
+    return padRow_(row, FOLLOWUP_SALES_EXPECTED_HEADERS_.length);
+  });
 }
 
 function readListRows_() {
@@ -380,6 +447,16 @@ function validateDuplicateKeyUniqueness_(rows, targetRow) {
   if (matches.length > 1) throw new Error('DATA_INTEGRITY_ERROR');
 }
 
+function canAccessCase_(currentUser, row) {
+  if (currentUser.role === 'MANAGER') return true;
+  const caseSalesCode = normalizeSalesCode_(row[FOLLOWUP_COLUMNS_.salesCode]);
+  return Boolean(caseSalesCode) && caseSalesCode === currentUser.salesCode;
+}
+
+function assertCaseAccess_(currentUser, row) {
+  if (!canAccessCase_(currentUser, row)) throw new Error('FORBIDDEN');
+}
+
 function validateUpdatePayloadShape_(payload) {
   if (!payload || Object.prototype.toString.call(payload) !== '[object Object]') {
     throw new Error('VALIDATION_ERROR');
@@ -396,6 +473,22 @@ function validateUpdatePayloadShape_(payload) {
   if (hasUnknownField || hasMissingField || keys.length !== FOLLOWUP_UPDATE_FIELDS_.length) {
     throw new Error('VALIDATION_ERROR');
   }
+}
+
+function normalizeUpdateIdentity_(payload) {
+  const serialNumber = normalizeSerialNumber_(payload.serialNumber);
+  const identityToken = cleanText_(payload.identityToken);
+  const revisionToken = cleanText_(payload.revisionToken);
+
+  if (!serialNumber || !isSecureToken_(identityToken) || !isSecureToken_(revisionToken)) {
+    throw new Error('VALIDATION_ERROR');
+  }
+
+  return {
+    serialNumber: serialNumber,
+    identityToken: identityToken,
+    revisionToken: revisionToken,
+  };
 }
 
 function normalizeUpdatePayload_(payload) {
@@ -547,7 +640,11 @@ function requireIdentitySecret_() {
 }
 
 function quoteSheetRange_(range) {
-  return "'" + FOLLOWUP_SHEET_NAME_.replace(/'/g, "''") + "'!" + range;
+  return quoteNamedSheetRange_(FOLLOWUP_SHEET_NAME_, range);
+}
+
+function quoteNamedSheetRange_(sheetName, range) {
+  return "'" + cleanText_(sheetName).replace(/'/g, "''") + "'!" + range;
 }
 
 function firstRow_(valueRange) {
@@ -623,20 +720,16 @@ function normalizeEmail_(value) {
   return cleanText_(value).toLowerCase();
 }
 
+function normalizeSalesCode_(value) {
+  return cleanText_(value).toUpperCase();
+}
+
 function normalizeDomain_(value) {
   return cleanText_(value).toLowerCase().replace(/^@+/, '');
 }
 
-function parseAllowedEmails_(value) {
-  const uniqueEmails = {};
-  cleanText_(value)
-    .split(/[\s,;]+/)
-    .map(normalizeEmail_)
-    .filter(Boolean)
-    .forEach(function (email) {
-      uniqueEmails[email] = true;
-    });
-  return Object.keys(uniqueEmails);
+function isFollowupUserEnabled_(value) {
+  return value === true || cleanText_(value).toUpperCase() === 'TRUE';
 }
 
 function digitsOnly_(value) {

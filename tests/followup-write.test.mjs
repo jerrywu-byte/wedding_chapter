@@ -33,6 +33,16 @@ const HEADERS = [
   "結案日期",
 ];
 
+const SALES_HEADERS = ["業務代碼", "業務姓名", "業務Email", "LINE連結", "啟用", "Follow-up角色"];
+
+function makeSalesRow(overrides = {}) {
+  const row = ["JW", "Jerry", "jerry@company.example", "", "TRUE", "SALES"];
+  Object.entries(overrides).forEach(([index, value]) => {
+    row[Number(index)] = value;
+  });
+  return row;
+}
+
 const SECRET = "test-only-identity-secret-at-least-32-characters";
 
 function makeRow(overrides = {}) {
@@ -69,6 +79,11 @@ function createRuntime(options = {}) {
     email: options.email ?? "jerry@company.example",
     headers: options.headers ?? HEADERS.slice(),
     rows: options.rows ?? [makeRow()],
+    salesHeaders: options.salesHeaders ?? SALES_HEADERS.slice(),
+    salesRows: options.salesRows ?? [
+      makeSalesRow(),
+      makeSalesRow({ 0: "AP", 1: "April", 2: "april@company.example", 5: "MANAGER" }),
+    ],
     batchGetCalls: 0,
     updateCalls: 0,
     updates: [],
@@ -78,7 +93,6 @@ function createRuntime(options = {}) {
     updateObservedLock: false,
     properties: {
       FOLLOWUP_ALLOWED_DOMAIN: "company.example",
-      FOLLOWUP_ALLOWED_EMAILS: "jerry@company.example,april@company.example",
       FOLLOWUP_SPREADSHEET_ID: "test-spreadsheet-id",
       FOLLOWUP_IDENTITY_SECRET: SECRET,
       ...(options.properties ?? {}),
@@ -86,6 +100,7 @@ function createRuntime(options = {}) {
   };
 
   function valuesForRange(range) {
+    if (range.endsWith("業務資料'!A1:F")) return [state.salesHeaders, ...state.salesRows];
     if (range.endsWith("A1:T1")) return [state.headers];
     if (range.endsWith("A2:O")) return state.rows.map((row) => row.slice(0, 15));
     if (range.endsWith("S2:S")) return state.rows.map((row) => [row[18]]);
@@ -209,7 +224,7 @@ test("1 授權帳號可 update", () => {
 });
 
 test("2 未授權帳號不可 update 且不讀寫 Sheet", () => {
-  const { context, state } = createRuntime({ email: "other@company.example" });
+  const { context, state } = createRuntime({ email: "other@outside.example" });
   const payload = {
     serialNumber: "115DX2031",
     identityToken: "a".repeat(43),
@@ -221,7 +236,7 @@ test("2 未授權帳號不可 update 且不讀寫 Sheet", () => {
     status: "洽談中",
     closedDate: "",
   };
-  assert.throws(() => context.updateCase(payload), /AUTH_EMAIL_DENIED/);
+  assert.throws(() => context.updateCase(payload), /UNAUTHORIZED/);
   assert.equal(state.batchGetCalls, 0);
   assert.equal(state.updateCalls, 0);
   assert.equal(state.lockWaitCalls, 0);
@@ -561,4 +576,82 @@ test("UI 提供重新開啟確認、CONFLICT 訊息與可編輯 P/Q/R", () => {
   assert.match(clientHtml, /此案件已被其他人更新，請重新載入最新資料後再編輯。/);
   assert.match(clientHtml, /textarea\.maxLength = 5000/);
   assert.doesNotMatch(clientHtml, /textarea\.readOnly = true/);
+});
+
+test("SALES update 自己案件成功，他人案件回傳 FORBIDDEN 且完全不寫入", () => {
+  const rows = [
+    makeRow(),
+    makeRow({ 0: "115DX2032", 2: "private-duplicate-key-two", 13: "AP", 14: "April" }),
+  ];
+  const { context, state } = createRuntime({ rows });
+  assert.doesNotThrow(() => context.updateCase(payloadFor(context, { firstConsultation: "自己案件" })));
+  assert.equal(state.updateCalls, 1);
+
+  const otherDetail = createRuntime({ email: "april@company.example", rows }).context.getCase("115DX2032");
+  const forbiddenPayload = {
+    serialNumber: otherDetail.serialNumber,
+    identityToken: otherDetail.identityToken,
+    revisionToken: otherDetail.revisionToken,
+    estimatedTables: otherDetail.estimatedTables,
+    firstConsultation: "不可寫入",
+    secondConsultation: otherDetail.secondConsultation,
+    thirdConsultation: otherDetail.thirdConsultation,
+    status: otherDetail.status,
+    closedDate: otherDetail.closedDate,
+  };
+  const beforeOther = state.rows[1].slice();
+  assert.throws(() => context.updateCase(forbiddenPayload), /FORBIDDEN/);
+  assert.equal(state.updateCalls, 1);
+  assert.deepEqual(state.rows[1], beforeOther);
+});
+
+test("MANAGER 可修改任一業務的案件", () => {
+  const rows = [makeRow()];
+  const { context, state } = createRuntime({ email: "april@company.example", rows });
+  const result = context.updateCase(payloadFor(context, { estimatedTables: "31" }));
+  assert.equal(result.estimatedTables, "31");
+  assert.equal(state.rows[0][12], "31");
+  assert.equal(state.updateCalls, 1);
+});
+
+test("SALES 不得更新 N 空白案件", () => {
+  const rows = [makeRow({ 13: "", 14: "" })];
+  const managerRuntime = createRuntime({ email: "april@company.example", rows });
+  const detail = managerRuntime.context.getCase("115DX2031");
+  const payload = {
+    serialNumber: detail.serialNumber,
+    identityToken: detail.identityToken,
+    revisionToken: detail.revisionToken,
+    estimatedTables: detail.estimatedTables,
+    firstConsultation: detail.firstConsultation,
+    secondConsultation: detail.secondConsultation,
+    thirdConsultation: detail.thirdConsultation,
+    status: detail.status,
+    closedDate: detail.closedDate,
+  };
+  const salesRuntime = createRuntime({ rows });
+  assert.throws(() => salesRuntime.context.updateCase(payload), /FORBIDDEN/);
+  assert.equal(salesRuntime.state.updateCalls, 0);
+});
+
+test("前端無法藉由偽造 salesCode 取得他人案件權限", () => {
+  const { context, state } = createRuntime();
+  const payload = payloadFor(context);
+  payload.salesCode = "AP";
+  assert.throws(() => context.updateCase(payload), /VALIDATION_ERROR/);
+  assert.equal(state.updateCalls, 0);
+  assert.doesNotMatch(clientHtml, /currentUser|role\s*:|salesCode\s*:/);
+});
+
+test("ownership 檢查位於 Lock critical section 且早於 revision 與寫入", () => {
+  const updateStart = serverSource.indexOf("function updateCase(payload)");
+  const updateEnd = serverSource.indexOf("function getCurrentFollowupUser_", updateStart);
+  const updateSource = serverSource.slice(updateStart, updateEnd);
+  const lockIndex = updateSource.indexOf("lock.waitLock");
+  const ownershipIndex = updateSource.indexOf("assertCaseAccess_");
+  const revisionIndex = updateSource.indexOf("createRevisionToken_");
+  const writeIndex = updateSource.indexOf("writeCaseFields_");
+  assert.ok(lockIndex >= 0 && ownershipIndex > lockIndex);
+  assert.ok(revisionIndex > ownershipIndex);
+  assert.ok(writeIndex > revisionIndex);
 });
