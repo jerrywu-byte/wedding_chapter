@@ -9,6 +9,8 @@ const client = read("lib/weddingChapterSubmission.ts");
 const api = read("app/api/submissions/route.ts");
 const gas = read("google-apps-script/Code.gs");
 const css = read("presentation/styles/wedding-experience-enhancements.css");
+const profileSubmission = runner.slice(runner.indexOf("const submitProfile"), runner.indexOf("const answer"));
+const endingView = runner.slice(runner.indexOf('{session.step === "ending"'), runner.indexOf("{cardPreview"));
 
 test("業務名稱、代碼與 LINE 網址由業務資料分頁動態讀取", () => {
   assert.match(sales, /loadSalesOptions/);
@@ -39,10 +41,17 @@ test("送至 Sheet 的值由目前業務名單轉為大寫 salesCode", () => {
   assert.match(gas, /cleanText_\(row\[0\]\)\.toUpperCase\(\)/);
 });
 
-test("LINE 按鈕只在 Sheet 成功並取得流水號後顯示", () => {
-  assert.match(runner, /await submitWeddingChapter\(payload\)/);
-  assert.match(runner, /update\(\{ submissionNumber: saved\.serialNumber/);
-  assert.match(runner, /session\.submissionNumber \? <div className="wx-submission-success"/);
+test("基本資料成功寫入 Sheet 並取得訪客編號後才進入體驗", () => {
+  assert.match(profileSubmission, /const payload = createWeddingChapterSubmission\(\{ \.\.\.session, profile \}, salesOptions\)/);
+  assert.match(profileSubmission, /await submitWeddingChapter\(payload\)/);
+  assert.match(profileSubmission, /submissionNumber: saved\.serialNumber/);
+  assert.match(profileSubmission, /submittedAt: new Date\(\)\.toISOString\(\)/);
+  assert.match(profileSubmission, /step: "opening"/);
+  assert.ok(profileSubmission.indexOf("await submitWeddingChapter(payload)") < profileSubmission.lastIndexOf('step: "opening"'));
+});
+
+test("LINE 按鈕在完成頁沿用已建立案件的訪客編號", () => {
+  assert.match(endingView, /className="wx-submission-success"/);
   assert.match(runner, /salesLineUrl \? <>/);
   assert.match(runner, /前往官方 LINE 完成報到/);
   assert.match(runner, /target="_blank"/);
@@ -55,16 +64,20 @@ test("成功頁將 serialNumber 顯示為訪客編號", () => {
   assert.doesNotMatch(runner, /流水編號：/);
 });
 
-test("找不到業務網址時保留成功與流水號但不建立錯誤連結", () => {
+test("找不到業務網址時保留成功與訪客編號但不建立錯誤連結", () => {
   assert.match(runner, /資料已成功送出，請由現場服務人員協助加入官方 LINE。/);
   assert.match(runner, /console\.warn\("Wedding Chapter 無法識別業務 LINE 網址"/);
   assert.doesNotMatch(sales, /fallback/i);
 });
 
-test("Sheet 失敗可重新送出且成功前不顯示 LINE", () => {
-  assert.match(runner, /catch \(error\)/);
-  assert.match(runner, /finally \{[\s\S]*submitLock\.current = false;[\s\S]*setSubmitting\(false\)/);
-  assert.match(runner, /submitting \? "資料送出中…" : "完成並送出"/);
+test("基本資料送出失敗時保留頁面並允許重試", () => {
+  assert.match(profileSubmission, /catch \{/);
+  assert.match(profileSubmission, /資料送出失敗，請稍後再試。/);
+  assert.match(profileSubmission, /finally \{[\s\S]*submitLock\.current = false;[\s\S]*setSubmitting\(false\)/);
+  assert.match(runner, /disabled=\{submitting\}/);
+  assert.match(runner, /submitting \? "正在建立新人資料…"/);
+  const catchBlock = profileSubmission.slice(profileSubmission.indexOf("catch"), profileSubmission.indexOf("finally"));
+  assert.doesNotMatch(catchBlock, /step: "opening"|go\("opening"\)/);
   assert.match(client, /!body\.success/);
   assert.match(client, /body\.message \|\| body\.error/);
   assert.match(client, /!body\.serialNumber\?\.trim\(\)/);
@@ -87,11 +100,26 @@ test("業務名單採 simple request 且不把 Email 回傳前端", () => {
 });
 
 test("重複點擊由前端鎖與 Apps Script idempotency 雙重保護", () => {
-  assert.match(runner, /if \(submitLock\.current \|\| session\.submissionNumber\) return/);
+  assert.match(profileSubmission, /foundErrors\.length \|\| submitLock\.current/);
+  assert.match(profileSubmission, /if \(session\.submissionNumber\) \{[\s\S]*step: "opening"[\s\S]*return;/);
   assert.match(client, /activeSubmissions\.get\(payload\.submissionId\)/);
   assert.match(gas, /LockService\.getScriptLock\(\)/);
   assert.match(gas, /findSubmissionById_/);
   assert.match(gas, /status: 'ALREADY_SAVED'/);
+});
+
+test("sessionStorage 保留 submissionId 與訪客編號，重新整理不建立第二案", () => {
+  assert.match(runner, /sessionStorage\.setItem\(key\(experienceId\), JSON\.stringify\(session\)\)/);
+  assert.match(runner, /submissionClientId: raw\.submissionClientId \|\| base\.submissionClientId/);
+  assert.match(runner, /submissionNumber: raw\.submissionNumber \|\| null/);
+  assert.match(runner, /if \(step !== "profile" && !raw\.submissionNumber\) step = "profile"/);
+  assert.match(client, /submissionId: session\.submissionClientId/);
+});
+
+test("最後完成篇章不再建立案件或呼叫 submission API", () => {
+  assert.doesNotMatch(endingView, /createWeddingChapterSubmission|submitWeddingChapter|completeChapter|完成並送出|資料送出中/);
+  assert.match(endingView, /Wedding Chapter 已完成/);
+  assert.match(endingView, /訪客編號：<strong>\{session\.submissionNumber\}/);
 });
 
 test("手機版業務選單與按鈕單欄且不會橫向溢出", () => {

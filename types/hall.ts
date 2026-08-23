@@ -7,8 +7,6 @@ export type TimeSlot = "lunch" | "dinner";
 export interface HallCapacity {
   minimumTables: number | null;
   maximumTables: number | null;
-  comfortableMinimumTables: number | null;
-  comfortableMaximumTables: number | null;
   minimumGuests?: number | null;
   maximumGuests?: number | null;
 }
@@ -85,21 +83,10 @@ export interface HallsData {
 
 export function validateHall(hall: Hall): string[] {
   const errors: string[] = [];
-  const { minimumTables: min, maximumTables: max,
-    comfortableMinimumTables: comfortableMin,
-    comfortableMaximumTables: comfortableMax } = hall.capacity;
+  const { minimumTables: min, maximumTables: max } = hall.capacity;
 
   if (min !== null && max !== null && min > max) {
     errors.push(`${hall.id}: minimumTables 不可大於 maximumTables`);
-  }
-  if ((comfortableMin === null) !== (comfortableMax === null)) {
-    errors.push(`${hall.id}: 舒適推薦桌數上下限必須同時提供或同時為 null`);
-  }
-  if ((min === null || max === null) && (comfortableMin !== null || comfortableMax !== null)) {
-    errors.push(`${hall.id}: 無最佳推薦桌數時不可設定舒適推薦桌數`);
-  }
-  if (comfortableMin !== null && comfortableMax !== null && comfortableMin > comfortableMax) {
-    errors.push(`${hall.id}: comfortableMinimumTables 不可大於 comfortableMaximumTables`);
   }
   return errors;
 }
