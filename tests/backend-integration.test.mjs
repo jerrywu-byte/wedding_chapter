@@ -9,9 +9,13 @@ const planners = readFileSync("lib/banquetPlanners.ts", "utf8");
 const gas = readFileSync("google-apps-script/Code.gs", "utf8");
 const deployDocs = readFileSync("docs/Backend-Deployment.md", "utf8");
 
-test("完成按鈕只在正式儲存成功後顯示流水號", () => {
-  assert.match(runner, /await submitWeddingChapter/);
-  assert.match(runner, /saved\.serialNumber/);
+test("基本資料寫入成功並取得訪客編號後才進入測驗流程", () => {
+  const profileSubmission = runner.slice(runner.indexOf("const submitProfile"), runner.indexOf("const answer"));
+  const endingView = runner.slice(runner.indexOf('{session.step === "ending"'), runner.indexOf("{cardPreview"));
+  assert.match(profileSubmission, /await submitWeddingChapter/);
+  assert.match(profileSubmission, /submissionNumber: saved\.serialNumber/);
+  assert.match(profileSubmission, /step: "opening"/);
+  assert.doesNotMatch(endingView, /submitWeddingChapter|createWeddingChapterSubmission|completeChapter/);
   assert.doesNotMatch(runner, /PDF|寄給|plannerEmail/);
   assert.match(client, /fetch\("\/api\/submissions"/);
 });

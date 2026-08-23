@@ -29,7 +29,7 @@ export interface ContactInfo {
 }
 
 export interface RecommendationSession {
-  sessionVersion: 3;
+  sessionVersion: 4;
   quizVersion: string;
   sessionId: string;
   currentStep: RecommendationStep;
@@ -37,7 +37,6 @@ export interface RecommendationSession {
   answers: WeddingQuizAnswer[];
   quizResult: QuizResult | null;
   recommendations: RankedHallByQuiz[];
-  manualConfirmationHalls: RankedHallByQuiz[];
   comparisonHallIds: string[];
   ceremonyInterest: boolean | null;
   contactInfo: ContactInfo;

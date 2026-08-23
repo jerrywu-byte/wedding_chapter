@@ -78,7 +78,7 @@ function profileErrors(profile: WeddingProfile) {
 function recover(raw: Partial<WeddingExperienceSession> | null, id: ExperienceId): WeddingExperienceSession {
   const questions = getActiveQuizQuestions();
   const base: WeddingExperienceSession = {
-    version: 2, quizVersion: QUIZ_VERSION, experienceId: id, step: "profile", profile: blank,
+    version: 3, quizVersion: QUIZ_VERSION, experienceId: id, step: "profile", profile: blank,
     currentQuestionIndex: 0, quizAnswers: [], personalityResult: null,
     venueRecommendations: [], submissionClientId: newClientSubmissionId(),
     submissionNumber: null, submittedAt: null,
@@ -96,16 +96,18 @@ function recover(raw: Partial<WeddingExperienceSession> | null, id: ExperienceId
       : tableRangeForLegacyCount(legacy?.estimatedTables),
   });
   const quizVersionMatches = raw.quizVersion === QUIZ_VERSION;
+  const recommendationVersionMatches = raw.version === 3;
   let step = validStep(raw.step) ? raw.step : "profile";
   const quizAnswers = quizVersionMatches && Array.isArray(raw.quizAnswers) ? raw.quizAnswers : [];
   const personalityResult = quizVersionMatches ? raw.personalityResult ?? null : null;
-  const venueRecommendations = quizVersionMatches && Array.isArray(raw.venueRecommendations) ? raw.venueRecommendations : [];
+  const venueRecommendations = quizVersionMatches && recommendationVersionMatches && Array.isArray(raw.venueRecommendations) ? raw.venueRecommendations.slice(0, 3) : [];
   if (!quizVersionMatches && step !== "profile") step = "opening";
   if (step !== "profile" && profileErrors(profile).length) step = "profile";
+  if (step !== "profile" && !raw.submissionNumber) step = "profile";
   if (["personality-result", "venue-result", "ending"].includes(step) && !personalityResult?.isComplete) step = "quiz";
   if (["venue-result", "ending"].includes(step) && !venueRecommendations.length) step = "personality-result";
   return {
-    ...base, ...raw, version: 2, quizVersion: QUIZ_VERSION, step, profile,
+    ...base, ...raw, version: 3, quizVersion: QUIZ_VERSION, step, profile,
     currentQuestionIndex: Math.max(0, Math.min(Number(raw.currentQuestionIndex) || 0, questions.length - 1)),
     quizAnswers, personalityResult, venueRecommendations,
     submissionClientId: raw.submissionClientId || base.submissionClientId,
@@ -200,7 +202,7 @@ export default function WeddingExperienceRunner({ experienceId }: { experienceId
     }
   }, [session.submissionNumber, salesLineUrl, p.banquetPlanner]);
 
-  const submitProfile = () => {
+  const submitProfile = async () => {
     const profile = normalized(p);
     const foundErrors = profileErrors(profile);
     if (profile.banquetPlanner && !salesOptions.some(option => option.label === profile.banquetPlanner)) {
@@ -212,7 +214,30 @@ export default function WeddingExperienceRunner({ experienceId }: { experienceId
       requestAnimationFrame(() => plannerSelectRef.current?.focus());
       return;
     }
-    if (!foundErrors.length) update({ profile, step: "opening" });
+    if (foundErrors.length || submitLock.current) return;
+    if (session.submissionNumber) {
+      update({ profile, step: "opening" });
+      return;
+    }
+    submitLock.current = true;
+    setSubmitting(true);
+    setSubmissionMessage("正在建立新人資料…");
+    try {
+      const payload = createWeddingChapterSubmission({ ...session, profile }, salesOptions);
+      const saved = await submitWeddingChapter(payload);
+      update({
+        profile,
+        submissionNumber: saved.serialNumber,
+        submittedAt: new Date().toISOString(),
+        step: "opening",
+      });
+      setSubmissionMessage("");
+    } catch {
+      setSubmissionMessage("資料送出失敗，請稍後再試。");
+    } finally {
+      submitLock.current = false;
+      setSubmitting(false);
+    }
   };
   const answer = (optionId: string) => update({ quizAnswers: [...session.quizAnswers.filter(item => item.questionId !== question.id), { questionId: question.id, optionId }] });
   const next = () => {
@@ -234,9 +259,7 @@ export default function WeddingExperienceRunner({ experienceId }: { experienceId
   const findVenues = () => {
     if (!session.personalityResult) return;
     const found = rankHallsForBasicInfo({ estimatedTables: p.estimatedTables, estimatedTableRange: tableRange, estimatedGuests: null, tableCountUndecided: false }, session.personalityResult);
-    const primary = found.recommendations.filter(item => item.recommendationTier === "primary").slice(0, 3);
-    const comfort = found.recommendations.filter(item => item.recommendationTier === "comfort").slice(0, 3);
-    update({ venueRecommendations: [...primary, ...comfort], step: "venue-result" });
+    update({ venueRecommendations: found.recommendations.slice(0, 3), step: "venue-result" });
   };
   const closeCardPreview = () => {
     if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
@@ -309,24 +332,6 @@ export default function WeddingExperienceRunner({ experienceId }: { experienceId
       }
     }
   };
-  const completeChapter = async () => {
-    if (submitLock.current || session.submissionNumber) return;
-    submitLock.current = true;
-    setSubmitting(true);
-    setSubmissionMessage("資料送出中…");
-    try {
-      const payload = createWeddingChapterSubmission(session, salesOptions);
-      const saved = await submitWeddingChapter(payload);
-      update({ submissionNumber: saved.serialNumber, submittedAt: new Date().toISOString() });
-      setSubmissionMessage("");
-    } catch (error) {
-      setSubmissionMessage(error instanceof Error ? error.message : "暫時無法送出，請稍後再試。");
-    } finally {
-      submitLock.current = false;
-      setSubmitting(false);
-    }
-  };
-
   if (!ready) return <main className={`wx-flow wx-${experienceId}`}><p>正在翻開篇章…</p></main>;
   return <main className={`wx-flow wx-${experienceId}`} data-experience-id={experienceId} data-step={session.step}>
     <div className="wx-ambient" aria-hidden="true"><i/><i/><i/></div>
@@ -360,6 +365,7 @@ export default function WeddingExperienceRunner({ experienceId }: { experienceId
           </div>
         </div><label>預計桌數<select value={p.estimatedTableRangeId} onChange={event => { const id = event.target.value; const range = isEstimatedTableRangeId(id) ? getEstimatedTableRange(id) : null; updateProfile({ estimatedTableRangeId: isEstimatedTableRangeId(id) ? id : "", estimatedTables: range?.minimum ?? null }); }}><option value="" disabled>請選擇</option>{ESTIMATED_TABLE_RANGES.map(range => <option value={range.id} key={range.id}>{range.label}</option>)}</select></label></div>
         <Errors values={errors}/>
+        <p className="wx-submit-message" role="status" aria-live="polite">{submissionMessage}</p>
         <div className="wx-profile-actions">
           <label className="wx-planner" htmlFor="banquet-planner">負責業務 *
             <select ref={plannerSelectRef} id="banquet-planner" required disabled={salesLoading || Boolean(salesLoadError)} value={p.banquetPlanner} onChange={event => updateProfile({ banquetPlanner: event.target.value as WeddingProfile["banquetPlanner"] })}>
@@ -367,7 +373,7 @@ export default function WeddingExperienceRunner({ experienceId }: { experienceId
               {salesOptions.map(option => <option value={option.label} key={option.value}>{option.label}</option>)}
             </select>
           </label>
-          <button className="wx-primary">進入我們的婚禮故事 →</button>
+          <button className="wx-primary" disabled={submitting}>{submitting ? "正在建立新人資料…" : session.submissionNumber ? "繼續我們的婚禮故事 →" : "進入我們的婚禮故事 →"}</button>
         </div>
       </form>
     </section>}
@@ -375,8 +381,8 @@ export default function WeddingExperienceRunner({ experienceId }: { experienceId
     {session.step === "opening" && <section className="wx-page wx-center"><small>YOUR WEDDING CHAPTER</small><h1>{p.groomName} × {p.brideName}</h1><p>在五個故事章節裡，憑直覺選出最像你們的畫面。</p><button className="wx-primary" onClick={() => go("quiz")}>翻開故事 →</button><button className="wx-back" onClick={back}>返回基本資料</button></section>}
     {session.step === "quiz" && <section className="wx-page wx-quiz"><div className="wx-progress"><i style={{ width: `${(session.currentQuestionIndex + 1) / questions.length * 100}%` }}/></div><small>CHAPTER {String(session.currentQuestionIndex + 1).padStart(2, "0")} · {session.currentQuestionIndex + 1} / {questions.length}</small><h1><EditorialLineBreaks text={question.title} /></h1><div className="wx-options" data-question={question.id}>{question.options.map((option, index) => <button className={`wx-option wx-option-${index + 1}`} key={option.optionId} aria-pressed={session.quizAnswers.some(item => item.questionId === question.id && item.optionId === option.optionId)} onClick={() => answer(option.optionId)}><i>{String.fromCharCode(65 + index)}</i><b>{option.text}</b></button>)}</div><Errors values={errors}/><nav><button className="wx-back" onClick={back}>返回</button><button className="wx-primary" onClick={next}>{session.currentQuestionIndex === questions.length - 1 ? "揭曉篇章" : "下一題"} →</button></nav></section>}
     {session.step === "personality-result" && result && <section className="wx-page wx-center wx-personality"><small>THE STORY WITHIN YOU</small>{personality ? <><PersonalityCard personality={personality} coupleNames={`${p.groomName} × ${p.brideName}`} mode="screen"/><div className="wx-download-render" aria-hidden="true"><PersonalityCard ref={downloadCardRef} personality={personality} coupleNames={`${p.groomName} × ${p.brideName}`} mode="download"/></div><div className="wx-card-save"><button onClick={savePersonalityCard}>↓ 將人格卡另存為圖片</button><p role="status" aria-live="polite">{saveMessage}</p></div></> : <article className="personality-card-error"><h1>人格篇章需要重新整理</h1><p>這筆舊資料的人格代碼已無法辨識，請返回最後一題重新揭曉，不會隨機替換成其他人格。</p></article>}<div className="wx-actions"><button className="wx-back" onClick={back}>返回最後一題</button>{personality ? <button className="wx-primary" onClick={findVenues}>尋找故事舞台 →</button> : null}</div></section>}
-    {session.step === "venue-result" && <section className="wx-page wx-venues"><small>YOUR STORY STAGES</small><h1>適合你們的婚禮舞台</h1><p>{tableRangeLabel} · {dateLabel}</p><div className="wx-halls">{session.venueRecommendations.map((recommendation, index) => { const hall = getHallById(recommendation.hallId); const tierIndex = session.venueRecommendations.filter(item => item.recommendationTier === recommendation.recommendationTier).findIndex(item => item.hallId === recommendation.hallId); return <article key={recommendation.hallId}><em>0{index + 1}</em><small>{recommendation.recommendationTier === "comfort" ? `舒適推薦 ${tierIndex + 1}` : `最佳推薦 ${tierIndex + 1}`}</small><h2>{recommendation.displayName}</h2><p>{recommendation.reasons[1] || recommendation.reasons[0]}</p><b>{recommendation.recommendationTier === "comfort" ? hall?.capacity.comfortableMinimumTables : hall?.capacity.minimumTables ?? "待確認"}–{recommendation.recommendationTier === "comfort" ? hall?.capacity.comfortableMaximumTables : hall?.capacity.maximumTables ?? "待確認"} 桌</b><ul>{hall?.features.slice(0, 3).map(feature => <li key={feature}>{feature}</li>)}</ul><button onClick={() => setDetail(detail === recommendation.hallId ? null : recommendation.hallId)}>{detail === recommendation.hallId ? "收起詳細資料" : "查看詳細資料"}</button>{detail === recommendation.hallId && <div>{recommendation.reasons.map(reason => <p key={reason}>{reason}</p>)}</div>}</article>; })}</div><nav><button className="wx-back" onClick={back}>返回人格篇章</button><button className="wx-primary" onClick={() => go("ending")}>完成篇章 →</button></nav></section>}
-    {session.step === "ending" && <section className="wx-page wx-center wx-ending"><small>WEDDING CHAPTER</small><h1>{p.groomName} × {p.brideName}</h1><blockquote>「屬於你們的婚禮篇章，已經悄悄展開。」</blockquote><dl><div><dt>宴會企劃</dt><dd>{p.banquetPlanner}</dd></div><div><dt>宴會時段</dt><dd>{mealPeriodLabel}</dd></div><div><dt>人格篇章</dt><dd>{result?.displayName}</dd></div><div><dt>推薦廳房</dt><dd>{recommendedHallNames}</dd></div><div><dt>婚禮日期</dt><dd>{dateLabel}</dd></div><div><dt>預計桌數</dt><dd>{tableRangeLabel}</dd></div></dl><p className="wx-routing-note">完成後將交由 {p.banquetPlanner} 接續服務</p>{session.submissionNumber ? <div className="wx-submission-success" role="status"><h2>資料已成功送出</h2><p>訪客編號：<strong>{session.submissionNumber}</strong></p>{salesLineUrl ? <><p>最後一步：<br/>請前往官方 LINE 完成報到，<br/>讓婚禮顧問接續為你們服務。</p><a className="wx-line-button" href={salesLineUrl} target="_blank" rel="noopener noreferrer">前往官方 LINE 完成報到</a></> : <p>資料已成功送出，請由現場服務人員協助加入官方 LINE。</p>}</div> : <><p className="wx-submit-message" role="status" aria-live="polite">{submissionMessage}</p><div className="wx-actions"><button className="wx-back" disabled={submitting} onClick={back}>回到推薦廳房</button><button disabled={submitting} onClick={() => go("personality-result")}>重新閱讀篇章</button><button className="wx-primary" disabled={submitting} onClick={completeChapter}>{submitting ? "資料送出中…" : "完成並送出"}</button></div></>}</section>}
+    {session.step === "venue-result" && <section className="wx-page wx-venues"><small>YOUR STORY STAGES</small><h1>推薦廳房</h1><p>{tableRangeLabel} · {dateLabel}</p><div className="wx-halls">{session.venueRecommendations.map((recommendation, index) => { const hall = getHallById(recommendation.hallId); return <article key={recommendation.hallId}><em>0{index + 1}</em><small>推薦廳房</small><h2>{recommendation.displayName}</h2><p>{recommendation.reasons[1] || recommendation.reasons[0]}</p><b>{hall?.capacity.minimumTables ?? "待確認"}–{hall?.capacity.maximumTables ?? "待確認"} 桌</b><ul>{hall?.features.slice(0, 3).map(feature => <li key={feature}>{feature}</li>)}</ul><button onClick={() => setDetail(detail === recommendation.hallId ? null : recommendation.hallId)}>{detail === recommendation.hallId ? "收起詳細資料" : "查看詳細資料"}</button>{detail === recommendation.hallId && <div>{recommendation.reasons.map(reason => <p key={reason}>{reason}</p>)}</div>}</article>; })}</div><nav><button className="wx-back" onClick={back}>返回人格篇章</button><button className="wx-primary" onClick={() => go("ending")}>完成篇章 →</button></nav></section>}
+    {session.step === "ending" && <section className="wx-page wx-center wx-ending"><small>WEDDING CHAPTER</small><h1>{p.groomName} × {p.brideName}</h1><blockquote>「屬於你們的婚禮篇章，已經悄悄展開。」</blockquote><dl><div><dt>宴會企劃</dt><dd>{p.banquetPlanner}</dd></div><div><dt>宴會時段</dt><dd>{mealPeriodLabel}</dd></div><div><dt>人格篇章</dt><dd>{result?.displayName}</dd></div><div><dt>推薦廳房</dt><dd>{recommendedHallNames}</dd></div><div><dt>婚禮日期</dt><dd>{dateLabel}</dd></div><div><dt>預計桌數</dt><dd>{tableRangeLabel}</dd></div></dl><p className="wx-routing-note">完成後將交由 {p.banquetPlanner} 接續服務</p><div className="wx-submission-success" role="status"><h2>Wedding Chapter 已完成</h2><p>訪客編號：<strong>{session.submissionNumber}</strong></p>{salesLineUrl ? <><p>最後一步：<br/>請前往官方 LINE 完成報到，<br/>讓婚禮顧問接續為你們服務。</p><a className="wx-line-button" href={salesLineUrl} target="_blank" rel="noopener noreferrer">前往官方 LINE 完成報到</a></> : <p>資料已成功送出，請由現場服務人員協助加入官方 LINE。</p>}</div></section>}
     {cardPreview
       ? <PersonalityCardPreviewModal
           preview={cardPreview}
