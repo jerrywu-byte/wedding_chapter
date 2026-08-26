@@ -5,7 +5,7 @@ import { EditorialLineBreaks } from "../typography/EditorialLineBreaks";
 export interface PersonalityCardProps {
   personality: WeddingPersonality;
   coupleNames: string;
-  mode: "screen" | "download";
+  mode: "screen";
 }
 
 export const PersonalityCard = forwardRef<HTMLElement, PersonalityCardProps>(
