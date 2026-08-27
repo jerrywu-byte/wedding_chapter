@@ -44,6 +44,14 @@ npm run dev
 
 本機 Vite 會提供 GitHub Pages 相同的靜態版本。
 
+若只需人工查看新人端流程、不需要載入業務名單或送出基本資料，可在本機開啟：
+
+```text
+http://localhost:5173/wedding_chapter/?preview=1
+```
+
+此入口只在 Vite development mode 生效，會使用明確標示的假資料進入故事頁，不會呼叫業務名單服務、不會寫入 Google Sheet，也不會在 production build 開放。
+
 若需要維護原本的 Sites/Vinext 版本：
 
 ```bash

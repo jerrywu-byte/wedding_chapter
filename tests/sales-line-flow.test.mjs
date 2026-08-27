@@ -10,7 +10,7 @@ const api = read("app/api/submissions/route.ts");
 const gas = read("google-apps-script/Code.gs");
 const css = read("presentation/styles/wedding-experience-enhancements.css");
 const profileSubmission = runner.slice(runner.indexOf("const submitProfile"), runner.indexOf("const answer"));
-const endingView = runner.slice(runner.indexOf('{session.step === "ending"'), runner.indexOf("{cardPreview"));
+const endingView = runner.slice(runner.indexOf('{session.step === "ending"'));
 
 test("業務名稱、代碼與 LINE 網址由業務資料分頁動態讀取", () => {
   assert.match(sales, /loadSalesOptions/);
@@ -57,6 +57,12 @@ test("LINE 按鈕在完成頁沿用已建立案件的訪客編號", () => {
   assert.match(runner, /target="_blank"/);
   assert.match(runner, /rel="noopener noreferrer"/);
   assert.doesNotMatch(runner, /window\.open|location\.(?:assign|replace|href)/);
+});
+
+test("完成頁改由宴會顧問接續服務且 LINE URL 流程不變", () => {
+  assert.match(endingView, /讓宴會顧問接續為你們服務。/);
+  assert.doesNotMatch(endingView, /讓婚禮顧問接續為你們服務。/);
+  assert.match(endingView, /href=\{salesLineUrl\}/);
 });
 
 test("成功頁將 serialNumber 顯示為訪客編號", () => {
