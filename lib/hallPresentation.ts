@@ -1,5 +1,7 @@
 import type { Hall } from "../types/hall";
 
+// Only user-provided, verified venue photos belong in this allowlist.
+// Combined/unknown halls must never borrow another venue or brand image.
 export const VENUE_PHOTO_BY_HALL_ID = Object.freeze({
   floral: "/venue-photos/web/floral.webp",
   mushi: "/venue-photos/web/mushi.webp",
@@ -13,6 +15,7 @@ export const VENUE_PHOTO_BY_HALL_ID = Object.freeze({
   "purple-grand": "/venue-photos/web/purple-grand.webp",
   century: "/venue-photos/web/century.webp",
   ceremony: "/venue-photos/web/ceremony.webp",
+  "nordic-light": "/venue-photos/original/nordic-light.jpg",
 } as const);
 
 export const VENUE_SHORT_DESCRIPTION_BY_HALL_ID = Object.freeze({
@@ -30,21 +33,20 @@ export const VENUE_SHORT_DESCRIPTION_BY_HALL_ID = Object.freeze({
   ceremony: "九米挑高的皇家宴會空間，適合大器且具舞台感的婚禮。",
 } as const);
 
-export const VENUE_PHOTO_FALLBACK = "/realistic/brandcolor.webp";
-
 export function withWeddingChapterBasePath(path: string) {
   const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
   const basePath = globalThis.__WEDDING_CHAPTER_BASE_PATH__ || "/";
   return `${basePath.endsWith("/") ? basePath : `${basePath}/`}${normalizedPath}`;
 }
 
-export function getVenuePhotoPath(hallId: string) {
-  return VENUE_PHOTO_BY_HALL_ID[hallId as keyof typeof VENUE_PHOTO_BY_HALL_ID]
-    ?? VENUE_PHOTO_FALLBACK;
+export function getVenuePhotoPath(hallId: string): string | null {
+  if (!Object.hasOwn(VENUE_PHOTO_BY_HALL_ID, hallId)) return null;
+  return VENUE_PHOTO_BY_HALL_ID[hallId as keyof typeof VENUE_PHOTO_BY_HALL_ID];
 }
 
 export function getVenuePhotoSrc(hallId: string) {
-  return withWeddingChapterBasePath(getVenuePhotoPath(hallId));
+  const path = getVenuePhotoPath(hallId);
+  return path === null ? null : withWeddingChapterBasePath(path);
 }
 
 export function getVenueShortDescription(hall: Hall | null) {
