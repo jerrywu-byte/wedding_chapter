@@ -50,7 +50,7 @@ after(async () => {
 });
 
 test("12 個正式廳房都有固定 hall id 圖片 mapping 與原始檔", () => {
-  assert.deepEqual(Object.keys(hallPresentation.VENUE_PHOTO_BY_HALL_ID), Object.keys(expectedAssets));
+  assert.deepEqual(Object.keys(hallPresentation.VENUE_PHOTO_BY_HALL_ID), [...Object.keys(expectedAssets), "nordic-light"]);
   for (const [hallId, assetName] of Object.entries(expectedAssets)) {
     const webPath = hallPresentation.getVenuePhotoPath(hallId);
     assert.equal(webPath, `/venue-photos/web/${assetName}.webp`);
@@ -61,13 +61,13 @@ test("12 個正式廳房都有固定 hall id 圖片 mapping 與原始檔", () =>
   }
 });
 
-test("不存在的 hall id 使用明確 fallback，不以陣列 index 猜圖", () => {
-  assert.equal(hallPresentation.getVenuePhotoPath("not-a-hall"), "/realistic/brandcolor.webp");
+test("不存在的 hall id 不提供照片，不以陣列 index 猜圖", () => {
+  assert.equal(hallPresentation.getVenuePhotoPath("not-a-hall"), null);
   assert.doesNotMatch(readFileSync("lib/hallPresentation.ts", "utf8"), /indexOf|findIndex|\[index\]/);
 });
 
 test("推薦頁每張卡片以照片為主並保留精簡桌數與特色", () => {
-  assert.match(runner, /className="wx-hall-photo"/);
+  assert.match(runner, /<VenuePhoto /);
   assert.match(runner, /getVenuePhotoSrc\(recommendation\.hallId\)/);
   assert.match(runner, /getVenueShortDescription\(hall\)/);
   assert.match(runner, /capacity\.minimumTables/);

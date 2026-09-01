@@ -229,6 +229,10 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--khaki-light
 .wx-halls article:before,.wx-halls article:after{content:none!important;display:none!important}
 .wx-hall-photo{width:100%;aspect-ratio:4/3;overflow:hidden;background:#d8cdbc}
 .wx-hall-photo img{width:100%;height:100%;display:block;object-fit:cover;object-position:center}
+.wx-hall-photo-placeholder{width:100%;height:100%;padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;color:#574735;background:linear-gradient(145deg,#f6f1e9,#e2d5c1);border:12px solid #f4eee3;box-shadow:inset 0 0 0 1px #b29a7355}
+.wx-hall-photo-placeholder small{font:600 10px/1.7 var(--font-brand);letter-spacing:.2em;color:#806747}
+.wx-hall-photo-placeholder strong{font:500 clamp(24px,3vw,32px)/1.5 var(--font-brand);overflow-wrap:anywhere}
+.wx-hall-photo-placeholder span{font-size:16px;line-height:1.7}
 .wx-hall-copy{padding:22px 24px 25px;display:flex;flex:1;flex-direction:column;align-items:flex-start}
 .wx-hall-copy small{color:var(--accent);font-size:10px;font-weight:700;letter-spacing:.2em}
 .wx-halls .wx-hall-copy h2{margin:7px 0 10px;font-size:30px}
