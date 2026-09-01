@@ -38,15 +38,33 @@ test("北歐光境使用本次正式提供的原始照片，位元組未變更",
   assert.match(photo.render("nordic-light", "北歐光境"), /src="\/venue-photos\/original\/nordic-light.jpg"/);
 });
 
-test("全部 15 個推薦廳房只有兩個合併廳缺少獨立正式照片", () => {
+test("全部 15 個推薦廳房都有使用者正式提供或明確授權使用的照片", () => {
   const { halls } = JSON.parse(readFileSync("data/halls.json", "utf8"));
   assert.equal(halls.length, 15);
   assert.deepEqual(halls.filter(hall => photo.getVenuePhotoPath(hall.id) === null).map(hall => hall.id).sort(),
-    ["century-ceremony", "purple-full"]);
+    []);
 });
 
-for (const [id, name] of [["purple-full", "紫艷盛事全"], ["century-ceremony", "世紀盛典"],
-  ["unknown", "未知廳房"], ["constructor", "未知廳房"], ["toString", "未知廳房"], ["__proto__", "未知廳房"]]) {
+test("紫艷盛事全使用本次上傳的完整原始照片", () => {
+  const path = photo.getVenuePhotoPath("purple-full");
+  assert.equal(path, "/venue-photos/original/purple-full.jpg");
+  assert.equal(createHash("sha256").update(readFileSync(`public${path}`)).digest("hex"),
+    "eb5f9ccc74935b2ac7a3707644023faaef8b6ee4a3041be587e95df0dbe731f2");
+  const html = photo.render("purple-full", "紫艷盛事全");
+  assert.match(html, /src="\/venue-photos\/original\/purple-full.jpg"/);
+  assert.doesNotMatch(html, /場地照片準備中/);
+});
+
+test("世紀盛典依使用者明確授權使用既有世紀廳照片", () => {
+  assert.equal(photo.getVenuePhotoPath("century-ceremony"), "/venue-photos/web/century.webp");
+  assert.equal(photo.getVenuePhotoPath("century-ceremony"), photo.getVenuePhotoPath("century"));
+  const html = photo.render("century-ceremony", "世紀盛典");
+  assert.match(html, /src="\/venue-photos\/web\/century.webp"/);
+  assert.match(html, /alt="世紀盛典廳房空間"/);
+  assert.doesNotMatch(html, /場地照片準備中/);
+});
+
+for (const [id, name] of [["unknown", "未知廳房"], ["constructor", "未知廳房"], ["toString", "未知廳房"], ["__proto__", "未知廳房"]]) {
   test(`${id} 不取得圖片，實際渲染品牌 placeholder 與廳房名稱`, () => {
     assert.equal(photo.getVenuePhotoPath(id), null);
     assert.equal(photo.getVenuePhotoSrc(id), null);
@@ -58,7 +76,7 @@ for (const [id, name] of [["purple-full", "紫艷盛事全"], ["century-ceremony
   });
 }
 
-test("13 張正式照片在根路徑和 production 子路徑皆正確，缺圖仍回傳 null", () => {
+test("15 廳照片 mapping 在根路徑和 production 子路徑皆正確，未知廳仍回傳 null", () => {
   try {
     for (const base of ["/", "/wedding_chapter/", "/wedding_chapter"]) {
       global.__WEDDING_CHAPTER_BASE_PATH__ = base;
@@ -67,13 +85,13 @@ test("13 張正式照片在根路徑和 production 子路徑皆正確，缺圖�
         assert.equal(photo.getVenuePhotoSrc(id), expected);
         assert.ok(photo.render(id, id).includes(`src="${expected}"`));
       }
-      assert.equal(photo.getVenuePhotoSrc("purple-full"), null);
+      assert.equal(photo.getVenuePhotoSrc("unknown"), null);
     }
   } finally { delete global.__WEDDING_CHAPTER_BASE_PATH__; }
 });
 
 test("圖片路徑僅包含正式 allowlist，無外站、品牌圖或隨機宴會廳 fallback", () => {
-  assert.equal(Object.keys(photo.VENUE_PHOTO_BY_HALL_ID).length, 13);
+  assert.equal(Object.keys(photo.VENUE_PHOTO_BY_HALL_ID).length, 15);
   for (const path of Object.values(photo.VENUE_PHOTO_BY_HALL_ID)) assert.match(path, /^\/venue-photos\/(web|original)\//);
   const source = readFileSync("lib/hallPresentation.ts", "utf8") + readFileSync("components/venue/VenuePhoto.tsx", "utf8");
   assert.doesNotMatch(source, /Math\.random|https?:|unsplash|\/realistic\/|VENUE_PHOTO_FALLBACK|hall\.image/i);

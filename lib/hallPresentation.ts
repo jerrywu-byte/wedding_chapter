@@ -1,7 +1,7 @@
 import type { Hall } from "../types/hall";
 
 // Only user-provided, verified venue photos belong in this allowlist.
-// Combined/unknown halls must never borrow another venue or brand image.
+// Reuse requires explicit user approval; unknown halls never borrow a photo.
 export const VENUE_PHOTO_BY_HALL_ID = Object.freeze({
   floral: "/venue-photos/web/floral.webp",
   mushi: "/venue-photos/web/mushi.webp",
@@ -16,6 +16,9 @@ export const VENUE_PHOTO_BY_HALL_ID = Object.freeze({
   century: "/venue-photos/web/century.webp",
   ceremony: "/venue-photos/web/ceremony.webp",
   "nordic-light": "/venue-photos/original/nordic-light.jpg",
+  "purple-full": "/venue-photos/original/purple-full.jpg",
+  // User explicitly approved using the Century hall photo for this combined hall.
+  "century-ceremony": "/venue-photos/web/century.webp",
 } as const);
 
 export const VENUE_SHORT_DESCRIPTION_BY_HALL_ID = Object.freeze({

@@ -50,7 +50,7 @@ after(async () => {
 });
 
 test("12 個正式廳房都有固定 hall id 圖片 mapping 與原始檔", () => {
-  assert.deepEqual(Object.keys(hallPresentation.VENUE_PHOTO_BY_HALL_ID), [...Object.keys(expectedAssets), "nordic-light"]);
+  assert.deepEqual(Object.keys(hallPresentation.VENUE_PHOTO_BY_HALL_ID), [...Object.keys(expectedAssets), "nordic-light", "purple-full", "century-ceremony"]);
   for (const [hallId, assetName] of Object.entries(expectedAssets)) {
     const webPath = hallPresentation.getVenuePhotoPath(hallId);
     assert.equal(webPath, `/venue-photos/web/${assetName}.webp`);

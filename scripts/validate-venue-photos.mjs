@@ -15,12 +15,14 @@ const scripts = (await Promise.all(assets.filter(name => name.endsWith(".js"))
   .map(name => readFile(join(root, "assets", name), "utf8")))).join("\n");
 assert.ok(scripts.includes("場地照片準備中"));
 assert.ok(scripts.includes("/wedding_chapter/"));
-assert.equal(Object.keys(photo.VENUE_PHOTO_BY_HALL_ID).length, 13);
+assert.equal(Object.keys(photo.VENUE_PHOTO_BY_HALL_ID).length, 15);
 for (const [id, path] of Object.entries(photo.VENUE_PHOTO_BY_HALL_ID)) {
   assert.ok(scripts.includes(path), `${id}: missing production mapping`);
   assert.deepEqual(await readFile(join(root, path)), await readFile(join("public", path)), `${id}: artifact photo changed`);
 }
-for (const id of ["purple-full", "century-ceremony", "unknown", "constructor", "__proto__"]) {
+assert.equal(photo.getVenuePhotoPath("purple-full"), "/venue-photos/original/purple-full.jpg");
+assert.equal(photo.getVenuePhotoPath("century-ceremony"), photo.getVenuePhotoPath("century"));
+for (const id of ["unknown", "constructor", "__proto__"]) {
   assert.equal(photo.getVenuePhotoSrc(id), null);
 }
-console.log("Validated GitHub Pages artifact: 13 verified photos, production base path, and missing-photo placeholder.");
+console.log("Validated GitHub Pages artifact: 15 approved hall mappings, production base path, and unknown-hall placeholder.");
