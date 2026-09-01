@@ -100,6 +100,8 @@ function createRuntime(options = {}) {
   };
 
   function valuesForRange(range) {
+    if (range === "'協作備註'!1:1") return [["訪客編號", "建立時間", "留言業務代碼", "留言業務姓名", "備註內容"]];
+    if (range === "'協作備註'!A2:E") return [];
     if (range.endsWith("業務資料'!A1:F")) return [state.salesHeaders, ...state.salesRows];
     if (range.endsWith("A1:T1")) return [state.headers];
     if (range.endsWith("A2:O")) return state.rows.map((row) => row.slice(0, 15));
@@ -644,11 +646,11 @@ test("前端無法藉由偽造 salesCode 取得他人案件權限", () => {
 });
 
 test("ownership 檢查位於 Lock critical section 且早於 revision 與寫入", () => {
-  const updateStart = serverSource.indexOf("function updateCase(payload)");
+  const updateStart = serverSource.indexOf("function updateCase_(payload)");
   const updateEnd = serverSource.indexOf("function getCurrentFollowupUser_", updateStart);
   const updateSource = serverSource.slice(updateStart, updateEnd);
   const lockIndex = updateSource.indexOf("lock.waitLock");
-  const ownershipIndex = updateSource.indexOf("assertCaseAccess_");
+  const ownershipIndex = updateSource.indexOf("assertCaseEditable_");
   const revisionIndex = updateSource.indexOf("createRevisionToken_");
   const writeIndex = updateSource.indexOf("writeCaseFields_");
   assert.ok(lockIndex >= 0 && ownershipIndex > lockIndex);

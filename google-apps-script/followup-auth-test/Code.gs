@@ -6,13 +6,18 @@
  *   FOLLOWUP_SPREADSHEET_ID
  *   FOLLOWUP_IDENTITY_SECRET
  *
- * Columns A:L and N:O remain read-only. The only write operation replaces M
- * and P:T in one batch request after authorization, identity, revision, and
- * validation checks.
+ * Case writes remain limited to M and P:T after authorization, identity,
+ * revision, and validation checks. Collaboration notes append to a separate
+ * sheet; setup is manual and never runs from a Web App request.
  */
 
 const FOLLOWUP_SHEET_NAME_ = '新人資料';
 const FOLLOWUP_SALES_SHEET_NAME_ = '業務資料';
+const FOLLOWUP_NOTES_SHEET_NAME_ = '協作備註';
+const FOLLOWUP_MAX_NOTE_LENGTH_ = 1000;
+const FOLLOWUP_NOTE_HEADERS_ = Object.freeze([
+  '訪客編號', '建立時間', '留言業務代碼', '留言業務姓名', '備註內容',
+]);
 const FOLLOWUP_MAX_LIST_RESULTS_ = 100;
 const FOLLOWUP_MAX_CONSULTATION_LENGTH_ = 5000;
 const FOLLOWUP_LOCK_TIMEOUT_MS_ = 30000;
@@ -115,6 +120,147 @@ function doGet() {
   }
 }
 
+function followupRequest_(operation) {
+  try {
+    return operation();
+  } catch (error) {
+    const code = error && error.message;
+    const allowed = ['UNAUTHORIZED', 'FORBIDDEN', 'NOT_FOUND', 'DATA_INTEGRITY_ERROR',
+      'VALIDATION_ERROR', 'CONFLICT', 'INTERNAL_ERROR', 'LOCK_TIMEOUT',
+      'DATA_SCHEMA_ERROR', 'DATA_CONFIGURATION_ERROR', 'AUTH_CONFIGURATION_MISSING'];
+    throw new Error(allowed.indexOf(code) !== -1 ? code : 'INTERNAL_ERROR');
+  }
+}
+
+function listCases(query) {
+  return followupRequest_(function () { return listCases_(query); });
+}
+
+function getCase(serialNumber) {
+  return followupRequest_(function () { return getCase_(serialNumber); });
+}
+
+function updateCase(payload) {
+  return followupRequest_(function () { return updateCase_(payload); });
+}
+
+function addCollaborationNote(payload) {
+  return followupRequest_(function () {
+    let currentUser = requireAuthorizedUser_();
+    if (!payload || Object.prototype.toString.call(payload) !== '[object Object]' ||
+        Object.keys(payload).length !== 2 ||
+        !Object.prototype.hasOwnProperty.call(payload, 'serialNumber') ||
+        !Object.prototype.hasOwnProperty.call(payload, 'note') ||
+        typeof payload.serialNumber !== 'string' || typeof payload.note !== 'string') {
+      throw new Error('VALIDATION_ERROR');
+    }
+    const serialNumber = normalizeSerialNumber_(payload.serialNumber);
+    const note = normalizeConsultationText_(payload.note);
+    if (!serialNumber || !note || note.length > FOLLOWUP_MAX_NOTE_LENGTH_) {
+      throw new Error('VALIDATION_ERROR');
+    }
+
+    const lock = LockService.getScriptLock();
+    try { lock.waitLock(FOLLOWUP_LOCK_TIMEOUT_MS_); }
+    catch (error) { throw new Error('LOCK_TIMEOUT'); }
+    try {
+      // Recheck access after waiting: disabled users must not write with stale roles.
+      currentUser = requireAuthorizedUser_();
+      if (!currentUser.salesName) throw new Error('DATA_INTEGRITY_ERROR');
+      const rows = readDetailRows_();
+      const located = locateCaseBySerial_(rows, serialNumber);
+      validateDuplicateKeyUniqueness_(rows, located.row);
+      const notes = collaborationNotesFor_(readCollaborationRows_(), serialNumber);
+      const createdAt = new Date().toISOString();
+      const newNote = { createdAt: createdAt, authorName: currentUser.salesName, note: note };
+      notes.push(newNote);
+      notes.sort(function (a, b) { return Date.parse(a.createdAt) - Date.parse(b.createdAt); });
+      // Prepare the safe response before writing; do not read again after a successful append.
+      const result = { serialNumber: serialNumber, collaborationNotes: notes };
+      Sheets.Spreadsheets.Values.append({
+        majorDimension: 'ROWS',
+        values: [[serialNumber, createdAt, currentUser.salesCode, currentUser.salesName, note]],
+      }, requireSpreadsheetId_(), quoteNamedSheetRange_(FOLLOWUP_NOTES_SHEET_NAME_, 'A:E'), {
+        valueInputOption: 'RAW', insertDataOption: 'INSERT_ROWS', includeValuesInResponse: false,
+      });
+      return result;
+    } finally { lock.releaseLock(); }
+  });
+}
+
+/** Manual editor-only setup. Trailing underscore blocks google.script.run calls. */
+function setupCollaborationNotes_() {
+  return followupRequest_(function () {
+    const currentUser = requireAuthorizedUser_();
+    if (currentUser.role !== 'MANAGER') throw new Error('FORBIDDEN');
+    const lock = LockService.getScriptLock();
+    try { lock.waitLock(FOLLOWUP_LOCK_TIMEOUT_MS_); }
+    catch (error) { throw new Error('LOCK_TIMEOUT'); }
+    try {
+      if (requireAuthorizedUser_().role !== 'MANAGER') throw new Error('FORBIDDEN');
+      const spreadsheetId = requireSpreadsheetId_();
+      const metadata = Sheets.Spreadsheets.get(spreadsheetId, {
+        fields: 'sheets.properties(sheetId,title)',
+      });
+      const sheets = metadata.sheets || [];
+      const existing = sheets.some(function (sheet) {
+        return sheet.properties.title === FOLLOWUP_NOTES_SHEET_NAME_;
+      });
+      if (existing) {
+        readCollaborationRows_(); // Validate, never repair, clear, or overwrite existing data.
+        return { created: false };
+      }
+      let sheetId = 0;
+      while (sheets.some(function (sheet) { return sheet.properties.sheetId === sheetId; })) {
+        sheetId += 1;
+      }
+      // One atomic batch creates both the sheet and its fixed header.
+      Sheets.Spreadsheets.batchUpdate({ requests: [
+        { addSheet: { properties: {
+          sheetId: sheetId, title: FOLLOWUP_NOTES_SHEET_NAME_,
+          gridProperties: { rowCount: 1000, columnCount: 5, frozenRowCount: 1 },
+        } } },
+        { updateCells: {
+          range: { sheetId: sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 5 },
+          rows: [{ values: FOLLOWUP_NOTE_HEADERS_.map(function (header) {
+            return { userEnteredValue: { stringValue: header } };
+          }) }],
+          fields: 'userEnteredValue',
+        } },
+      ] }, spreadsheetId);
+      return { created: true };
+    } finally { lock.releaseLock(); }
+  });
+}
+
+function readCollaborationRows_() {
+  const response = Sheets.Spreadsheets.Values.batchGet(requireSpreadsheetId_(), {
+    ranges: [quoteNamedSheetRange_(FOLLOWUP_NOTES_SHEET_NAME_, '1:1'),
+      quoteNamedSheetRange_(FOLLOWUP_NOTES_SHEET_NAME_, 'A2:E')],
+    majorDimension: 'ROWS', valueRenderOption: 'UNFORMATTED_VALUE',
+  });
+  const ranges = response.valueRanges || [];
+  const header = firstRow_(ranges[0]);
+  if (header.length !== FOLLOWUP_NOTE_HEADERS_.length ||
+      !FOLLOWUP_NOTE_HEADERS_.every(function (name, index) { return header[index] === name; })) {
+    throw new Error('DATA_INTEGRITY_ERROR');
+  }
+  return valuesFrom_(ranges[1]);
+}
+
+function collaborationNotesFor_(rows, serialNumber) {
+  return rows.filter(function (row) {
+    return normalizeSerialNumber_(row[0]) === serialNumber;
+  }).map(function (row) {
+    const createdAt = cleanText_(row[1]);
+    const authorName = cleanText_(row[3]);
+    const note = cleanText_(row[4]);
+    if (!/^\d{4}-\d{2}-\d{2}T/.test(createdAt) || !Number.isFinite(Date.parse(createdAt)) ||
+        !cleanText_(row[2]) || !authorName || !note) throw new Error('DATA_INTEGRITY_ERROR');
+    return { createdAt: createdAt, authorName: authorName, note: note };
+  }).sort(function (a, b) { return Date.parse(a.createdAt) - Date.parse(b.createdAt); });
+}
+
 /**
  * Returns at most 100 case summaries. Phone numbers are used only for
  * server-side matching and are never included in the response.
@@ -122,8 +268,8 @@ function doGet() {
  * @param {string} query
  * @return {Array<Object>}
  */
-function listCases(query) {
-  const currentUser = getCurrentFollowupUser_();
+function listCases_(query) {
+  const currentUser = requireAuthorizedUser_();
 
   const normalizedQuery = normalizeSearchQuery_(query);
   const rows = readListRows_();
@@ -132,10 +278,9 @@ function listCases(query) {
   for (let index = rows.length - 1; index >= 0; index -= 1) {
     const row = rows[index];
     if (!cleanText_(row[FOLLOWUP_COLUMNS_.serialNumber])) continue;
-    if (!canAccessCase_(currentUser, row)) continue;
     if (normalizedQuery && !rowMatchesQuery_(row, normalizedQuery)) continue;
 
-    results.push(mapCaseSummary_(row));
+    results.push(Object.assign(mapCaseSummary_(row), casePermissions_(currentUser, row)));
     if (results.length >= FOLLOWUP_MAX_LIST_RESULTS_) break;
   }
 
@@ -149,19 +294,20 @@ function listCases(query) {
  * @param {string} serialNumber
  * @return {Object}
  */
-function getCase(serialNumber) {
-  const currentUser = getCurrentFollowupUser_();
+function getCase_(serialNumber) {
+  const currentUser = requireAuthorizedUser_();
 
   const target = normalizeSerialNumber_(serialNumber);
   if (!target) throw new Error('NOT_FOUND');
 
   const rows = readDetailRows_();
   const located = locateCaseBySerial_(rows, target);
-  assertCaseAccess_(currentUser, located.row);
 
   const secret = requireIdentitySecret_();
   validateDuplicateKeyUniqueness_(rows, located.row);
-  return mapCaseDetail_(located.row, secret);
+  return Object.assign(mapCaseDetail_(located.row, secret), casePermissions_(currentUser, located.row), {
+    collaborationNotes: collaborationNotesFor_(readCollaborationRows_(), target),
+  });
 }
 
 /**
@@ -170,8 +316,8 @@ function getCase(serialNumber) {
  * @param {Object} payload
  * @return {Object}
  */
-function updateCase(payload) {
-  const currentUser = getCurrentFollowupUser_();
+function updateCase_(payload) {
+  let currentUser = requireAuthorizedUser_();
   validateUpdatePayloadShape_(payload);
 
   const lock = LockService.getScriptLock();
@@ -182,6 +328,7 @@ function updateCase(payload) {
   }
 
   try {
+    currentUser = requireAuthorizedUser_();
     const identity = normalizeUpdateIdentity_(payload);
     const rows = readDetailRows_();
     const secret = requireIdentitySecret_();
@@ -193,7 +340,7 @@ function updateCase(payload) {
     }
 
     validateDuplicateKeyUniqueness_(rows, serialMatch.row);
-    assertCaseAccess_(currentUser, serialMatch.row);
+    assertCaseEditable_(currentUser, serialMatch.row);
 
     const input = normalizeUpdatePayload_(payload);
 
@@ -447,14 +594,18 @@ function validateDuplicateKeyUniqueness_(rows, targetRow) {
   if (matches.length > 1) throw new Error('DATA_INTEGRITY_ERROR');
 }
 
-function canAccessCase_(currentUser, row) {
+function casePermissions_(currentUser, row) {
+  return { editable: canEditCase_(currentUser, row), canAddCollaborationNote: true };
+}
+
+function canEditCase_(currentUser, row) {
   if (currentUser.role === 'MANAGER') return true;
   const caseSalesCode = normalizeSalesCode_(row[FOLLOWUP_COLUMNS_.salesCode]);
   return Boolean(caseSalesCode) && caseSalesCode === currentUser.salesCode;
 }
 
-function assertCaseAccess_(currentUser, row) {
-  if (!canAccessCase_(currentUser, row)) throw new Error('FORBIDDEN');
+function assertCaseEditable_(currentUser, row) {
+  if (!canEditCase_(currentUser, row)) throw new Error('FORBIDDEN');
 }
 
 function validateUpdatePayloadShape_(payload) {

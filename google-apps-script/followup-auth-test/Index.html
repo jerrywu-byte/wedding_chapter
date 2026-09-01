@@ -54,6 +54,7 @@
               </div>
               <span id="statusBadge" class="followup-status-badge"></span>
             </header>
+            <p id="ownershipNotice" class="followup-ownership-notice" hidden></p>
 
             <section class="followup-card followup-basic-card">
               <div class="followup-section-heading">
@@ -71,9 +72,27 @@
               <div id="consultations" class="followup-consultations"></div>
             </section>
 
-            <section class="followup-card">
+            <section class="followup-card followup-collaboration-card">
               <div class="followup-section-heading">
                 <span>03</span>
+                <div><p>COLLABORATION NOTES</p><h3>協作備註</h3></div>
+              </div>
+              <ol id="collaborationNotes" class="followup-note-list"></ol>
+              <details id="noteComposer" class="followup-note-composer" hidden>
+                <summary>＋ 新增協作備註</summary>
+                <label for="collaborationNote">備註內容</label>
+                <textarea id="collaborationNote" rows="3" maxlength="1000" placeholder="記錄已協助的事項或交接資訊"></textarea>
+                <div class="followup-note-actions">
+                  <span>最多 1000 字，由系統記錄署名與時間。</span>
+                  <button id="addNote" type="button" disabled>新增備註</button>
+                </div>
+              </details>
+              <p id="noteState" class="followup-note-state" role="status"></p>
+            </section>
+
+            <section class="followup-card">
+              <div class="followup-section-heading">
+                <span>04</span>
                 <div><p>CASE STATUS</p><h3>案件狀態</h3></div>
               </div>
               <div id="closingGrid" class="followup-closing-grid">

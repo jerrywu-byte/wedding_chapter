@@ -108,6 +108,8 @@ function createRuntime(options = {}) {
   };
 
   function valuesForRange(range) {
+    if (range === "'協作備註'!1:1") return [["訪客編號", "建立時間", "留言業務代碼", "留言業務姓名", "備註內容"]];
+    if (range === "'協作備註'!A2:E") return [];
     if (range.endsWith("業務資料'!A1:F")) return [state.salesHeaders, ...state.salesRows];
     if (range.endsWith("A1:T1")) return [state.headers];
     if (range.endsWith("A2:O")) return state.rows.map((row) => row.slice(0, 15));
@@ -182,7 +184,9 @@ test("listCases 只回傳最小摘要且不含電話", () => {
   assert.deepEqual(Object.keys(summary).sort(), [
     "banquetSession",
     "brideName",
+    "canAddCollaborationNote",
     "dateUndecided",
+    "editable",
     "estimatedTables",
     "groomName",
     "salesCode",
@@ -254,7 +258,7 @@ test("Apps Script manifest 僅增加 Sheets 必要寫入 scope", () => {
 
 test("Follow-up server 只提供固定 M 與 P 起始儲存格 batch 更新", () => {
   assert.doesNotMatch(
-    serverSource,
+    serverSource.slice(serverSource.indexOf("function writeCaseFields_"), serverSource.indexOf("function createIdentityToken_")),
     /SpreadsheetApp|appendRow|setValue|setValues|clearContent|deleteRow|insertRow|Values\.append/,
   );
   assert.match(serverSource, /Sheets\.Spreadsheets\.Values\.batchGet/);
@@ -265,9 +269,9 @@ test("Follow-up server 只提供固定 M 與 P 起始儲存格 batch 更新", ()
 });
 
 test("所有正式資料函式都先驗證授權", () => {
-  assert.match(serverSource, /function listCases\(query\) \{\s*const currentUser = getCurrentFollowupUser_\(\);/);
-  assert.match(serverSource, /function getCase\(serialNumber\) \{\s*const currentUser = getCurrentFollowupUser_\(\);/);
-  assert.match(serverSource, /function updateCase\(payload\) \{\s*const currentUser = getCurrentFollowupUser_\(\);/);
+  assert.match(serverSource, /function listCases_\(query\) \{\s*const currentUser = requireAuthorizedUser_\(\);/);
+  assert.match(serverSource, /function getCase_\(serialNumber\) \{\s*const currentUser = requireAuthorizedUser_\(\);/);
+  assert.match(serverSource, /function updateCase_\(payload\) \{\s*let currentUser = requireAuthorizedUser_\(\);/);
 });
 
 test("HTML 不含正式新人資料、duplicateKey 或 Spreadsheet ID", () => {
@@ -343,7 +347,7 @@ test("MANAGER listCases 可查看全部案件", () => {
   );
 });
 
-test("SALES listCases 與搜尋只回傳自己的案件", () => {
+test("SALES listCases 與搜尋可回傳全部案件，權限由 Server 決定", () => {
   const rows = [
     makeRow(),
     makeRow({
@@ -356,20 +360,21 @@ test("SALES listCases 與搜尋只回傳自己的案件", () => {
     }),
   ];
   const { context } = createRuntime({ rows });
-  assert.deepEqual(Array.from(context.listCases("")).map((item) => item.serialNumber), ["115DX2031"]);
-  assert.equal(context.listCases("其他業務新郎").length, 0);
-  assert.equal(context.listCases("0988888888").length, 0);
-  assert.equal(context.listCases("115DX2032").length, 0);
+  assert.deepEqual(Array.from(context.listCases("")).map((item) => item.serialNumber), ["115DX2032", "115DX2031"]);
+  assert.equal(context.listCases("其他業務新郎").length, 1);
+  assert.equal(context.listCases("0988888888").length, 1);
+  assert.equal(context.listCases("115DX2032").length, 1);
 });
 
-test("SALES getCase 只能讀取自己案件", () => {
+test("SALES getCase 可讀他人案件，但不可編輯正式資料", () => {
   const rows = [
     makeRow(),
     makeRow({ 0: "115DX2032", 2: "another-key", 13: "AP", 14: "April" }),
   ];
   const { context } = createRuntime({ rows });
   assert.equal(context.getCase("115DX2031").serialNumber, "115DX2031");
-  assert.throws(() => context.getCase("115DX2032"), /FORBIDDEN/);
+  assert.equal(context.getCase("115DX2032").editable, false);
+  assert.equal(context.getCase("115DX2032").canAddCollaborationNote, true);
 });
 
 test("業務資料啟用 FALSE、Email 不存在、role 空白或非法時全部拒絕", () => {
@@ -397,11 +402,11 @@ test("業務 Email 或 salesCode 重複時 fail closed", () => {
   assert.throws(() => duplicateCode.context.listCases(""), /DATA_INTEGRITY_ERROR/);
 });
 
-test("SALES 不得讀取 N 空白案件，MANAGER 仍可讀取", () => {
+test("SALES 可讀但不可編輯 N 空白案件，MANAGER 仍可編輯", () => {
   const rows = [makeRow({ 13: "", 14: "" })];
   const sales = createRuntime({ rows });
-  assert.equal(sales.context.listCases("").length, 0);
-  assert.throws(() => sales.context.getCase("115DX2031"), /FORBIDDEN/);
+  assert.equal(sales.context.listCases("").length, 1);
+  assert.equal(sales.context.getCase("115DX2031").editable, false);
 
   const manager = createRuntime({ email: "april@company.example", rows });
   assert.equal(manager.context.getCase("115DX2031").serialNumber, "115DX2031");

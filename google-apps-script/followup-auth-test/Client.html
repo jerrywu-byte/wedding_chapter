@@ -37,6 +37,12 @@
       closedDate: document.getElementById('closedDate'),
       saveState: document.getElementById('saveState'),
       saveCase: document.getElementById('saveCase'),
+      ownershipNotice: document.getElementById('ownershipNotice'),
+      notes: document.getElementById('collaborationNotes'),
+      noteComposer: document.getElementById('noteComposer'),
+      noteInput: document.getElementById('collaborationNote'),
+      addNote: document.getElementById('addNote'),
+      noteState: document.getElementById('noteState'),
       statusButtons: Array.from(document.querySelectorAll('[data-status]')),
     };
 
@@ -51,6 +57,8 @@
     let detailRequestId = 0;
     let lastLoadedQuery = '';
     let isSaving = false;
+    let isAddingNote = false;
+    const noteDrafts = Object.create(null);
 
     elements.search.addEventListener('input', function () {
       window.clearTimeout(searchTimer);
@@ -72,7 +80,7 @@
 
     elements.statusButtons.forEach(function (button) {
       button.addEventListener('click', function () {
-        if (!currentCase || isSaving) return;
+        if (!canEditCase_() || isSaving || isAddingNote) return;
 
         const nextStatus = button.dataset.status;
         const currentStatus = getSelectedStatus_();
@@ -92,17 +100,25 @@
 
     elements.closedDate.addEventListener('input', handleEditorInput_);
     elements.saveCase.addEventListener('click', saveCase_);
+    elements.addNote.addEventListener('click', addCollaborationNote_);
+    elements.noteInput.addEventListener('input', function () {
+      if (!currentCase) return;
+      noteDrafts[currentCase.serialNumber] = elements.noteInput.value;
+      updateNoteButton_();
+    });
 
     window.addEventListener('beforeunload', function (event) {
-      if (!isDirty_()) return;
+      if (!isDirty_() && !hasNoteDraft_() && !isSaving && !isAddingNote) return;
       event.preventDefault();
       event.returnValue = '';
     });
 
     function loadCases(query) {
       const requestId = ++listRequestId;
+      detailRequestId += 1;
       lastLoadedQuery = String(query || '');
       setListState('正在載入新人案件…');
+      showDetailState('正在載入新人案件…');
       elements.count.textContent = '—';
 
       google.script.run
@@ -242,6 +258,14 @@
       const status = displayValue_(caseData.status);
       const weddingDate = caseData.dateUndecided ? '日期未定' : displayValue_(caseData.weddingDate);
       const salesName = caseData.salesName || caseData.salesCode || '—';
+      elements.ownershipNotice.hidden = caseData.editable === true;
+      elements.ownershipNotice.textContent = '此案件由 ' + salesName + ' 負責，你可以查看案件內容並新增協作備註。';
+      renderCollaborationNotes_(caseData.collaborationNotes);
+      elements.noteInput.value = noteDrafts[caseData.serialNumber] || '';
+      elements.noteComposer.hidden = caseData.canAddCollaborationNote !== true;
+      elements.noteComposer.open = Boolean(elements.noteInput.value);
+      setNoteMessage_('', '');
+      setNoteEditorDisabled_(false);
 
       renderBasicInformation_([
         ['婚宴日期', weddingDate],
@@ -260,7 +284,7 @@
       applyStatusVisual_(status);
       baseline = editableSnapshot_(caseData);
       setEditorDisabled_(false);
-      setSaveMessage_(DEFAULT_SAVE_MESSAGE, '');
+      setSaveMessage_(canEditCase_() ? DEFAULT_SAVE_MESSAGE : '此案件正式資料為唯讀。', '');
       updateSaveButton_();
     }
 
@@ -340,6 +364,121 @@
       });
     }
 
+    function canEditCase_() {
+      return Boolean(currentCase && currentCase.editable === true);
+    }
+
+    function hasNoteDraft_() {
+      return Boolean(currentCase && String(noteDrafts[currentCase.serialNumber] || '').trim());
+    }
+
+    function renderCollaborationNotes_(notes) {
+      elements.notes.replaceChildren();
+      const values = Array.isArray(notes) ? notes : [];
+      if (!values.length) {
+        const empty = document.createElement('li');
+        empty.className = 'followup-note-empty';
+        empty.textContent = '尚無協作備註';
+        elements.notes.append(empty);
+        return;
+      }
+      values.forEach(function (note) {
+        const item = document.createElement('li');
+        const time = document.createElement('time');
+        const date = new Date(note.createdAt);
+        time.textContent = Number.isFinite(date.getTime()) ? new Intl.DateTimeFormat('zh-TW', {
+          timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit',
+          hour: '2-digit', minute: '2-digit', hour12: false,
+        }).format(date) : '—';
+        const author = document.createElement('strong');
+        author.textContent = displayValue_(note.authorName);
+        const content = document.createElement('p');
+        content.textContent = String(note.note || '');
+        item.append(time, author, content);
+        elements.notes.append(item);
+      });
+    }
+
+    function setNoteMessage_(message, type) {
+      elements.noteState.textContent = message;
+      elements.noteState.classList.toggle('is-success', type === 'success');
+      elements.noteState.classList.toggle('is-error', type === 'error');
+    }
+
+    function updateNoteButton_() {
+      const note = elements.noteInput.value.trim();
+      elements.addNote.disabled = !currentCase || currentCase.canAddCollaborationNote !== true ||
+        isAddingNote || isSaving || !note || note.length > 1000;
+      elements.addNote.textContent = isAddingNote ? '新增中…' : '新增備註';
+    }
+
+    function setNoteEditorDisabled_(disabled) {
+      elements.noteInput.disabled = disabled || !currentCase || currentCase.canAddCollaborationNote !== true;
+      updateNoteButton_();
+    }
+
+    function applyAuthorizationFailure_(error) {
+      const code = String(error && error.message ? error.message : '');
+      if (!currentCase) return;
+      if (code.includes('FORBIDDEN') || code.includes('UNAUTHORIZED') || code.includes('AUTH_')) {
+        currentCase.editable = false;
+      }
+      if (code.includes('UNAUTHORIZED') || code.includes('AUTH_')) {
+        currentCase.canAddCollaborationNote = false;
+      }
+    }
+
+    function addCollaborationNote_() {
+      if (!currentCase || currentCase.canAddCollaborationNote !== true || isAddingNote || isSaving) return;
+      const note = elements.noteInput.value.trim();
+      if (!note || note.length > 1000) {
+        setNoteMessage_('請輸入 1～1000 字的協作備註。', 'error');
+        return;
+      }
+      const serialNumber = currentCase.serialNumber;
+      const requestId = detailRequestId;
+      isAddingNote = true;
+      setNoteEditorDisabled_(true);
+      setEditorDisabled_(true);
+      updateSaveButton_();
+      setNoteMessage_('正在新增協作備註…', '');
+      google.script.run
+        .withSuccessHandler(function (result) {
+          isAddingNote = false;
+          if (requestId !== detailRequestId || !currentCase || currentCase.serialNumber !== serialNumber) return;
+          setEditorDisabled_(false);
+          if (!result || result.serialNumber !== serialNumber || !Array.isArray(result.collaborationNotes)) {
+            setNoteEditorDisabled_(false);
+            updateSaveButton_();
+            setNoteMessage_('無法確認新增結果，請重新載入案件確認後再試。', 'error');
+            return;
+          }
+          // Update only the notes: preserve unsaved case fields, baseline and revisionToken.
+          currentCase.collaborationNotes = result.collaborationNotes;
+          renderCollaborationNotes_(result.collaborationNotes);
+          delete noteDrafts[serialNumber];
+          elements.noteInput.value = '';
+          setNoteEditorDisabled_(false);
+          updateSaveButton_();
+          setNoteMessage_('已新增協作備註', 'success');
+        })
+        .withFailureHandler(function (error) {
+          isAddingNote = false;
+          if (requestId !== detailRequestId || !currentCase || currentCase.serialNumber !== serialNumber) return;
+          applyAuthorizationFailure_(error);
+          setEditorDisabled_(false);
+          setNoteEditorDisabled_(false);
+          updateSaveButton_();
+          const code = String(error && error.message ? error.message : '');
+          const message = code.includes('VALIDATION_ERROR') ? '請輸入 1～1000 字的協作備註。'
+            : code.includes('LOCK_TIMEOUT') ? '系統忙碌中，請稍後再試。'
+            : code.includes('CONFLICT') ? '案件資料已變更，請重新載入後再新增備註。'
+            : messageForFailure_(error, '無法確認新增結果，請重新載入案件確認後再試。');
+          setNoteMessage_(message, 'error');
+        })
+        .addCollaborationNote({ serialNumber: serialNumber, note: note });
+    }
+
     function applyStatusVisual_(status) {
       elements.statusBadge.className = 'followup-status-badge ' + statusClass_(status);
       elements.statusBadge.textContent = status;
@@ -355,7 +494,7 @@
     }
 
     function saveCase_() {
-      if (!currentCase || !isDirty_() || isSaving) return;
+      if (!canEditCase_() || !isDirty_() || isSaving || isAddingNote) return;
 
       const values = getEditorValues_();
       if (!isValidEstimatedTables_(values.estimatedTables)) {
@@ -384,6 +523,7 @@
 
       isSaving = true;
       setEditorDisabled_(true);
+      setNoteEditorDisabled_(true);
       elements.saveCase.disabled = true;
       elements.saveCase.textContent = '儲存中…';
       setSaveMessage_('正在安全儲存這筆案件…', '');
@@ -397,7 +537,9 @@
         })
         .withFailureHandler(function (error) {
           isSaving = false;
+          applyAuthorizationFailure_(error);
           setEditorDisabled_(false);
+          setNoteEditorDisabled_(false);
           elements.saveCase.textContent = '儲存洽談紀錄';
           updateSaveButton_();
           setSaveMessage_(saveMessageForFailure_(error), 'error');
@@ -460,12 +602,16 @@
     }
 
     function isDirty_() {
-      if (!currentCase || !baseline || !consultationInputs.firstConsultation) return false;
+      if (!canEditCase_() || !baseline || !consultationInputs.firstConsultation) return false;
       return JSON.stringify(getEditorValues_()) !== JSON.stringify(baseline);
     }
 
     function confirmDiscardChanges_() {
-      return !isDirty_() || window.confirm(DIRTY_MESSAGE);
+      if (isSaving || isAddingNote) return false;
+      if (!isDirty_() && !hasNoteDraft_()) return true;
+      if (!window.confirm(DIRTY_MESSAGE)) return false;
+      if (currentCase) delete noteDrafts[currentCase.serialNumber];
+      return true;
     }
 
     function discardCurrentChanges_() {
@@ -473,8 +619,10 @@
     }
 
     function setEditorDisabled_(disabled) {
+      disabled = disabled || !canEditCase_() || isAddingNote;
       Object.keys(consultationInputs).forEach(function (key) {
         consultationInputs[key].disabled = disabled;
+        consultationInputs[key].readOnly = !canEditCase_();
       });
       if (estimatedTablesInput) estimatedTablesInput.disabled = disabled;
       elements.statusButtons.forEach(function (button) {
@@ -484,7 +632,7 @@
     }
 
     function updateSaveButton_() {
-      elements.saveCase.disabled = isSaving || !isDirty_();
+      elements.saveCase.disabled = isSaving || isAddingNote || !canEditCase_() || !isDirty_();
       if (!isSaving) elements.saveCase.textContent = '儲存洽談紀錄';
     }
 
