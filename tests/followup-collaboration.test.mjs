@@ -109,7 +109,7 @@ test('備註依時間舊到新排序，同時間維持先後，且不洩漏其�
   assert.doesNotMatch(JSON.stringify(notes), /@|rowNumber|sheetId|spreadsheetId|其他案件/);
 });
 
-test('SALES 跨業務搜尋 A/D/E/F/G/H/I，摘要不帶電話或備註', () => {
+test('USER 跨業務搜尋 A/D/E/F/G/H/I，摘要不帶電話或備註', () => {
   const state = createState();
   state.rows[1][4] = '0944-444-444'; state.rows[1][6] = '0955-555-555'; state.rows[1][8] = '0966-666-666';
   const { api } = runtime(state);
@@ -196,7 +196,7 @@ test('備註不影響 revisionToken，正式更新仍僅 M＋P:T 且不改備註
   assert.throws(() => api.updateCase({ ...updatePayload(api), collaborationNotes: [] }), /VALIDATION_ERROR/);
 });
 
-test('public 手動 setup 由 MANAGER 一次建立工作表與表頭，重跑不改任何資料', () => {
+test('public 手動 setup 由 ADMINISTRATOR 一次建立工作表與表頭，重跑不改任何資料', () => {
   const state = createState({ notesExist: false }); const { api } = runtime(state, { email: 'april@company.example' });
   assert.equal(api.setupCollaborationNotes().created, true);
   assert.equal(state.notesExist, true);
@@ -223,7 +223,7 @@ test('已存在但表頭不符的工作表禁止覆蓋，getCase／append 也 fa
   }
 });
 
-test('SALES／未授權帳號不可 setup，Web App request 不自動建立缺少的 Sheet', () => {
+test('USER／未授權帳號不可 setup，Web App request 不自動建立缺少的 Sheet', () => {
   const state = createState({ notesExist: false }); const { api } = runtime(state);
   assert.throws(() => api.setupCollaborationNotes(), /^Error: FORBIDDEN$/);
   assert.throws(() => api.getCase('115DX2031'), /^Error: INTERNAL_ERROR$/);
@@ -248,8 +248,8 @@ test('public setup 原樣回傳既有實作結果與錯誤，不建立第二套�
 
 for (const [label, email, disabledIndex] of [
   ['同網域未登記帳號', 'unknown@company.example', null],
-  ['停用 SALES', 'sean@company.example', 0],
-  ['停用 MANAGER', 'april@company.example', 2],
+  ['停用 USER', 'sean@company.example', 0],
+  ['停用 ADMINISTRATOR', 'april@company.example', 2],
 ]) {
   test(`public setup 拒絕${label}，不建立或修改工作表`, () => {
     const state = createState({ notesExist: false });
@@ -262,12 +262,12 @@ for (const [label, email, disabledIndex] of [
   });
 }
 
-test('public setup 保留鎖逾時與鎖內 MANAGER 再驗證', () => {
+test('public setup 保留鎖逾時與鎖內 ADMINISTRATOR 再驗證', () => {
   const busy = runtime(createState({ notesExist: false }), { email: 'april@company.example', lockTimeout: true });
   assert.throws(() => busy.api.setupCollaborationNotes(), /^Error: LOCK_TIMEOUT$/);
   assert.equal(busy.state.setups.length, 0);
   const state = createState({ notesExist: false });
-  const { api } = runtime(state, { email: 'april@company.example', beforeLock: () => { state.sales[2][5] = 'SALES'; } });
+  const { api } = runtime(state, { email: 'april@company.example', beforeLock: () => { state.sales[2][5] = 'USER'; } });
   assert.throws(() => api.setupCollaborationNotes(), /^Error: FORBIDDEN$/);
   assert.equal(state.setups.length, 0); assert.equal(state.locked, false);
   assert.equal(state.waits, 1); assert.equal(state.releases, 1);

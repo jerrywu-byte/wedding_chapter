@@ -36,7 +36,7 @@ test('他人案件新增備註只送 serialNumber 和 note，Server 回應署名
   assert.equal(ui.calls.some(call => call.method === 'updateCase'), false);
 });
 
-for (const label of ['SALES 自己案件', 'MANAGER 任意案件']) {
+for (const label of ['USER 自己案件', 'ADMINISTRATOR 任意案件']) {
   test(`${label}：沿用 Server editable=true 編輯全部既有欄位`, () => {
     const ui = clientRuntime(); ui.open(fixture({ editable: true }));
     assert.equal(ui.tables().disabled, false); ui.consultations().forEach(input => assert.equal(input.disabled, false));

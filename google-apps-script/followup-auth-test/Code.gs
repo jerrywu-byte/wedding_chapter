@@ -22,7 +22,7 @@ const FOLLOWUP_MAX_LIST_RESULTS_ = 100;
 const FOLLOWUP_MAX_CONSULTATION_LENGTH_ = 5000;
 const FOLLOWUP_LOCK_TIMEOUT_MS_ = 30000;
 const FOLLOWUP_ALLOWED_STATUSES_ = Object.freeze(['洽談中', '已訂', '退訂', '流失']);
-const FOLLOWUP_ALLOWED_ROLES_ = Object.freeze(['MANAGER', 'SALES']);
+const FOLLOWUP_ALLOWED_ROLES_ = Object.freeze(['ADMINISTRATOR', 'USER']);
 const FOLLOWUP_UPDATE_FIELDS_ = Object.freeze([
   'serialNumber',
   'identityToken',
@@ -188,7 +188,7 @@ function addCollaborationNote(payload) {
   });
 }
 
-/** Manual setup entrypoint; the delegated implementation enforces MANAGER access. */
+/** Manual setup entrypoint; the delegated implementation enforces ADMINISTRATOR access. */
 function setupCollaborationNotes() {
   return setupCollaborationNotes_();
 }
@@ -197,12 +197,12 @@ function setupCollaborationNotes() {
 function setupCollaborationNotes_() {
   return followupRequest_(function () {
     const currentUser = requireAuthorizedUser_();
-    if (currentUser.role !== 'MANAGER') throw new Error('FORBIDDEN');
+    if (currentUser.role !== 'ADMINISTRATOR') throw new Error('FORBIDDEN');
     const lock = LockService.getScriptLock();
     try { lock.waitLock(FOLLOWUP_LOCK_TIMEOUT_MS_); }
     catch (error) { throw new Error('LOCK_TIMEOUT'); }
     try {
-      if (requireAuthorizedUser_().role !== 'MANAGER') throw new Error('FORBIDDEN');
+      if (requireAuthorizedUser_().role !== 'ADMINISTRATOR') throw new Error('FORBIDDEN');
       const spreadsheetId = requireSpreadsheetId_();
       const metadata = Sheets.Spreadsheets.get(spreadsheetId, {
         fields: 'sheets.properties(sheetId,title)',
@@ -604,7 +604,7 @@ function casePermissions_(currentUser, row) {
 }
 
 function canEditCase_(currentUser, row) {
-  if (currentUser.role === 'MANAGER') return true;
+  if (currentUser.role === 'ADMINISTRATOR') return true;
   const caseSalesCode = normalizeSalesCode_(row[FOLLOWUP_COLUMNS_.salesCode]);
   return Boolean(caseSalesCode) && caseSalesCode === currentUser.salesCode;
 }

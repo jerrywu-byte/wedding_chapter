@@ -38,7 +38,7 @@ const HEADERS = [
 const SALES_HEADERS = ["業務代碼", "業務姓名", "業務Email", "LINE連結", "啟用", "Follow-up角色"];
 
 function makeSalesRow(overrides = {}) {
-  const row = ["JW", "Jerry", "jerry@company.example", "", "TRUE", "SALES"];
+  const row = ["SEAN", "Sean", "sean@company.example", "", "TRUE", "USER"];
   Object.entries(overrides).forEach(([index, value]) => {
     row[Number(index)] = value;
   });
@@ -60,8 +60,8 @@ function makeRow(overrides = {}) {
     "FALSE",
     "晚",
     "20",
-    "JW",
-    "Jerry",
+    "SEAN",
+    "Sean",
     "已完成第一次洽談",
     "",
     "第三次洽談補充",
@@ -76,7 +76,7 @@ function makeRow(overrides = {}) {
 
 function createRuntime(options = {}) {
   const state = {
-    email: options.email ?? "jerry@company.example",
+    email: options.email ?? "sean@company.example",
     rows: options.rows ?? [
       makeRow(),
       makeRow({
@@ -96,7 +96,8 @@ function createRuntime(options = {}) {
     salesHeaders: options.salesHeaders ?? SALES_HEADERS,
     salesRows: options.salesRows ?? [
       makeSalesRow(),
-      makeSalesRow({ 0: "AP", 1: "April", 2: "april@company.example", 5: "MANAGER" }),
+      makeSalesRow({ 0: "AP", 1: "April", 2: "april@company.example", 5: "ADMINISTRATOR" }),
+      makeSalesRow({ 0: "JERRY", 1: "Jerry", 2: "jerry@company.example", 5: "ADMINISTRATOR" }),
     ],
     batchGetCalls: 0,
     properties: {
@@ -335,7 +336,7 @@ test("基本資料卡依三行規格排列且只顯示 M 欄桌數", () => {
   assert.match(serverSource, /estimatedTables: cleanText_\(row\[FOLLOWUP_COLUMNS_\.estimatedTables\]\)/);
 });
 
-test("MANAGER listCases 可查看全部案件", () => {
+test("ADMINISTRATOR listCases 可查看全部案件", () => {
   const rows = [
     makeRow(),
     makeRow({ 0: "115DX2032", 2: "another-key", 13: "AP", 14: "April" }),
@@ -347,7 +348,7 @@ test("MANAGER listCases 可查看全部案件", () => {
   );
 });
 
-test("SALES listCases 與搜尋可回傳全部案件，權限由 Server 決定", () => {
+test("USER listCases 與搜尋可回傳全部案件，權限由 Server 決定", () => {
   const rows = [
     makeRow(),
     makeRow({
@@ -366,7 +367,7 @@ test("SALES listCases 與搜尋可回傳全部案件，權限由 Server 決定",
   assert.equal(context.listCases("115DX2032").length, 1);
 });
 
-test("SALES getCase 可讀他人案件，但不可編輯正式資料", () => {
+test("USER getCase 可讀他人案件，但不可編輯正式資料", () => {
   const rows = [
     makeRow(),
     makeRow({ 0: "115DX2032", 2: "another-key", 13: "AP", 14: "April" }),
@@ -402,7 +403,7 @@ test("業務 Email 或 salesCode 重複時 fail closed", () => {
   assert.throws(() => duplicateCode.context.listCases(""), /DATA_INTEGRITY_ERROR/);
 });
 
-test("SALES 可讀但不可編輯 N 空白案件，MANAGER 仍可編輯", () => {
+test("USER 可讀但不可編輯 N 空白案件，ADMINISTRATOR 仍可編輯", () => {
   const rows = [makeRow({ 13: "", 14: "" })];
   const sales = createRuntime({ rows });
   assert.equal(sales.context.listCases("").length, 1);

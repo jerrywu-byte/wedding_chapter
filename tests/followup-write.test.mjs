@@ -36,7 +36,7 @@ const HEADERS = [
 const SALES_HEADERS = ["業務代碼", "業務姓名", "業務Email", "LINE連結", "啟用", "Follow-up角色"];
 
 function makeSalesRow(overrides = {}) {
-  const row = ["JW", "Jerry", "jerry@company.example", "", "TRUE", "SALES"];
+  const row = ["SEAN", "Sean", "sean@company.example", "", "TRUE", "USER"];
   Object.entries(overrides).forEach(([index, value]) => {
     row[Number(index)] = value;
   });
@@ -60,8 +60,8 @@ function makeRow(overrides = {}) {
     "FALSE",
     "晚",
     "20",
-    "JW",
-    "Jerry",
+    "SEAN",
+    "Sean",
     "第一次原始內容",
     "",
     "",
@@ -76,13 +76,14 @@ function makeRow(overrides = {}) {
 
 function createRuntime(options = {}) {
   const state = {
-    email: options.email ?? "jerry@company.example",
+    email: options.email ?? "sean@company.example",
     headers: options.headers ?? HEADERS.slice(),
     rows: options.rows ?? [makeRow()],
     salesHeaders: options.salesHeaders ?? SALES_HEADERS.slice(),
     salesRows: options.salesRows ?? [
       makeSalesRow(),
-      makeSalesRow({ 0: "AP", 1: "April", 2: "april@company.example", 5: "MANAGER" }),
+      makeSalesRow({ 0: "AP", 1: "April", 2: "april@company.example", 5: "ADMINISTRATOR" }),
+      makeSalesRow({ 0: "JERRY", 1: "Jerry", 2: "jerry@company.example", 5: "ADMINISTRATOR" }),
     ],
     batchGetCalls: 0,
     updateCalls: 0,
@@ -580,7 +581,7 @@ test("UI 提供重新開啟確認、CONFLICT 訊息與可編輯 P/Q/R", () => {
   assert.doesNotMatch(clientHtml, /textarea\.readOnly = true/);
 });
 
-test("SALES update 自己案件成功，他人案件回傳 FORBIDDEN 且完全不寫入", () => {
+test("USER update 自己案件成功，他人案件回傳 FORBIDDEN 且完全不寫入", () => {
   const rows = [
     makeRow(),
     makeRow({ 0: "115DX2032", 2: "private-duplicate-key-two", 13: "AP", 14: "April" }),
@@ -607,7 +608,7 @@ test("SALES update 自己案件成功，他人案件回傳 FORBIDDEN 且完全�
   assert.deepEqual(state.rows[1], beforeOther);
 });
 
-test("MANAGER 可修改任一業務的案件", () => {
+test("ADMINISTRATOR 可修改任一業務的案件", () => {
   const rows = [makeRow()];
   const { context, state } = createRuntime({ email: "april@company.example", rows });
   const result = context.updateCase(payloadFor(context, { estimatedTables: "31" }));
@@ -616,7 +617,7 @@ test("MANAGER 可修改任一業務的案件", () => {
   assert.equal(state.updateCalls, 1);
 });
 
-test("SALES 不得更新 N 空白案件", () => {
+test("USER 不得更新 N 空白案件", () => {
   const rows = [makeRow({ 13: "", 14: "" })];
   const managerRuntime = createRuntime({ email: "april@company.example", rows });
   const detail = managerRuntime.context.getCase("115DX2031");

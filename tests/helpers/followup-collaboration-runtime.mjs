@@ -20,9 +20,13 @@ export function createState(overrides = {}) {
   return {
     rows: [caseRow(), caseRow('115DX2032', 'LISA')], notes: [], noteHeaders: noteHeaders.slice(),
     notesExist: true, now: '2026-09-01T11:35:00.000Z',
-    sales: [['SEAN', 'Sean', 'sean@company.example', '', 'TRUE', 'SALES'],
-      ['LISA', 'Lisa', 'lisa@company.example', '', true, 'SALES'],
-      ['APRIL', 'April', 'april@company.example', '', true, 'MANAGER']],
+    sales: [['SEAN', 'Sean', 'sean@company.example', '', 'TRUE', 'USER'],
+      ['LISA', 'Lisa', 'lisa@company.example', '', true, 'USER'],
+      ['APRIL', 'April', 'april@company.example', '', true, 'ADMINISTRATOR'],
+      ['JERRY', 'Jerry', 'jerry@company.example', '', true, 'ADMINISTRATOR'],
+      ['JIMMY', 'Jimmy', 'jimmy@company.example', '', true, 'USER'],
+      ['NIDIA', 'Nidia', 'nidia@company.example', '', true, 'USER'],
+      ['ELLE', 'Elle', 'elle@company.example', '', true, 'USER']],
     reads: [], appends: [], updates: [], setups: [], locked: false, waits: 0, releases: 0,
     failAppend: false, failRead: false, ...overrides,
   };
