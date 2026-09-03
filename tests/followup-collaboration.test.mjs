@@ -196,34 +196,86 @@ test('備註不影響 revisionToken，正式更新仍僅 M＋P:T 且不改備註
   assert.throws(() => api.updateCase({ ...updatePayload(api), collaborationNotes: [] }), /VALIDATION_ERROR/);
 });
 
-test('手動 setup 由 MANAGER 一次建立工作表與表頭，重跑不改任何資料', () => {
+test('public 手動 setup 由 MANAGER 一次建立工作表與表頭，重跑不改任何資料', () => {
   const state = createState({ notesExist: false }); const { api } = runtime(state, { email: 'april@company.example' });
-  assert.equal(api.setupCollaborationNotes_().created, true);
+  assert.equal(api.setupCollaborationNotes().created, true);
+  assert.equal(state.notesExist, true);
   assert.deepEqual(state.noteHeaders, noteHeaders);
   api.addCollaborationNote({ serialNumber: '115DX2031', note: '保留我' });
   const before = JSON.stringify(state.notes);
-  assert.equal(api.setupCollaborationNotes_().created, false);
+  assert.equal(api.setupCollaborationNotes().created, false);
   assert.equal(JSON.stringify(state.notes), before); assert.equal(state.setups.length, 1);
+  assert.equal(state.waits, state.releases);
 });
 
 test('已存在但表頭不符的工作表禁止覆蓋，getCase／append 也 fail closed', () => {
   for (const header of [[], ['錯誤', ...noteHeaders.slice(1)], [...noteHeaders, '多餘欄']]) {
-    const state = createState({ noteHeaders: header }); const { api } = runtime(state, { email: 'april@company.example' });
-    for (const action of [() => api.setupCollaborationNotes_(), () => api.getCase('115DX2031'),
+    const existingNote = ['115DX2031', '2026-09-01T11:35:00Z', 'SEAN', 'Sean', '不可覆寫'];
+    const state = createState({ noteHeaders: header, notes: [existingNote.slice()] });
+    const { api } = runtime(state, { email: 'april@company.example' });
+    for (const action of [() => api.setupCollaborationNotes(), () => api.getCase('115DX2031'),
       () => api.addCollaborationNote({ serialNumber: '115DX2031', note: 'x' })]) {
       assert.throws(action, /DATA_INTEGRITY_ERROR/);
     }
     assert.equal(state.setups.length, 0); assert.equal(state.appends.length, 0);
     assert.deepEqual(state.noteHeaders, header);
+    assert.deepEqual(state.notes, [existingNote]);
   }
 });
 
 test('SALES／未授權帳號不可 setup，Web App request 不自動建立缺少的 Sheet', () => {
   const state = createState({ notesExist: false }); const { api } = runtime(state);
-  assert.throws(() => api.setupCollaborationNotes_(), /FORBIDDEN/);
+  assert.throws(() => api.setupCollaborationNotes(), /^Error: FORBIDDEN$/);
   assert.throws(() => api.getCase('115DX2031'), /^Error: INTERNAL_ERROR$/);
   assert.throws(() => api.addCollaborationNote({ serialNumber: '115DX2031', note: 'x' }), /^Error: INTERNAL_ERROR$/);
   assert.equal(state.setups.length, 0); assert.equal(state.notesExist, false);
-  assert.throws(() => runtime(state, { email: 'outsider@example.net' }).api.setupCollaborationNotes_(), /UNAUTHORIZED/);
-  assert.deepEqual(Object.keys(api).filter(name => /CollaborationNote/.test(name) && !name.endsWith('_')), ['addCollaborationNote']);
+  assert.throws(() => runtime(state, { email: 'outsider@example.net' }).api.setupCollaborationNotes(), /^Error: UNAUTHORIZED$/);
+  assert.deepEqual(Object.keys(api).filter(name => /CollaborationNote/.test(name) && !name.endsWith('_')),
+    ['addCollaborationNote', 'setupCollaborationNotes']);
+});
+
+test('public setup 原樣回傳既有實作結果與錯誤，不建立第二套邏輯', () => {
+  const { api, state } = runtime();
+  const result = { created: false }; let calls = 0;
+  api.setupCollaborationNotes_ = () => { calls++; return result; };
+  assert.equal(api.setupCollaborationNotes(), result);
+  assert.equal(calls, 1);
+  const error = new Error('FORBIDDEN');
+  api.setupCollaborationNotes_ = () => { throw error; };
+  assert.throws(() => api.setupCollaborationNotes(), thrown => thrown === error);
+  assert.equal(state.reads.length, 0); assert.equal(state.setups.length, 0);
+});
+
+for (const [label, email, disabledIndex] of [
+  ['同網域未登記帳號', 'unknown@company.example', null],
+  ['停用 SALES', 'sean@company.example', 0],
+  ['停用 MANAGER', 'april@company.example', 2],
+]) {
+  test(`public setup 拒絕${label}，不建立或修改工作表`, () => {
+    const state = createState({ notesExist: false });
+    if (disabledIndex !== null) state.sales[disabledIndex][4] = false;
+    const { api } = runtime(state, { email });
+    assert.throws(() => api.setupCollaborationNotes(), /^Error: UNAUTHORIZED$/);
+    assert.equal(state.notesExist, false); assert.equal(state.setups.length, 0);
+    assert.equal(state.appends.length, 0); assert.equal(state.updates.length, 0);
+    assert.equal(state.waits, 0);
+  });
+}
+
+test('public setup 保留鎖逾時與鎖內 MANAGER 再驗證', () => {
+  const busy = runtime(createState({ notesExist: false }), { email: 'april@company.example', lockTimeout: true });
+  assert.throws(() => busy.api.setupCollaborationNotes(), /^Error: LOCK_TIMEOUT$/);
+  assert.equal(busy.state.setups.length, 0);
+  const state = createState({ notesExist: false });
+  const { api } = runtime(state, { email: 'april@company.example', beforeLock: () => { state.sales[2][5] = 'SALES'; } });
+  assert.throws(() => api.setupCollaborationNotes(), /^Error: FORBIDDEN$/);
+  assert.equal(state.setups.length, 0); assert.equal(state.locked, false);
+  assert.equal(state.waits, 1); assert.equal(state.releases, 1);
+});
+
+test('addCollaborationNote 無 payload 仍拒絕，不當作 setup 或寫入備註', () => {
+  const { api, state } = runtime(createState({ notesExist: false }), { email: 'april@company.example' });
+  assert.throws(() => api.addCollaborationNote(), /^Error: VALIDATION_ERROR$/);
+  assert.equal(state.notesExist, false); assert.equal(state.setups.length, 0);
+  assert.equal(state.appends.length, 0); assert.equal(state.waits, 0);
 });

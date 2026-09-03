@@ -39,10 +39,12 @@ N 空白的案件仍可讀取、協作；SALES 不可修改正式資料，MANAGE
 在 **Follow-up 專用 Apps Script 專案的編輯器**，以已啟用 MANAGER 帳號執行：
 
 ```js
-setupCollaborationNotes_()
+setupCollaborationNotes()
 ```
 
-- 函式名稱結尾 `_`，不提供給 `google.script.run`，也不從 Web App request 自動呼叫。
+- 在函式選單選擇 `setupCollaborationNotes`（不含結尾底線）。
+- public wrapper 只呼叫既有 `setupCollaborationNotes_()`；即使由 `google.script.run` 呼叫，仍須通過原有授權及 MANAGER 驗證。
+- 不從其他 Web App request 自動呼叫，也不使用 `addCollaborationNote()` 代替 setup。
 - 使用 ScriptLock；先確認 MANAGER 身分。
 - 工作表不存在：一次 Sheets batch 建立工作表及五個 header。
 - 已存在：驗證整列 header；回傳 `{ created: false }`，不修改任何既有資料。
@@ -93,7 +95,7 @@ RAW 避免將以 `=` 起始的備註當成公式執行；沒有讀整格、拼�
    不要為此次更新任意更換 identity secret。
 3. 確認業務資料 A:F 表頭正確；準備一個 MANAGER、兩個不同業務代碼的 SALES，以及停用／未授權測試帳號。
 4. 保留 Sheets v4 Advanced Service；manifest 既有 `userinfo.email`、`spreadsheets` scopes 足夠，沒有新增 Drive scope。
-5. 先在 DEV 試算表／測試專案執行 `setupCollaborationNotes_()`，確認 header、MANAGER 與 SALES 權限及正式編輯流程。
+5. 先在 DEV 試算表／測試專案執行 `setupCollaborationNotes()`，確認 header、MANAGER 與 SALES 權限及正式編輯流程。
 6. 用兩個授權帳號同時對同案新增不同備註，確認兩列都存在、各自署名正確；確認跨業務 updateCase 被拒絕。
 7. 檢查桌機／手機排版、唯讀提示、備註成功／失敗文字保留，以及保留案件編輯草稿的行為。
 8. 人工驗收通過、取得正式部署指示後，再於正式試算表執行 setup（已存在則只驗證），
@@ -103,7 +105,13 @@ RAW 避免將以 `=` 起始的備註當成公式執行；沒有讀整格、拼�
 本機測試涵蓋 Server 權限、資料寫入範圍、鎖競爭模型與真實 Client 程式的事件行為。
 Apps Script 的真實帳號驗證、Google LockService 的跨執行個體行為與瀏覽器排版，仍需上述 DEV 人工驗收。
 
-## 本次驗證結果
+## 手動 setup 入口修正驗證
+
+- `node --test tests/followup*.test.mjs`：136 / 136 通過；涵蓋 public wrapper 的授權、鎖定、首次建立、重跑與異常 header 保護。
+- `git diff --check`：通過。所有既有 function body 與 5f1962e 逐字一致，僅新增委派 wrapper 及調整 setup 註解。
+- 未操作正式 Sheet、合併 main 或部署。更新 Code.gs 後，在編輯器函式選單選擇 `setupCollaborationNotes`。
+
+## 協作備註初版驗證結果（5f1962e）
 
 - `npm run typecheck`：通過。
 - `node --test tests/followup*.test.mjs`：130 / 130 通過。

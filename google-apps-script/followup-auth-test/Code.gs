@@ -188,7 +188,12 @@ function addCollaborationNote(payload) {
   });
 }
 
-/** Manual editor-only setup. Trailing underscore blocks google.script.run calls. */
+/** Manual setup entrypoint; the delegated implementation enforces MANAGER access. */
+function setupCollaborationNotes() {
+  return setupCollaborationNotes_();
+}
+
+/** Shared setup implementation. Trailing underscore blocks direct google.script.run calls. */
 function setupCollaborationNotes_() {
   return followupRequest_(function () {
     const currentUser = requireAuthorizedUser_();
