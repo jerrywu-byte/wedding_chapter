@@ -329,7 +329,8 @@ test("基本資料卡依三行規格排列且只顯示 M 欄桌數", () => {
     return nextIndex;
   }, -1);
 
-  assert.doesNotMatch(cardMapping, /主要聯絡人/);
+  assert.match(cardMapping, /\['新郎姓名', displayValue_\(caseData\.groomName\), 'primary-contact', groomIsPrimary\]/);
+  assert.match(cardMapping, /\['新娘姓名', displayValue_\(caseData\.brideName\), 'primary-contact', brideIsPrimary\]/);
   assert.doesNotMatch(cardMapping, /預計桌數|確認桌數/);
   assert.match(cardMapping, /\['桌數', String\(caseData\.estimatedTables \|\| ''\), 'number'\]/);
   assert.doesNotMatch(serverSource, /confirmedTables|A1:U1|A2:U|P\d+:U/);

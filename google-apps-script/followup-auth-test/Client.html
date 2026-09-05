@@ -258,6 +258,8 @@
       const status = displayValue_(caseData.status);
       const weddingDate = caseData.dateUndecided ? '日期未定' : displayValue_(caseData.weddingDate);
       const salesName = caseData.salesName || caseData.salesCode || '—';
+      const groomIsPrimary = isPrimaryContact_(caseData.primaryContactName, caseData.groomName);
+      const brideIsPrimary = isPrimaryContact_(caseData.primaryContactName, caseData.brideName);
       elements.ownershipNotice.hidden = caseData.editable === true;
       elements.ownershipNotice.textContent = '此案件由 ' + salesName + ' 負責，你可以查看案件內容並新增協作備註。';
       renderCollaborationNotes_(caseData.collaborationNotes);
@@ -272,9 +274,9 @@
         ['宴別', displayValue_(caseData.banquetSession)],
         ['桌數', String(caseData.estimatedTables || ''), 'number'],
         ['接待業務', salesName],
-        ['新郎姓名', displayValue_(caseData.groomName)],
+        ['新郎姓名', displayValue_(caseData.groomName), 'primary-contact', groomIsPrimary],
         ['新郎電話', displayValue_(caseData.groomPhone)],
-        ['新娘姓名', displayValue_(caseData.brideName)],
+        ['新娘姓名', displayValue_(caseData.brideName), 'primary-contact', brideIsPrimary],
         ['新娘電話', displayValue_(caseData.bridePhone)],
         ['提交時間', displayValue_(caseData.submittedAt)],
       ]);
@@ -307,6 +309,24 @@
           input.addEventListener('input', handleEditorInput_);
           estimatedTablesInput = input;
           description.append(input);
+        } else if (item[2] === 'primary-contact') {
+          description.className = 'followup-name-value';
+          const name = document.createElement('span');
+          name.textContent = item[1];
+
+          const marker = document.createElement('span');
+          marker.className = 'followup-primary-marker';
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.checked = item[3] === true;
+          checkbox.disabled = true;
+          checkbox.readOnly = true;
+          checkbox.tabIndex = -1;
+          checkbox.setAttribute('aria-label', item[0] + '是否為主要聯絡人');
+          const markerText = document.createElement('span');
+          markerText.textContent = '主要聯絡人';
+          marker.append(checkbox, markerText);
+          description.append(name, marker);
         } else {
           description.textContent = item[1];
         }
@@ -692,6 +712,12 @@
     function displayValue_(value) {
       const text = String(value || '').trim();
       return text || '—';
+    }
+
+    function isPrimaryContact_(primaryContactName, personName) {
+      const primary = String(primaryContactName || '').trim();
+      const person = String(personName || '').trim();
+      return Boolean(primary && person && primary === person);
     }
 
     function normalizeConsultation_(value) {

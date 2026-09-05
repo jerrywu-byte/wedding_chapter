@@ -45,6 +45,7 @@ class Element {
 export function fixture(overrides = {}) {
   return { serialNumber: '115DX2031', groomName: '測試新郎', brideName: '測試新娘', salesName: 'Lisa',
     salesCode: 'LISA', groomPhone: '0911111111', bridePhone: '0922222222', weddingDate: '', dateUndecided: true,
+    primaryContactName: '測試新娘', primaryContactPhone: '0922222222',
     banquetSession: '晚', submittedAt: '2026/09/01 10:00', estimatedTables: '20',
     firstConsultation: '原始洽談', secondConsultation: '', thirdConsultation: '', status: '洽談中', closedDate: '',
     identityToken: 'i'.repeat(43), revisionToken: 'r'.repeat(43), editable: false,
@@ -105,6 +106,8 @@ export function clientRuntime() {
     flushTimers() { for (const [id, fn] of timers) { timers.delete(id); fn(); } },
     input(id, text) { elements[id].value = text; elements[id].emit('input'); },
     tables: () => elements.basicInformation.querySelector('input'),
+    primaryMarkers: () => elements.basicInformation.querySelectorAll('.followup-primary-marker')
+      .map(marker => marker.querySelector('input')),
     consultations: () => elements.consultations.querySelectorAll('textarea'),
   };
 }

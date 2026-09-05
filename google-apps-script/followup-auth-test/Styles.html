@@ -185,6 +185,19 @@
     margin: 0; overflow-wrap: anywhere; font-family: var(--followup-font-sans);
     font-size: 14px; font-weight: 500; line-height: 1.55; letter-spacing: .01em;
   }
+  .followup-name-value {
+    min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 5px 9px;
+  }
+  .followup-name-value > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+  .followup-primary-marker {
+    min-width: 0; display: inline-flex; align-items: center; gap: 5px;
+    color: var(--followup-muted); font-size: 10px; font-weight: 500;
+    line-height: 1.4; letter-spacing: .03em; white-space: nowrap;
+  }
+  .followup-primary-marker input[type="checkbox"] {
+    width: 13px; height: 13px; margin: 0; flex: 0 0 auto;
+    accent-color: var(--followup-gold); opacity: 1;
+  }
   .followup-basic-grid dd input[type="number"] {
     width: 100%; min-width: 0; height: 30px; padding: 3px 8px;
     border: 1px solid var(--followup-line); border-radius: 7px; outline: none;
