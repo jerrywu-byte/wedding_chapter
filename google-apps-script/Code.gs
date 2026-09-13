@@ -116,10 +116,15 @@ function doPost(e) {
     const result = saveSubmission_(payload);
     return jsonResponse_(result);
   } catch (error) {
+    const errorCode = error && error.message === 'VALIDATION_ERROR'
+      ? 'VALIDATION_ERROR'
+      : 'ERROR';
     return jsonResponse_({
       success: false,
-      status: 'ERROR',
-      message: error && error.message ? error.message : String(error),
+      status: errorCode,
+      message: errorCode === 'VALIDATION_ERROR'
+        ? '請輸入正確的手機號碼，例如 0912-345-678'
+        : error && error.message ? error.message : String(error),
     });
   }
 }
@@ -241,6 +246,16 @@ function validateAndNormalize_(payload) {
       throw new Error('MISSING_REQUIRED_FIELD:' + field);
     }
   });
+
+  data.partner1Phone = normalizeTaiwanMobile_(data.partner1Phone);
+  data.partner2Phone = normalizeTaiwanMobile_(data.partner2Phone);
+  data.emergencyContactPhone = normalizeTaiwanMobile_(data.emergencyContactPhone);
+
+  if (data.emergencyContactName === data.partner1Name) {
+    data.emergencyContactPhone = data.partner1Phone;
+  } else if (data.emergencyContactName === data.partner2Name) {
+    data.emergencyContactPhone = data.partner2Phone;
+  }
 
   if (!data.dateUndecided && !data.weddingDate) {
     throw new Error('MISSING_REQUIRED_FIELD:weddingDate');
@@ -402,6 +417,12 @@ function getRocYear_(date) {
 
 function cleanText_(value) {
   return value === null || value === undefined ? '' : String(value).trim();
+}
+
+function normalizeTaiwanMobile_(value) {
+  const compact = cleanText_(value).replace(/[\s\-–—－()（）.．/／]/g, '');
+  if (!/^09\d{8}$/.test(compact)) throw new Error('VALIDATION_ERROR');
+  return compact.slice(0, 4) + '-' + compact.slice(4, 7) + '-' + compact.slice(7);
 }
 
 function jsonResponse_(body) {

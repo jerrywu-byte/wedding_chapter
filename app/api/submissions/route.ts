@@ -2,6 +2,7 @@ import type {
   WeddingChapterSubmission,
   WeddingChapterSubmissionResult,
 } from "../../../lib/weddingChapterSubmission";
+import { normalizeTaiwanMobile, TAIWAN_MOBILE_INPUT_ERROR } from "../../../lib/taiwanMobile";
 
 type RuntimeEnv = {
   GOOGLE_APPS_SCRIPT_WEB_APP_URL?: string;
@@ -37,6 +38,15 @@ function validate(payload: WeddingChapterSubmission): string | null {
   return null;
 }
 
+function normalizeSubmissionPhones(payload: WeddingChapterSubmission): WeddingChapterSubmission {
+  return {
+    ...payload,
+    partner1Phone: normalizeTaiwanMobile(payload.partner1Phone),
+    partner2Phone: normalizeTaiwanMobile(payload.partner2Phone),
+    emergencyContactPhone: normalizeTaiwanMobile(payload.emergencyContactPhone),
+  };
+}
+
 export async function POST(request: Request) {
   let payload: WeddingChapterSubmission | SalesOptionsRequest;
   try {
@@ -46,6 +56,14 @@ export async function POST(request: Request) {
   }
 
   if (!isSalesOptionsRequest(payload)) {
+    try {
+      payload = normalizeSubmissionPhones(payload);
+    } catch {
+      return Response.json(
+        { success: false, status: "VALIDATION_ERROR", message: TAIWAN_MOBILE_INPUT_ERROR },
+        { status: 400 },
+      );
+    }
     const validationError = validate(payload);
     if (validationError) {
       return Response.json({ success: false, status: "ERROR", message: validationError }, { status: 400 });

@@ -536,11 +536,11 @@ function mapCaseDetail_(row, secret) {
     serialNumber: cleanText_(row[FOLLOWUP_COLUMNS_.serialNumber]),
     submittedAt: cleanText_(row[FOLLOWUP_COLUMNS_.submittedAt]),
     groomName: cleanText_(row[FOLLOWUP_COLUMNS_.groomName]),
-    groomPhone: cleanText_(row[FOLLOWUP_COLUMNS_.groomPhone]),
+    groomPhone: formatTaiwanMobileForDisplay_(row[FOLLOWUP_COLUMNS_.groomPhone]),
     brideName: cleanText_(row[FOLLOWUP_COLUMNS_.brideName]),
-    bridePhone: cleanText_(row[FOLLOWUP_COLUMNS_.bridePhone]),
+    bridePhone: formatTaiwanMobileForDisplay_(row[FOLLOWUP_COLUMNS_.bridePhone]),
     primaryContactName: cleanText_(row[FOLLOWUP_COLUMNS_.primaryContactName]),
-    primaryContactPhone: cleanText_(row[FOLLOWUP_COLUMNS_.primaryContactPhone]),
+    primaryContactPhone: formatTaiwanMobileForDisplay_(row[FOLLOWUP_COLUMNS_.primaryContactPhone]),
     weddingDate: cleanText_(row[FOLLOWUP_COLUMNS_.weddingDate]),
     dateUndecided: parseBoolean_(row[FOLLOWUP_COLUMNS_.dateUndecided]),
     banquetSession: cleanText_(row[FOLLOWUP_COLUMNS_.banquetSession]),
@@ -890,6 +890,21 @@ function isFollowupUserEnabled_(value) {
 
 function digitsOnly_(value) {
   return cleanText_(value).replace(/\D/g, '');
+}
+
+function normalizeTaiwanMobile_(value) {
+  const compact = cleanText_(value).replace(/[\s\-–—－()（）.．/／]/g, '');
+  if (!/^09\d{8}$/.test(compact)) throw new Error('VALIDATION_ERROR');
+  return compact.slice(0, 4) + '-' + compact.slice(4, 7) + '-' + compact.slice(7);
+}
+
+function formatTaiwanMobileForDisplay_(value) {
+  const original = cleanText_(value);
+  try {
+    return normalizeTaiwanMobile_(original);
+  } catch (error) {
+    return original;
+  }
 }
 
 function cleanText_(value) {

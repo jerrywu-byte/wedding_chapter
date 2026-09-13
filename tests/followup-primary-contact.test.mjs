@@ -66,7 +66,7 @@ test('getCase 已回傳 H/I，updateCase 寫入仍限定 M 與 P:T', () => {
   );
   const writer = server.slice(server.indexOf('function writeCaseFields_'), server.indexOf('function createIdentityToken_'));
   assert.match(detailMapping, /primaryContactName: cleanText_\(row\[FOLLOWUP_COLUMNS_\.primaryContactName\]\)/);
-  assert.match(detailMapping, /primaryContactPhone: cleanText_\(row\[FOLLOWUP_COLUMNS_\.primaryContactPhone\]\)/);
+  assert.match(detailMapping, /primaryContactPhone: formatTaiwanMobileForDisplay_\(row\[FOLLOWUP_COLUMNS_\.primaryContactPhone\]\)/);
   assert.match(writer, /quoteSheetRange_\('M' \+ rowNumber\)/);
   assert.match(writer, /quoteSheetRange_\('P' \+ rowNumber\)/);
   assert.doesNotMatch(writer, /quoteSheetRange_\('[HI]' \+ rowNumber\)/);

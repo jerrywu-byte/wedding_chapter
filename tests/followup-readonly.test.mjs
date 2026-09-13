@@ -207,6 +207,14 @@ test("搜尋支援訪客編號、新郎姓名、新娘姓名與電話", () => {
   assert.equal(context.listCases("0922222222")[0].serialNumber, "115DX2031");
 });
 
+test("電話搜尋忽略 dash，查詢與舊資料格式可雙向對應", () => {
+  const formattedSheet = createRuntime({ rows: [makeRow({ 4: "0912-345-678" })] });
+  assert.equal(formattedSheet.context.listCases("0912345678")[0].serialNumber, "115DX2031");
+
+  const legacySheet = createRuntime({ rows: [makeRow({ 4: "0912345678" })] });
+  assert.equal(legacySheet.context.listCases("0912-345-678")[0].serialNumber, "115DX2031");
+});
+
 test("搜尋無結果回傳空摘要列表", () => {
   const { context } = createRuntime();
   assert.equal(context.listCases("不存在的新人").length, 0);
@@ -223,6 +231,18 @@ test("getCase 依訪客編號重新查找並回傳完整唯讀內容", () => {
   assert.equal("duplicateKey" in result, false);
   assert.equal("rowNumber" in result, false);
   assert.equal("spreadsheetId" in result, false);
+});
+
+test("getCase 將可辨識的舊電話安全格式化，無法辨識時保留原值", () => {
+  const { context } = createRuntime({ rows: [makeRow({
+    4: "0912345678",
+    6: "0922 222 222",
+    8: "舊資料待確認",
+  })] });
+  const result = context.getCase("115DX2031");
+  assert.equal(result.groomPhone, "0912-345-678");
+  assert.equal(result.bridePhone, "0922-222-222");
+  assert.equal(result.primaryContactPhone, "舊資料待確認");
 });
 
 test("getCase 找不到訪客編號時回傳 NOT_FOUND", () => {

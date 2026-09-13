@@ -14,7 +14,7 @@ import {
   triggerPersonalityCardDownload,
 } from "../../lib/personalityCardDownload";
 import { getSalesLineUrl, loadSalesOptions, type SalesOption } from "../../lib/banquetPlanners";
-import { validatePhone } from "../../lib/sessionState";
+import { normalizeTaiwanMobile, TAIWAN_MOBILE_INPUT_ERROR } from "../../lib/taiwanMobile";
 import { createWeddingChapterSubmission, submitWeddingChapter } from "../../lib/weddingChapterSubmission";
 import { ESTIMATED_TABLE_RANGES, getEstimatedTableRange, isEstimatedTableRangeId, tableRangeForLegacyCount } from "../../lib/tableRanges";
 import { PersonalityCard } from "../../components/personality/PersonalityCard";
@@ -59,16 +59,35 @@ function normalized(profile: WeddingProfile): WeddingProfile {
   return profile;
 }
 
+function normalizeProfilePhones(profile: WeddingProfile): WeddingProfile {
+  const p = normalized(profile);
+  return {
+    ...p,
+    groomPhone: normalizeTaiwanMobile(p.groomPhone),
+    bridePhone: normalizeTaiwanMobile(p.bridePhone),
+    primaryContactPhone: normalizeTaiwanMobile(p.primaryContactPhone),
+  };
+}
+
+function hasValidTaiwanMobile(value: string): boolean {
+  try {
+    normalizeTaiwanMobile(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function profileErrors(profile: WeddingProfile) {
   const p = normalized(profile);
   const errors: string[] = [];
   if (!p.banquetPlanner) errors.push("請先選擇接待您的業務人員");
   if (!p.groomName.trim()) errors.push("請填寫新郎姓名");
-  if (!validatePhone(p.groomPhone)) errors.push("請填寫正確的新郎電話");
   if (!p.brideName.trim()) errors.push("請填寫新娘姓名");
-  if (!validatePhone(p.bridePhone)) errors.push("請填寫正確的新娘電話");
   if (!p.primaryContactName.trim()) errors.push("請填寫主要聯絡人姓名");
-  if (!validatePhone(p.primaryContactPhone)) errors.push("請填寫正確的主要聯絡人電話");
+  if (![p.groomPhone, p.bridePhone, p.primaryContactPhone].every(hasValidTaiwanMobile)) {
+    errors.push(TAIWAN_MOBILE_INPUT_ERROR);
+  }
   if (!p.weddingDateUndecided && !p.weddingDate) errors.push("請選擇婚禮日期，或勾選未決定日期");
   if (!p.mealPeriod) errors.push("請選擇午宴、晚宴或都可以");
   if (!p.estimatedTableRangeId) errors.push("請選擇預計桌數");
@@ -177,6 +196,13 @@ export default function WeddingExperienceRunner({ experienceId }: { experienceId
 
   const update = (next: Partial<WeddingExperienceSession>) => setSession(current => ({ ...current, ...next, experienceId }));
   const updateProfile = (next: Partial<WeddingProfile>) => update({ profile: { ...session.profile, ...next } });
+  const formatPhoneOnBlur = (field: "groomPhone" | "bridePhone" | "primaryContactPhone") => {
+    try {
+      updateProfile({ [field]: normalizeTaiwanMobile(session.profile[field]) });
+    } catch {
+      // Keep the user's draft intact; complete validation runs on submit.
+    }
+  };
   const go = (step: WeddingExperienceStep) => { setErrors([]); setDetail(null); update({ step }); };
   const p = session.profile;
   const result = session.personalityResult?.primaryPersonality;
@@ -212,7 +238,7 @@ export default function WeddingExperienceRunner({ experienceId }: { experienceId
       requestAnimationFrame(() => plannerSelectRef.current?.focus());
       return;
     }
-    if (!foundErrors.length) update({ profile, step: "opening" });
+    if (!foundErrors.length) update({ profile: normalizeProfilePhones(profile), step: "opening" });
   };
   const answer = (optionId: string) => update({ quizAnswers: [...session.quizAnswers.filter(item => item.questionId !== question.id), { questionId: question.id, optionId }] });
   const next = () => {
@@ -337,18 +363,18 @@ export default function WeddingExperienceRunner({ experienceId }: { experienceId
       <form onSubmit={event => { event.preventDefault(); submitProfile(); }}>
         <div className="wx-person"><h2>新郎資料</h2><div className="wx-two">
           <Field label="新郎姓名" value={p.groomName} change={value => updateProfile({ groomName: value })} placeholder="請填寫真實姓名（僅供身分核對使用）" className="wx-real-name-input"/>
-          <Field label="新郎電話" value={p.groomPhone} change={value => updateProfile({ groomPhone: value })} placeholder="0912345678" type="tel"/>
+          <Field label="新郎電話" value={p.groomPhone} change={value => updateProfile({ groomPhone: value })} blur={() => formatPhoneOnBlur("groomPhone")} placeholder="0912-345-678" type="tel" inputMode="numeric" autoComplete="tel" maxLength={16}/>
         </div></div>
         <div className="wx-person"><h2>新娘資料</h2><div className="wx-two">
           <Field label="新娘姓名" value={p.brideName} change={value => updateProfile({ brideName: value })} placeholder="請填寫真實姓名（僅供身分核對使用）" className="wx-real-name-input"/>
-          <Field label="新娘電話" value={p.bridePhone} change={value => updateProfile({ bridePhone: value })} placeholder="0912345678" type="tel"/>
+          <Field label="新娘電話" value={p.bridePhone} change={value => updateProfile({ bridePhone: value })} blur={() => formatPhoneOnBlur("bridePhone")} placeholder="0912-345-678" type="tel" inputMode="numeric" autoComplete="tel" maxLength={16}/>
         </div></div>
         <fieldset><legend>主要聯絡人</legend><div className="wx-radio">
           {([["groom", "新郎"], ["bride", "新娘"], ["other", "其他"]] as const).map(item => <label key={item[0]}><input type="radio" checked={p.primaryContactType === item[0]} onChange={() => updateProfile({ primaryContactType: item[0], primaryContactName: "", primaryContactPhone: "" })}/>{item[1]}</label>)}
         </div></fieldset>
         {p.primaryContactType === "other" && <div className="wx-two">
           <Field label="其他聯絡人姓名" value={p.primaryContactName} change={value => updateProfile({ primaryContactName: value })}/>
-          <Field label="其他聯絡人電話" value={p.primaryContactPhone} change={value => updateProfile({ primaryContactPhone: value })} placeholder="0912345678" type="tel"/>
+          <Field label="其他聯絡人電話" value={p.primaryContactPhone} change={value => updateProfile({ primaryContactPhone: value })} blur={() => formatPhoneOnBlur("primaryContactPhone")} placeholder="0912-345-678" type="tel" inputMode="numeric" autoComplete="tel" maxLength={16}/>
         </div>}
         <div className="wx-two"><div>
           <Field label="婚禮日期" value={p.weddingDate ?? ""} change={value => updateProfile({ weddingDate: value || null, weddingDateUndecided: false })} type="date" disabled={p.weddingDateUndecided} lang="en-CA"/>
@@ -388,8 +414,8 @@ export default function WeddingExperienceRunner({ experienceId }: { experienceId
   </main>;
 }
 
-function Field({ label, value, change, placeholder, type = "text", disabled = false, lang, className }: { label: string; value: string; change: (value: string) => void; placeholder?: string; type?: string; disabled?: boolean; lang?: string; className?: string }) {
-  return <label>{label}<input className={className} type={type} lang={lang} value={value} disabled={disabled} onChange={event => change(event.target.value)} placeholder={placeholder}/></label>;
+function Field({ label, value, change, blur, placeholder, type = "text", disabled = false, lang, className, inputMode, autoComplete, maxLength }: { label: string; value: string; change: (value: string) => void; blur?: () => void; placeholder?: string; type?: string; disabled?: boolean; lang?: string; className?: string; inputMode?: "numeric"; autoComplete?: string; maxLength?: number }) {
+  return <label>{label}<input className={className} type={type} lang={lang} value={value} disabled={disabled} onChange={event => change(event.target.value)} onBlur={blur} placeholder={placeholder} inputMode={inputMode} autoComplete={autoComplete} maxLength={maxLength}/></label>;
 }
 function Errors({ values }: { values: string[] }) {
   return values.length ? <div className="wx-errors" role="alert">{values.map(value => <p key={value}>{value}</p>)}</div> : null;

@@ -1,4 +1,5 @@
 import { getBanquetPlannerCode, type SalesOption } from "./banquetPlanners";
+import { normalizeTaiwanMobile } from "./taiwanMobile";
 import type { WeddingExperienceSession } from "../types/wedding-experience";
 
 export interface WeddingChapterSubmission {
@@ -34,14 +35,27 @@ export function createWeddingChapterSubmission(
   if (!profile.mealPeriod) throw new Error("尚未選擇宴會時段。");
   if (!profile.estimatedTables) throw new Error("尚未填寫預計桌數。");
 
+  const partner1Phone = normalizeTaiwanMobile(profile.groomPhone);
+  const partner2Phone = normalizeTaiwanMobile(profile.bridePhone);
+  const emergencyContactName = profile.primaryContactType === "groom"
+    ? profile.groomName
+    : profile.primaryContactType === "bride"
+      ? profile.brideName
+      : profile.primaryContactName;
+  const emergencyContactPhone = profile.primaryContactType === "groom"
+    ? partner1Phone
+    : profile.primaryContactType === "bride"
+      ? partner2Phone
+      : normalizeTaiwanMobile(profile.primaryContactPhone);
+
   return {
     submissionId: session.submissionClientId,
     partner1Name: profile.groomName,
-    partner1Phone: profile.groomPhone,
+    partner1Phone,
     partner2Name: profile.brideName,
-    partner2Phone: profile.bridePhone,
-    emergencyContactName: profile.primaryContactName,
-    emergencyContactPhone: profile.primaryContactPhone,
+    partner2Phone,
+    emergencyContactName,
+    emergencyContactPhone,
     weddingDate: profile.weddingDate ?? "",
     dateUndecided: profile.weddingDateUndecided,
     banquetSession:
