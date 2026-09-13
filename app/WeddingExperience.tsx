@@ -522,7 +522,7 @@ export default function WeddingExperience({ theme }: { theme: keyof typeof versi
         ) : recommendations.map((hall, index) => (
           <article className="hall-card" key={hall.name}>
             <div className="hall-visual"><span>{hall.floor}</span><b>{String(index + 1).padStart(2, "0")}</b><div className="hall-arch" /><RingsIcon /></div>
-            <div className="hall-copy"><div><p>推薦契合度 {hall.match}%</p><h3>{hall.name}</h3></div><span className="match-badge">{index === 0 ? "首選" : "推薦"}</span><p>{hall.feature}</p><ul><li>可容納 {hall.min}–{hall.max} 桌</li><li>{hall.equipment}</li></ul></div>
+            <div className="hall-copy"><div><p>推薦契合度 {hall.match}%</p><h3>{hall.name}</h3></div><span className="match-badge">推薦廳房</span><p>{hall.feature}</p><ul><li>可容納 {hall.min}–{hall.max} 桌</li><li>{hall.equipment}</li></ul></div>
           </article>
         ))}</div>
       </section>

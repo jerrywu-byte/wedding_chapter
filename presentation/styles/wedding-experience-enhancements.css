@@ -173,3 +173,19 @@
 @media(max-width:760px){
   .wx-options button{min-height:96px!important;padding:18px!important}
 }
+
+.wx-preview-mode{
+  position:fixed;
+  z-index:20;
+  right:14px;
+  bottom:14px;
+  padding:7px 10px;
+  border:1px solid currentColor;
+  border-radius:999px;
+  color:var(--accent);
+  background:color-mix(in srgb,var(--ink) 82%,transparent);
+  font:700 9px/1 var(--font-body);
+  letter-spacing:.16em;
+  opacity:.78;
+  pointer-events:none;
+}

@@ -34,28 +34,6 @@ export function safePersonalityCardFileName(filename: string) {
   return safeName || "Wedding_Chapter_Personality_Card";
 }
 
-export function createPersonalityCardFile(blob: Blob, filename: string) {
-  const safeFileName = safePersonalityCardFileName(filename);
-  return new File([blob], `${safeFileName}.png`, { type: "image/png" });
-}
-
-export function canSharePersonalityCardFile(file: File) {
-  if (typeof navigator.share !== "function" || typeof navigator.canShare !== "function") {
-    return false;
-  }
-  try {
-    return navigator.canShare({ files: [file] });
-  } catch {
-    return false;
-  }
-}
-
-export function prefersPersonalityCardPreview() {
-  if (typeof window.matchMedia !== "function") return false;
-  return window.matchMedia("(pointer: coarse)").matches
-    || window.matchMedia("(max-width: 760px)").matches;
-}
-
 export function triggerPersonalityCardDownload(blob: Blob, filename: string) {
   const objectUrl = URL.createObjectURL(blob);
   const link = document.createElement("a");

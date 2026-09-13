@@ -21,8 +21,8 @@ function id(prefix: string): string {
 export function createRecommendationSession(now = new Date()): RecommendationSession {
   const iso = now.toISOString();
   return {
-    sessionVersion: 3, quizVersion: QUIZ_VERSION, sessionId: id("dna"), currentStep: "welcome", basicInfo: { ...emptyBasicInfo },
-    answers: [], quizResult: null, recommendations: [], manualConfirmationHalls: [],
+    sessionVersion: 4, quizVersion: QUIZ_VERSION, sessionId: id("dna"), currentStep: "welcome", basicInfo: { ...emptyBasicInfo },
+    answers: [], quizResult: null, recommendations: [],
     comparisonHallIds: [], ceremonyInterest: null,
     contactInfo: { groomName: "", brideName: "", phone: "", email: "", preferredHallIds: [], notes: "", privacyConsent: false },
     migrationWarnings: [],
@@ -56,25 +56,31 @@ export function migrateRecommendationSession(value: Partial<RecommendationSessio
     const migrationWarnings = Array.isArray(value.migrationWarnings) ? value.migrationWarnings : [];
     if (typeof legacyName === "string" && legacyName.trim()) migrationWarnings.push("舊版姓名資料無法判斷屬於新郎或新娘，請重新填寫兩位姓名。");
     const quizVersionMatches = value.quizVersion === QUIZ_VERSION;
-    const currentStep = quizVersionMatches
+    const recommendationVersionMatches = value.sessionVersion === 4;
+    let currentStep = quizVersionMatches
       ? safeStep(value.currentStep)
       : safeStep(value.currentStep) === "welcome"
         ? "welcome"
         : "basic-info";
+    if (!recommendationVersionMatches && ["hall-results", "hall-comparison", "ceremony-addon", "contact", "completed"].includes(currentStep)) {
+      currentStep = "personality-result";
+    }
     return {
       ...base,
-      ...value,
-      sessionVersion: 3,
+      sessionVersion: 4,
       quizVersion: QUIZ_VERSION,
+      sessionId: value.sessionId,
       currentStep,
       basicInfo: { ...base.basicInfo, ...value.basicInfo },
       answers: quizVersionMatches && Array.isArray(value.answers) ? value.answers : [],
       quizResult: quizVersionMatches ? value.quizResult ?? null : null,
-      recommendations: quizVersionMatches && Array.isArray(value.recommendations) ? value.recommendations : [],
-      manualConfirmationHalls: quizVersionMatches && Array.isArray(value.manualConfirmationHalls) ? value.manualConfirmationHalls : [],
+      recommendations: quizVersionMatches && recommendationVersionMatches && Array.isArray(value.recommendations) ? value.recommendations.slice(0, 3) : [],
       comparisonHallIds: quizVersionMatches && Array.isArray(value.comparisonHallIds) ? value.comparisonHallIds : [],
+      ceremonyInterest: value.ceremonyInterest ?? null,
       contactInfo: { ...base.contactInfo, ...currentContact },
       migrationWarnings: [...new Set(migrationWarnings)],
+      submissionId: value.submissionId ?? null,
+      createdAt: value.createdAt,
       updatedAt: new Date().toISOString(),
     } as RecommendationSession;
 }

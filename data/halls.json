@@ -12,9 +12,7 @@
       "floor": "1F",
       "capacity": {
         "minimumTables": 10,
-        "maximumTables": 19,
-        "comfortableMinimumTables": 8,
-        "comfortableMaximumTables": 21
+        "maximumTables": 19
       },
       "equipment": {
         "ledScreen": false,
@@ -106,9 +104,7 @@
       "status": "active",
       "capacity": {
         "minimumTables": 9,
-        "maximumTables": 21,
-        "comfortableMinimumTables": 6,
-        "comfortableMaximumTables": 24
+        "maximumTables": 21
       },
       "equipment": {
         "ledScreen": true,
@@ -296,9 +292,7 @@
       ],
       "capacity": {
         "minimumTables": 45,
-        "maximumTables": 100,
-        "comfortableMinimumTables": 40,
-        "comfortableMaximumTables": 105
+        "maximumTables": 100
       },
       "equipmentInheritance": {
         "inheritFromCombinedHalls": true
@@ -420,9 +414,7 @@
       "floor": "2F",
       "capacity": {
         "minimumTables": 5,
-        "maximumTables": 11,
-        "comfortableMinimumTables": 3,
-        "comfortableMaximumTables": 13
+        "maximumTables": 11
       },
       "equipment": {
         "ledScreen": false,
@@ -508,9 +500,7 @@
       "floor": "2F",
       "capacity": {
         "minimumTables": 6,
-        "maximumTables": 23,
-        "comfortableMinimumTables": 3,
-        "comfortableMaximumTables": 26
+        "maximumTables": 23
       },
       "equipment": {
         "ledScreen": null,
@@ -601,9 +591,7 @@
       "status": "active",
       "capacity": {
         "minimumTables": 6,
-        "maximumTables": 18,
-        "comfortableMinimumTables": 4,
-        "comfortableMaximumTables": 20
+        "maximumTables": 18
       },
       "equipment": {
         "ledScreen": true,
@@ -788,9 +776,7 @@
       "status": "active",
       "capacity": {
         "minimumTables": 20,
-        "maximumTables": 33,
-        "comfortableMinimumTables": 22,
-        "comfortableMaximumTables": 30
+        "maximumTables": 33
       },
       "equipment": {
         "ledScreen": true,
@@ -983,9 +969,7 @@
       "status": "active",
       "capacity": {
         "minimumTables": 5,
-        "maximumTables": 11,
-        "comfortableMinimumTables": 3,
-        "comfortableMaximumTables": 13
+        "maximumTables": 11
       },
       "equipment": {
         "ledScreen": true,
@@ -1177,9 +1161,7 @@
       "status": "active",
       "capacity": {
         "minimumTables": 10,
-        "maximumTables": 28,
-        "comfortableMinimumTables": 7,
-        "comfortableMaximumTables": 31
+        "maximumTables": 28
       },
       "equipment": {
         "ledScreen": true,
@@ -1354,9 +1336,7 @@
       "status": "active",
       "capacity": {
         "minimumTables": 15,
-        "maximumTables": 35,
-        "comfortableMinimumTables": 12,
-        "comfortableMaximumTables": 38
+        "maximumTables": 35
       },
       "equipment": {
         "ledScreen": true,
@@ -1526,9 +1506,7 @@
       "status": "active",
       "capacity": {
         "minimumTables": 10,
-        "maximumTables": 28,
-        "comfortableMinimumTables": 7,
-        "comfortableMaximumTables": 31
+        "maximumTables": 28
       },
       "equipment": {
         "ledScreen": true,
@@ -1699,9 +1677,7 @@
       "status": "active",
       "capacity": {
         "minimumTables": 23,
-        "maximumTables": 50,
-        "comfortableMinimumTables": 18,
-        "comfortableMaximumTables": 55
+        "maximumTables": 50
       },
       "equipment": {
         "ledScreen": true,
@@ -1877,9 +1853,7 @@
       "status": "active",
       "capacity": {
         "minimumTables": 24,
-        "maximumTables": 50,
-        "comfortableMinimumTables": 19,
-        "comfortableMaximumTables": 55
+        "maximumTables": 50
       },
       "equipment": {
         "ledScreen": true,
@@ -2055,9 +2029,7 @@
       ],
       "capacity": {
         "minimumTables": 45,
-        "maximumTables": 100,
-        "comfortableMinimumTables": 40,
-        "comfortableMaximumTables": 105
+        "maximumTables": 100
       },
       "equipmentInheritance": {
         "inheritFromCombinedHalls": true
@@ -2190,8 +2162,6 @@
       "capacity": {
         "minimumTables": 10,
         "maximumTables": 19,
-        "comfortableMinimumTables": 10,
-        "comfortableMaximumTables": 15,
         "minimumGuests": null,
         "maximumGuests": 240
       },

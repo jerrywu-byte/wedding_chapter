@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { PersonalityCard } from "../../components/personality/PersonalityCard";
+import { PersonalityExportCard } from "../../components/personality/PersonalityExportCard";
 import { getActivePersonalities } from "../../lib/personalityData";
 import {
   createPersonalityCardPng,
@@ -16,11 +16,10 @@ export default function PersonalityCardLab() {
   return <main className="personality-card-lab">
     <h1>Personality Card QA</h1>
     {personalities.map((personality) => <section key={personality.id} id={`qa-${personality.id}`}>
-      <PersonalityCard
+      <PersonalityExportCard
         ref={(node) => { refs.current[personality.id] = node; }}
         personality={personality}
-        coupleNames="新郎姓名 × 新娘姓名"
-        mode="download"
+        hallIds={["floral", "mushi", "yano"]}
       />
       <button
         type="button"

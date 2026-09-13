@@ -1,17 +1,12 @@
 import hallJson from "../data/halls.json";
-import {
-  recommendHalls,
-  type HallExclusionReason,
-} from "../recommendationEngine";
+import { recommendHalls } from "../recommendationEngine";
 import { WEDDING_PERSONALITY_WEIGHT_KEYS } from "../types/wedding-personality";
 import type { Hall, HallsData, HallType } from "../types/hall";
-import type {
-  QuizDimensionTotals,
-  QuizResult,
-} from "../types/wedding-quiz";
+import type { QuizDimensionTotals, QuizResult } from "../types/wedding-quiz";
 import type { EstimatedTableRange } from "./tableRanges";
 
 const hallsData = hallJson as unknown as HallsData;
+export const MAX_HALL_RECOMMENDATIONS = 3;
 
 const DIMENSION_LABELS = {
   romantic: "浪漫氛圍",
@@ -40,14 +35,11 @@ export interface RecommendationReasonResult {
 
 export interface RankedHallByQuiz extends HallStyleScore, RecommendationReasonResult {
   displayName: string;
-  capacityStatus: "eligible" | "manual-confirmation";
-  recommendationTier: "primary" | "comfort" | "manual-confirmation";
 }
 
 export interface QuizHallRecommendationResult {
   isComplete: boolean;
   recommendations: RankedHallByQuiz[];
-  manualConfirmationHalls: RankedHallByQuiz[];
   excludedHallIds: string[];
   warnings: string[];
 }
@@ -91,17 +83,12 @@ export function calculateHallStyleScoreFromDimensions(
   const maximumScore = quizWeightTotal * 5;
   return {
     rawScore,
-    normalizedScore:
-      maximumScore === 0
-        ? 0
-        : Math.round((rawScore / maximumScore) * 100),
+    normalizedScore: maximumScore === 0 ? 0 : Math.round((rawScore / maximumScore) * 100),
     dimensionScores: resultDimensions,
   };
 }
 
-function getTopDimensionLabels(
-  dimensionScores: QuizDimensionTotals,
-): string[] {
+function getTopDimensionLabels(dimensionScores: QuizDimensionTotals): string[] {
   return [...WEDDING_PERSONALITY_WEIGHT_KEYS]
     .sort(
       (a, b) =>
@@ -118,7 +105,6 @@ export function generateRecommendationReasons(
   hall: Hall,
   tableCount: number,
   quizDimensionScores: QuizDimensionTotals,
-  capacityStatus: "eligible" | "manual-confirmation" = "eligible",
 ): RecommendationReasonResult {
   const reasons: string[] = [];
   const warnings: string[] = [];
@@ -130,27 +116,12 @@ export function generateRecommendationReasons(
   );
 
   const capacity = hall.capacity;
-  if (
-    capacityStatus === "manual-confirmation" ||
-    capacity.minimumTables === null ||
-    capacity.maximumTables === null
-  ) {
+  if (capacity.minimumTables === null || capacity.maximumTables === null) {
     reasons.push("目前缺少完整桌數容量資料，需由婚禮顧問人工確認。");
-    warnings.push(
-      `${hall.displayName}的桌數容量尚未完整提供，不列入已確認容量的正式推薦。`,
-    );
-  } else if (
-    capacity.comfortableMinimumTables !== null &&
-    capacity.comfortableMaximumTables !== null &&
-    tableCount >= capacity.comfortableMinimumTables &&
-    tableCount <= capacity.comfortableMaximumTables
-  ) {
-    reasons.push(
-      `預計${tableCount}桌落在${hall.displayName}${capacity.comfortableMinimumTables}至${capacity.comfortableMaximumTables}桌的舒適範圍。`,
-    );
+    warnings.push(`${hall.displayName}的桌數容量尚未完整提供，不列入推薦廳房。`);
   } else {
     reasons.push(
-      `預計${tableCount}桌落在${hall.displayName}${capacity.minimumTables}至${capacity.maximumTables}桌的可承接範圍。`,
+      `預計${tableCount}桌落在${hall.displayName}${capacity.minimumTables}至${capacity.maximumTables}桌的正式可承接範圍。`,
     );
   }
 
@@ -166,14 +137,15 @@ export function generateRecommendationReasons(
   return { hallId: hall.id, reasons, warnings };
 }
 
-function rankHalls(
-  halls: Hall[],
-  tableCount: number,
-  quizResult: QuizResult,
-  capacityStatus: "eligible" | "manual-confirmation",
-  recommendationTier: RankedHallByQuiz["recommendationTier"] =
-    capacityStatus === "manual-confirmation" ? "manual-confirmation" : "primary",
-): RankedHallByQuiz[] {
+function compareRecommendations(a: RankedHallByQuiz, b: RankedHallByQuiz): number {
+  return (
+    b.normalizedScore - a.normalizedScore ||
+    b.rawScore - a.rawScore ||
+    a.hallId.localeCompare(b.hallId)
+  );
+}
+
+function rankHalls(halls: Hall[], tableCount: number, quizResult: QuizResult): RankedHallByQuiz[] {
   return halls
     .map((hall) => ({
       hall,
@@ -181,48 +153,34 @@ function rankHalls(
         quizResult.dimensionScores,
         hall.recommendationWeights,
       ),
-      explanation: generateRecommendationReasons(
-        hall,
-        tableCount,
-        quizResult.dimensionScores,
-        capacityStatus,
-      ),
+      explanation: generateRecommendationReasons(hall, tableCount, quizResult.dimensionScores),
     }))
     .map(({ hall, style, explanation }) => ({
       displayName: hall.displayName,
-      capacityStatus,
-      recommendationTier,
       ...style,
       ...explanation,
     }))
-    .sort(
-      (a, b) =>
-        b.normalizedScore - a.normalizedScore ||
-        b.rawScore - a.rawScore ||
-        a.hallId.localeCompare(b.hallId),
-    );
+    .sort(compareRecommendations);
 }
 
-function rangeFits(
-  range: EstimatedTableRange,
-  minimum: number | null,
-  maximum: number | null,
-): boolean {
+export function limitHallRecommendations(
+  recommendations: readonly RankedHallByQuiz[],
+): RankedHallByQuiz[] {
+  return [...recommendations]
+    .filter(
+      (item, index, all) =>
+        all.findIndex((other) => other.hallId === item.hallId) === index,
+    )
+    .sort(compareRecommendations)
+    .slice(0, MAX_HALL_RECOMMENDATIONS);
+}
+
+function rangeFitsFormalCapacity(range: EstimatedTableRange, hall: Hall): boolean {
+  const minimum = hall.capacity.minimumTables;
+  const maximum = hall.capacity.maximumTables;
   if (minimum === null || maximum === null) return false;
   const selectedMaximum = range.maximum ?? range.minimum;
   return range.minimum >= minimum && selectedMaximum <= maximum;
-}
-
-function recommendationTierForRange(
-  range: EstimatedTableRange,
-  hall: Hall,
-): "primary" | "comfort" | null {
-  const capacity = hall.capacity;
-  if (rangeFits(range, capacity.minimumTables, capacity.maximumTables)) return "primary";
-  if (rangeFits(range, capacity.comfortableMinimumTables, capacity.comfortableMaximumTables)) {
-    return "comfort";
-  }
-  return null;
 }
 
 function rankEligibleHallsByTableRange(
@@ -233,43 +191,25 @@ function rankEligibleHallsByTableRange(
   const candidates = hallsData.halls.filter(
     (hall) => hall.status === "active" && hall.type === hallType,
   );
-  const primary = candidates.filter((hall) => recommendationTierForRange(range, hall) === "primary");
-  const comfort = candidates.filter((hall) => recommendationTierForRange(range, hall) === "comfort");
-  const eligible = [...primary, ...comfort];
-  const manual = candidates.filter(
-    (hall) => hall.capacity.minimumTables === null || hall.capacity.maximumTables === null,
-  );
+  const eligible = candidates.filter((hall) => rangeFitsFormalCapacity(range, hall));
   const referenceCount = range.maximum ?? range.minimum;
-  const recommendations = [
-    ...rankHalls(primary, referenceCount, quizResult, "eligible", "primary"),
-    ...rankHalls(comfort, referenceCount, quizResult, "eligible", "comfort"),
-  ].map((item) => {
-      const hall = eligible.find((candidate) => candidate.id === item.hallId)!;
-      const minimum = item.recommendationTier === "primary"
-        ? hall.capacity.minimumTables
-        : hall.capacity.comfortableMinimumTables;
-      const maximum = item.recommendationTier === "primary"
-        ? hall.capacity.maximumTables
-        : hall.capacity.comfortableMaximumTables;
-      return {
-        ...item,
-        reasons: [
-          item.reasons[0],
-          `選擇的${range.label}與${hall.displayName}${minimum}至${maximum}桌的${item.recommendationTier === "primary" ? "最佳" : "舒適"}推薦範圍相符。`,
-          ...item.reasons.slice(2),
-        ],
-      };
-    });
+  const recommendations = rankHalls(eligible, referenceCount, quizResult).map((item) => {
+    const hall = eligible.find((candidate) => candidate.id === item.hallId)!;
+    return {
+      ...item,
+      reasons: [
+        item.reasons[0],
+        `選擇的${range.label}落在${hall.displayName}${hall.capacity.minimumTables}至${hall.capacity.maximumTables}桌的正式可承接範圍。`,
+        ...item.reasons.slice(2),
+      ],
+    };
+  });
+
   return {
     isComplete: true,
     recommendations,
-    manualConfirmationHalls: rankHalls(manual, referenceCount, quizResult, "manual-confirmation"),
-    excludedHallIds: candidates
-      .filter((hall) => !eligible.includes(hall) && !manual.includes(hall))
-      .map((hall) => hall.id),
-    warnings: manual.length
-      ? ["另有容量資料不足的場地，已獨立列為人工確認，不納入正式推薦排序。"]
-      : [],
+    excludedHallIds: candidates.filter((hall) => !eligible.includes(hall)).map((hall) => hall.id),
+    warnings: [],
   };
 }
 
@@ -282,65 +222,23 @@ export function rankEligibleHallsByQuizResult(
     return {
       isComplete: false,
       recommendations: [],
-      manualConfirmationHalls: [],
       excludedHallIds: [],
-      warnings: ["測驗尚未完成，不進行人格風格排序或正式廳房推薦。"],
+      warnings: ["測驗尚未完成，不進行人格風格排序或廳房推薦。"],
     };
   }
 
-  const hardFilterResult = recommendHalls(hallsData, {
-    tableCount,
-    hallType,
-  });
-  const recommendations = rankHalls(
-    hardFilterResult.eligibleHalls,
-    tableCount,
-    quizResult,
-    "eligible",
-  ).map((item) => {
-    const hall = hardFilterResult.eligibleHalls.find((candidate) => candidate.id === item.hallId)!;
-    const isPrimary =
-      hall.capacity.minimumTables !== null &&
-      hall.capacity.maximumTables !== null &&
-      tableCount >= hall.capacity.minimumTables &&
-      tableCount <= hall.capacity.maximumTables;
-    return { ...item, recommendationTier: isPrimary ? "primary" as const : "comfort" as const };
-  }).sort((a, b) =>
-    (a.recommendationTier === "primary" ? 0 : 1) - (b.recommendationTier === "primary" ? 0 : 1) ||
-    b.normalizedScore - a.normalizedScore ||
-    a.hallId.localeCompare(b.hallId)
-  );
-
-  const manualConfirmationHalls = hardFilterResult.excludedHalls
-    .filter(
-      ({ hall, reasons }) =>
-        hall.status === "active" &&
-        hall.type === hallType &&
-        reasons.length === 1 &&
-        reasons.includes("table-capacity-unknown" satisfies HallExclusionReason),
-    )
-    .map(({ hall }) => hall);
-
+  const hardFilterResult = recommendHalls(hallsData, { tableCount, hallType });
   return {
     isComplete: true,
-    recommendations,
-    manualConfirmationHalls: rankHalls(
-      manualConfirmationHalls,
-      tableCount,
-      quizResult,
-      "manual-confirmation",
+    recommendations: limitHallRecommendations(
+      rankHalls(hardFilterResult.eligibleHalls, tableCount, quizResult),
     ),
-    excludedHallIds: hardFilterResult.excludedHalls
-      .filter(({ hall }) => !manualConfirmationHalls.some((item) => item.id === hall.id))
-      .map(({ hall }) => hall.id),
-    warnings:
-      manualConfirmationHalls.length > 0
-        ? ["另有容量資料不足的場地，已獨立列為人工確認，不納入正式推薦排序。"]
-        : [],
+    excludedHallIds: hardFilterResult.excludedHalls.map(({ hall }) => hall.id),
+    warnings: [],
   };
 }
 
-/** Frontend adapter: preserves the existing table hard filter and adds guest-only/manual states. */
+/** Applies the formal capacity hard filter, then returns at most three halls. */
 export function rankHallsForBasicInfo(
   criteria: FlexibleRecommendationCriteria,
   quizResult: QuizResult,
@@ -350,59 +248,59 @@ export function rankHallsForBasicInfo(
   if (!criteria.tableCountUndecided && criteria.estimatedTableRange) {
     const single = rankEligibleHallsByTableRange(criteria.estimatedTableRange, quizResult, "single");
     const combined = rankEligibleHallsByTableRange(criteria.estimatedTableRange, quizResult, "combined");
-    const official = [...single.recommendations, ...combined.recommendations]
-      .filter((item, index, all) => all.findIndex((other) => other.hallId === item.hallId) === index)
-      .sort((a, b) =>
-        (a.recommendationTier === "primary" ? 0 : 1) - (b.recommendationTier === "primary" ? 0 : 1) ||
-        b.normalizedScore - a.normalizedScore ||
-        a.hallId.localeCompare(b.hallId));
-    const manual = [...single.manualConfirmationHalls, ...combined.manualConfirmationHalls]
-      .filter((item, index, all) => all.findIndex((other) => other.hallId === item.hallId) === index)
-      .sort((a, b) =>
-        (a.recommendationTier === "primary" ? 0 : 1) - (b.recommendationTier === "primary" ? 0 : 1) ||
-        b.normalizedScore - a.normalizedScore ||
-        a.hallId.localeCompare(b.hallId));
     return {
       isComplete: true,
-      recommendations: official,
-      manualConfirmationHalls: manual,
+      recommendations: limitHallRecommendations([
+        ...single.recommendations,
+        ...combined.recommendations,
+      ]),
       excludedHallIds: [...new Set([...single.excludedHallIds, ...combined.excludedHallIds])],
-      warnings: [...new Set([...single.warnings, ...combined.warnings])],
+      warnings: [],
     };
   }
 
   if (!criteria.tableCountUndecided && criteria.estimatedTables !== null) {
     const single = rankEligibleHallsByQuizResult(criteria.estimatedTables, quizResult, "single");
     const combined = rankEligibleHallsByQuizResult(criteria.estimatedTables, quizResult, "combined");
-    const official = [...single.recommendations, ...combined.recommendations]
-      .filter((item, index, all) => all.findIndex((other) => other.hallId === item.hallId) === index)
-      .sort((a, b) => b.normalizedScore - a.normalizedScore || a.hallId.localeCompare(b.hallId));
-    const manual = [...single.manualConfirmationHalls, ...combined.manualConfirmationHalls]
-      .filter((item, index, all) => all.findIndex((other) => other.hallId === item.hallId) === index)
-      .sort((a, b) => b.normalizedScore - a.normalizedScore || a.hallId.localeCompare(b.hallId));
-    return { isComplete: true, recommendations: official, manualConfirmationHalls: manual,
+    return {
+      isComplete: true,
+      recommendations: limitHallRecommendations([
+        ...single.recommendations,
+        ...combined.recommendations,
+      ]),
       excludedHallIds: [...new Set([...single.excludedHallIds, ...combined.excludedHallIds])],
-      warnings: [...new Set([...single.warnings, ...combined.warnings])] };
+      warnings: [],
+    };
   }
 
   const guestCount = criteria.estimatedGuests;
+  if (guestCount === null) {
+    return {
+      isComplete: true,
+      recommendations: [],
+      excludedHallIds: [],
+      warnings: ["桌數尚未決定，暫時無法提供推薦廳房。"],
+    };
+  }
+
   const activeHalls = hallsData.halls.filter((hall) => hall.status === "active");
-  const confirmed = guestCount === null ? [] : activeHalls.filter((hall) => {
+  const eligible = activeHalls.filter((hall) => {
     const { minimumGuests, maximumGuests } = hall.capacity;
-    return minimumGuests !== undefined && maximumGuests !== undefined &&
+    return (
+      minimumGuests !== undefined &&
+      maximumGuests !== undefined &&
       (minimumGuests === null || guestCount >= minimumGuests) &&
       (maximumGuests === null || guestCount <= maximumGuests) &&
-      (minimumGuests !== null || maximumGuests !== null);
+      (minimumGuests !== null || maximumGuests !== null)
+    );
   });
-  const manual = activeHalls.filter((hall) => !confirmed.some((item) => item.id === hall.id));
-  const styleTableCount = criteria.estimatedTables ?? 1;
+
   return {
     isComplete: true,
-    recommendations: guestCount === null ? [] : rankHalls(confirmed, styleTableCount, quizResult, "eligible"),
-    manualConfirmationHalls: rankHalls(manual, styleTableCount, quizResult, "manual-confirmation"),
-    excludedHallIds: [],
-    warnings: [guestCount === null
-      ? "桌數尚未決定，以下僅提供風格高匹配候選，容量均需人工確認。"
-      : "目前僅有人數資料；不換算桌數，缺少人數容量的廳房均列為人工確認。"],
+    recommendations: limitHallRecommendations(
+      rankHalls(eligible, criteria.estimatedTables ?? 1, quizResult),
+    ),
+    excludedHallIds: activeHalls.filter((hall) => !eligible.includes(hall)).map((hall) => hall.id),
+    warnings: [],
   };
 }

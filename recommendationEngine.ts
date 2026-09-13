@@ -65,35 +65,17 @@ function getHallExclusionReasons(
   if (hall.status !== "active") reasons.push("inactive");
   if (hall.type !== hallType) reasons.push("hall-type-mismatch");
 
-  const {
-    minimumTables,
-    maximumTables,
-    comfortableMinimumTables,
-    comfortableMaximumTables,
-  } = hall.capacity;
+  const { minimumTables, maximumTables } = hall.capacity;
   if (minimumTables === null || maximumTables === null) {
     reasons.push("table-capacity-unknown");
     return reasons;
   }
 
-  const isPrimary =
-    tableCount >= minimumTables && tableCount <= maximumTables;
-  const isComfort =
-    comfortableMinimumTables !== null &&
-    comfortableMaximumTables !== null &&
-    tableCount >= comfortableMinimumTables &&
-    tableCount <= comfortableMaximumTables;
-  if (!isPrimary && !isComfort) {
-    const eligibleMinimum =
-      comfortableMinimumTables === null
-        ? minimumTables
-        : Math.min(minimumTables, comfortableMinimumTables);
-    const eligibleMaximum =
-      comfortableMaximumTables === null
-        ? maximumTables
-        : Math.max(maximumTables, comfortableMaximumTables);
-    if (tableCount < eligibleMinimum) reasons.push("below-minimum-tables");
-    if (tableCount > eligibleMaximum) reasons.push("above-maximum-tables");
+  if (tableCount < minimumTables) {
+    reasons.push("below-minimum-tables");
+  }
+  if (tableCount > maximumTables) {
+    reasons.push("above-maximum-tables");
   }
   return reasons;
 }
