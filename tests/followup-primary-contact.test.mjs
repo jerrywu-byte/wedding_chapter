@@ -74,7 +74,7 @@ test('getCase 已回傳 H/I，updateCase 寫入仍限定 M 與 P:T', () => {
 
 test('桌機與手機沿用既有 grid，姓名標記可換行且頁面禁止水平溢出', () => {
   assert.match(styles, /\.followup-basic-grid\s*\{[^}]*grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\)/s);
-  assert.match(styles, /@media \(max-width:\s*980px\)[\s\S]*?\.followup-basic-grid\s*\{\s*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
+  assert.match(styles, /@media \(max-width:\s*1180px\)[\s\S]*?\.followup-basic-grid\s*\{\s*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
   assert.match(styles, /@media \(max-width:\s*760px\)[\s\S]*?\.followup-basic-grid\s*\{\s*grid-template-columns:\s*1fr/);
   assert.match(styles, /\.followup-name-value\s*\{[^}]*flex-wrap:\s*wrap/s);
   assert.match(styles, /body\s*\{\s*overflow-x:\s*hidden/);

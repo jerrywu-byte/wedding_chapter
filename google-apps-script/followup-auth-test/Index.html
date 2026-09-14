@@ -26,6 +26,32 @@
           >
         </label>
 
+        <details class="followup-mobile-filters">
+          <summary>篩選與統計</summary>
+          <div class="followup-mobile-filter-content">
+            <label class="followup-sales-filter">
+              <span>業務篩選</span>
+              <select data-sales-filter aria-label="依接待業務篩選案件">
+                <option value="">全部業務</option>
+                <option value="April">April</option>
+                <option value="Sean">Sean</option>
+                <option value="Jimmy">Jimmy</option>
+                <option value="Lisa">Lisa</option>
+                <option value="Nidia">Nidia</option>
+                <option value="Jerry">Jerry</option>
+                <option value="Elle">Elle</option>
+              </select>
+            </label>
+            <div class="followup-mobile-stat-grid" aria-label="案件狀態篩選">
+              <button type="button" data-case-status="" aria-pressed="true"><span>全部案件</span><strong data-stat-status="">0</strong></button>
+              <button type="button" data-case-status="已訂" aria-pressed="false"><span>已下訂</span><strong data-stat-status="已訂">0</strong></button>
+              <button type="button" data-case-status="洽談中" aria-pressed="false"><span>未下訂</span><strong data-stat-status="洽談中">0</strong></button>
+              <button type="button" data-case-status="退訂" aria-pressed="false"><span>退訂</span><strong data-stat-status="退訂">0</strong></button>
+              <button type="button" data-case-status="流失" aria-pressed="false"><span>流失</span><strong data-stat-status="流失">0</strong></button>
+            </div>
+          </div>
+        </details>
+
         <div class="followup-list-summary">
           <span>案件列表</span>
           <span id="caseCount">—</span>
@@ -33,6 +59,49 @@
 
         <p id="listState" class="followup-state" role="status">正在載入新人案件…</p>
         <div id="caseList" class="followup-case-list" role="list"></div>
+      </aside>
+
+      <aside class="followup-filter-panel" aria-label="篩選與統計">
+        <div class="followup-filter-panel__inner">
+          <header class="followup-filter-header">
+            <p>FILTER &amp; SUMMARY</p>
+            <h2>篩選與統計</h2>
+          </header>
+
+          <label class="followup-sales-filter">
+            <span>業務篩選</span>
+            <select data-sales-filter aria-label="依接待業務篩選案件">
+              <option value="">全部業務</option>
+              <option value="April">April</option>
+              <option value="Sean">Sean</option>
+              <option value="Jimmy">Jimmy</option>
+              <option value="Lisa">Lisa</option>
+              <option value="Nidia">Nidia</option>
+              <option value="Jerry">Jerry</option>
+              <option value="Elle">Elle</option>
+            </select>
+          </label>
+
+          <p class="followup-stat-heading">案件狀態</p>
+          <div class="followup-stat-list" aria-label="案件狀態統計與篩選">
+            <button type="button" data-case-status="" aria-pressed="true">
+              <span>全部案件</span><strong data-stat-status="">0</strong>
+            </button>
+            <button type="button" data-case-status="已訂" aria-pressed="false">
+              <span>已下訂</span><strong data-stat-status="已訂">0</strong>
+            </button>
+            <button type="button" data-case-status="洽談中" aria-pressed="false">
+              <span>未下訂</span><strong data-stat-status="洽談中">0</strong>
+            </button>
+            <button type="button" data-case-status="退訂" aria-pressed="false">
+              <span>退訂</span><strong data-stat-status="退訂">0</strong>
+            </button>
+            <button type="button" data-case-status="流失" aria-pressed="false">
+              <span>流失</span><strong data-stat-status="流失">0</strong>
+            </button>
+          </div>
+          <p class="followup-filter-note">統計依目前業務篩選結果計算。</p>
+        </div>
       </aside>
 
       <section class="followup-detail-panel" aria-label="案件詳細資料">
