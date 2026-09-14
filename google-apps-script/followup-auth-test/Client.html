@@ -24,6 +24,7 @@
       list: document.getElementById('caseList'),
       listState: document.getElementById('listState'),
       detailState: document.getElementById('detailState'),
+      detailHeading: document.getElementById('detailHeading'),
       detailContent: document.getElementById('detailContent'),
       back: document.getElementById('backToList'),
       groomName: document.getElementById('groomName'),
@@ -287,7 +288,9 @@
       currentCase = Object.assign({}, caseData);
       isSaving = false;
       elements.detailState.hidden = true;
+      elements.detailHeading.hidden = false;
       elements.detailContent.hidden = false;
+      elements.statusBadge.hidden = false;
       elements.groomName.textContent = displayValue_(caseData.groomName);
       elements.brideName.textContent = displayValue_(caseData.brideName);
       elements.caseNumber.textContent = '訪客編號 ' + caseData.serialNumber;
@@ -763,7 +766,9 @@
     }
 
     function showDetailState(message) {
+      elements.detailHeading.hidden = true;
       elements.detailContent.hidden = true;
+      elements.statusBadge.hidden = true;
       elements.detailState.textContent = message;
       elements.detailState.hidden = false;
     }

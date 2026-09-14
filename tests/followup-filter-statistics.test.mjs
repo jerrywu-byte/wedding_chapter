@@ -42,18 +42,35 @@ function loadRows(app, rows) {
   app.respond('getCase', rows[0]);
 }
 
-test('桌機有獨立中間側欄，手機保留精簡篩選且不產生橫向捲動', () => {
-  assert.match(index, /<aside class="followup-filter-panel" aria-label="篩選與統計">/);
+test('桌機改為二欄且篩選面板嵌入詳細 header，手機保留列表篩選', () => {
+  const detailPanelPosition = index.indexOf('<section class="followup-detail-panel"');
+  const detailHeaderPosition = index.indexOf('<header class="followup-detail-header">');
+  const filterPanelPosition = index.indexOf('<aside class="followup-filter-panel" aria-label="篩選與統計">');
+  const statusBadgePosition = index.indexOf('id="statusBadge"');
+  const desktopSalesFilterPosition = index.indexOf('<select data-sales-filter', filterPanelPosition);
+
+  assert.ok(detailPanelPosition >= 0);
+  assert.ok(detailHeaderPosition > detailPanelPosition);
+  assert.ok(filterPanelPosition > detailHeaderPosition, '篩選面板應位於詳細 header 內');
+  assert.ok(statusBadgePosition > filterPanelPosition && statusBadgePosition < desktopSalesFilterPosition);
   assert.match(index, /<details class="followup-mobile-filters">/);
+  assert.match(index, /id="detailHeading" class="followup-detail-heading" hidden/);
   assert.match(index, /全部業務/);
   for (const salesName of ['April', 'Sean', 'Jimmy', 'Lisa', 'Nidia', 'Jerry', 'Elle']) {
     assert.match(index, new RegExp('<option value="' + salesName + '">' + salesName + '<\\/option>'));
   }
-  assert.match(styles, /grid-template-columns:\s*minmax\(300px, 340px\) minmax\(210px, 238px\) minmax\(0, 1fr\)/);
-  assert.match(styles, /@media \(max-width: 760px\)[\s\S]*?\.followup-filter-panel \{ display: none; \}/);
+  assert.match(styles, /grid-template-columns:\s*minmax\(300px, 340px\) minmax\(0, 1fr\)/);
+  assert.doesNotMatch(styles, /grid-template-columns:\s*minmax\(300px, 340px\) minmax\(210px, 238px\)/);
+  assert.match(styles, /\.followup-detail-wrap \{ width: min\(1180px, 100%\)/);
+  assert.match(styles, /\.followup-stat-list \{[^}]*grid-template-columns:\s*repeat\(5, minmax\(0, 1fr\)\)/s);
+  assert.match(styles, /@media \(max-width: 760px\)[\s\S]*?\.followup-filter-panel \.followup-stat-list,[\s\S]*?display: none;/);
+  assert.doesNotMatch(styles, /@media \(max-width: 760px\)[\s\S]*?\.followup-filter-panel \{ display: none; \}/);
   assert.match(styles, /body \{ overflow-x: hidden; \}/);
   assert.match(styles, /\.followup-mobile-stat-grid\s*\{[^}]*display:\s*flex[^}]*overflow-x:\s*auto/s);
   assert.match(styles, /\.followup-mobile-stat-grid button\s*\{[^}]*flex:\s*0 0 auto/s);
+  assert.match(client, /elements\.detailHeading\.hidden = false;/);
+  assert.match(client, /elements\.statusBadge\.hidden = false;/);
+  assert.match(client, /function showDetailState\(message\) \{[\s\S]*?elements\.detailHeading\.hidden = true;[\s\S]*?elements\.statusBadge\.hidden = true;/);
 });
 
 test('首次載入預設為全部業務與全部案件', () => {
