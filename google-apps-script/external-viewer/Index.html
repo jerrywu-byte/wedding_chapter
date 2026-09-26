@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="referrer" content="no-referrer">
+    <?!= include_('Styles'); ?>
+  </head>
+  <body>
+    <div
+      id="viewerBoot"
+      data-mode="<?= bootMode ?>"
+      data-viewer-email="<?= viewerEmail ?>"
+      data-magic-token="<?= magicToken ?>"
+      hidden
+    ></div>
+
+    <main class="viewer-shell">
+      <section id="loginView" class="auth-card" aria-labelledby="loginTitle">
+        <div class="brand-mark" aria-hidden="true">WC</div>
+        <p class="eyebrow">Wedding Chapter</p>
+        <h1 id="loginTitle">案件檢視</h1>
+        <p class="auth-intro">請輸入已由管理員授權的 Email，我們會寄送一次性登入連結。</p>
+        <form id="loginForm" novalidate>
+          <label for="viewerEmail">Email</label>
+          <input id="viewerEmail" name="email" type="email" autocomplete="email" inputmode="email" required>
+          <button id="sendMagicLink" class="primary-button" type="submit">寄送登入連結</button>
+        </form>
+        <p id="loginMessage" class="form-message" role="status" aria-live="polite"></p>
+      </section>
+
+      <section id="magicView" class="auth-card" hidden aria-labelledby="magicTitle">
+        <div class="brand-mark" aria-hidden="true">WC</div>
+        <p class="eyebrow">Wedding Chapter</p>
+        <h1 id="magicTitle">案件檢視登入</h1>
+        <div id="magicConfirmContent">
+          <p class="auth-intro">請確認使用下列帳號進入唯讀案件檢視。</p>
+          <p class="account-card"><span>帳號</span><strong id="magicEmail"></strong></p>
+          <button id="continueMagicLogin" class="primary-button" type="button">繼續登入</button>
+        </div>
+        <p id="magicMessage" class="form-message" role="status" aria-live="polite"></p>
+        <button id="returnToLogin" class="text-button" type="button">返回登入入口</button>
+      </section>
+
+      <section id="viewerApp" class="app-shell" hidden aria-label="唯讀案件檢視">
+        <header class="app-header">
+          <div>
+            <p class="eyebrow">Wedding Chapter</p>
+            <h1>唯讀案件檢視</h1>
+          </div>
+          <div class="viewer-identity">
+            <span id="viewerIdentity"></span>
+            <button id="logoutViewer" class="text-button" type="button">登出</button>
+          </div>
+        </header>
+
+        <div class="app-grid">
+          <aside id="caseSidebar" class="case-sidebar" aria-label="案件列表">
+            <div class="filters">
+              <label for="caseSearch">搜尋案件</label>
+              <input id="caseSearch" type="search" placeholder="訪客編號、新郎或新娘姓名" autocomplete="off">
+              <label for="salesFilter">接待業務</label>
+              <select id="salesFilter">
+                <option value="">全部業務</option>
+              </select>
+            </div>
+            <div class="list-heading">
+              <h2>案件列表</h2>
+              <span id="caseCount">0 筆</span>
+            </div>
+            <div id="caseList" class="case-list" role="list"></div>
+            <p id="listMessage" class="empty-message">載入案件中…</p>
+          </aside>
+
+          <article id="caseDetail" class="case-detail" aria-live="polite">
+            <button id="backToList" class="back-button" type="button">← 返回案件列表</button>
+            <div id="emptyDetail" class="detail-placeholder">
+              <div class="placeholder-icon" aria-hidden="true">WC</div>
+              <h2>選擇一筆案件</h2>
+              <p>案件資料僅供授權檢視，無法在此頁修改。</p>
+            </div>
+            <div id="detailContent" hidden>
+              <div class="detail-heading">
+                <div>
+                  <p id="detailSerial" class="serial-number"></p>
+                  <h2 id="detailNames"></h2>
+                </div>
+                <span class="readonly-badge">唯讀</span>
+              </div>
+              <section class="detail-section" aria-labelledby="basicTitle">
+                <h3 id="basicTitle">基本資料</h3>
+                <dl id="basicInformation" class="information-grid"></dl>
+              </section>
+              <section class="detail-section" aria-labelledby="consultationTitle">
+                <h3 id="consultationTitle">洽談紀錄</h3>
+                <div id="consultations" class="consultation-list"></div>
+              </section>
+            </div>
+          </article>
+        </div>
+        <div id="watermark" class="watermark" aria-hidden="true"></div>
+        <div id="appMessage" class="toast" hidden role="status" aria-live="polite"></div>
+      </section>
+    </main>
+    <?!= include_('Client'); ?>
+  </body>
+</html>

@@ -1,0 +1,370 @@
+<script>
+  (function () {
+    'use strict';
+
+    var STORAGE_KEY = 'weddingChapterExternalViewerSessionV1';
+    var sessionToken = '';
+    var selectedSerialNumber = '';
+    var searchTimer = null;
+    var knownSalesOptions = [];
+
+    var elements = {
+      boot: document.getElementById('viewerBoot'),
+      loginView: document.getElementById('loginView'),
+      loginForm: document.getElementById('loginForm'),
+      viewerEmail: document.getElementById('viewerEmail'),
+      sendMagicLink: document.getElementById('sendMagicLink'),
+      loginMessage: document.getElementById('loginMessage'),
+      magicView: document.getElementById('magicView'),
+      magicConfirmContent: document.getElementById('magicConfirmContent'),
+      magicEmail: document.getElementById('magicEmail'),
+      continueMagicLogin: document.getElementById('continueMagicLogin'),
+      magicMessage: document.getElementById('magicMessage'),
+      returnToLogin: document.getElementById('returnToLogin'),
+      viewerApp: document.getElementById('viewerApp'),
+      viewerIdentity: document.getElementById('viewerIdentity'),
+      logoutViewer: document.getElementById('logoutViewer'),
+      caseSearch: document.getElementById('caseSearch'),
+      salesFilter: document.getElementById('salesFilter'),
+      caseCount: document.getElementById('caseCount'),
+      caseList: document.getElementById('caseList'),
+      listMessage: document.getElementById('listMessage'),
+      caseDetail: document.getElementById('caseDetail'),
+      backToList: document.getElementById('backToList'),
+      emptyDetail: document.getElementById('emptyDetail'),
+      detailContent: document.getElementById('detailContent'),
+      detailSerial: document.getElementById('detailSerial'),
+      detailNames: document.getElementById('detailNames'),
+      basicInformation: document.getElementById('basicInformation'),
+      consultations: document.getElementById('consultations'),
+      watermark: document.getElementById('watermark'),
+      appMessage: document.getElementById('appMessage'),
+    };
+
+    function server_() {
+      return google.script.run;
+    }
+
+    function showOnly_(target) {
+      [elements.loginView, elements.magicView, elements.viewerApp].forEach(function (view) {
+        view.hidden = view !== target;
+      });
+    }
+
+    function setMessage_(element, message, isError) {
+      element.textContent = message || '';
+      element.classList.toggle('is-error', Boolean(isError));
+    }
+
+    function errorCode_(error) {
+      var text = error && error.message ? String(error.message) : String(error || '');
+      var match = text.match(/(?:Error:\s*)?([A-Z][A-Z_]+)$/);
+      return match ? match[1] : 'INTERNAL_ERROR';
+    }
+
+    function setStoredSession_(token) {
+      sessionToken = token || '';
+      try {
+        if (sessionToken) window.localStorage.setItem(STORAGE_KEY, sessionToken);
+        else window.localStorage.removeItem(STORAGE_KEY);
+      } catch (error) {
+        // Browser storage can be disabled; the in-memory session still works until refresh.
+      }
+    }
+
+    function getStoredSession_() {
+      try { return window.localStorage.getItem(STORAGE_KEY) || ''; }
+      catch (error) { return ''; }
+    }
+
+    function clearSensitiveUi_() {
+      selectedSerialNumber = '';
+      elements.caseList.replaceChildren();
+      elements.basicInformation.replaceChildren();
+      elements.consultations.replaceChildren();
+      elements.watermark.replaceChildren();
+      elements.detailContent.hidden = true;
+      elements.emptyDetail.hidden = false;
+      elements.caseCount.textContent = '0 筆';
+    }
+
+    function returnToLogin_(message) {
+      setStoredSession_('');
+      clearSensitiveUi_();
+      showOnly_(elements.loginView);
+      setMessage_(elements.loginMessage, message || '', Boolean(message));
+      try { window.history.replaceState({}, '', window.location.pathname); }
+      catch (error) { /* The Apps Script iframe may restrict history updates. */ }
+    }
+
+    function handleAuthorizedFailure_(error) {
+      var code = errorCode_(error);
+      if (['FORBIDDEN', 'UNAUTHORIZED', 'SESSION_EXPIRED'].indexOf(code) !== -1) {
+        returnToLogin_('您的案件檢視權限目前無法使用。');
+        return;
+      }
+      showToast_('目前無法載入案件，請稍後再試。');
+    }
+
+    function showToast_(message) {
+      elements.appMessage.textContent = message;
+      elements.appMessage.hidden = false;
+      window.setTimeout(function () { elements.appMessage.hidden = true; }, 3200);
+    }
+
+    function requestMagicLink_(event) {
+      event.preventDefault();
+      var email = elements.viewerEmail.value.trim().toLowerCase();
+      setMessage_(elements.loginMessage, '', false);
+      if (!email) {
+        setMessage_(elements.loginMessage, '請輸入 Email。', true);
+        return;
+      }
+      elements.sendMagicLink.disabled = true;
+      elements.sendMagicLink.textContent = '寄送中…';
+      server_()
+        .withSuccessHandler(function () {
+          elements.sendMagicLink.disabled = false;
+          elements.sendMagicLink.textContent = '寄送登入連結';
+          setMessage_(elements.loginMessage, '登入連結已寄出，請前往信箱查看。', false);
+        })
+        .withFailureHandler(function (error) {
+          elements.sendMagicLink.disabled = false;
+          elements.sendMagicLink.textContent = '寄送登入連結';
+          var code = errorCode_(error);
+          var message = code === 'RATE_LIMITED'
+            ? '寄送次數過於頻繁，請稍後再試。'
+            : code === 'MAIL_QUOTA_EXCEEDED'
+              ? '今日登入信件額度已用完，請聯絡管理員。'
+              : '此帳號目前無法使用案件檢視。';
+          setMessage_(elements.loginMessage, message, true);
+        })
+        .requestViewerMagicLink(email);
+    }
+
+    function redeemMagicLink_() {
+      var token = elements.boot.dataset.magicToken || '';
+      if (!token) {
+        setMessage_(elements.magicMessage, '此登入連結無效或已過期。', true);
+        return;
+      }
+      elements.continueMagicLogin.disabled = true;
+      elements.continueMagicLogin.textContent = '驗證中…';
+      server_()
+        .withSuccessHandler(function (result) {
+          elements.continueMagicLogin.disabled = false;
+          elements.continueMagicLogin.textContent = '繼續登入';
+          elements.boot.dataset.magicToken = '';
+          setStoredSession_(result.sessionToken);
+          try { window.history.replaceState({}, '', window.location.pathname); }
+          catch (error) { /* One-time redemption keeps a retained URL harmless. */ }
+          enterViewer_(result);
+        })
+        .withFailureHandler(function () {
+          elements.continueMagicLogin.disabled = false;
+          elements.continueMagicLogin.textContent = '繼續登入';
+          elements.magicConfirmContent.hidden = true;
+          setMessage_(elements.magicMessage, '此登入連結無效、已過期或已使用。', true);
+        })
+        .redeemViewerMagicLink(token);
+    }
+
+    function resumeSession_(token) {
+      sessionToken = token;
+      server_()
+        .withSuccessHandler(function (identity) { enterViewer_(identity); })
+        .withFailureHandler(function () {
+          returnToLogin_('您的案件檢視權限目前無法使用。');
+        })
+        .resumeViewerSession(token);
+    }
+
+    function enterViewer_(identity) {
+      showOnly_(elements.viewerApp);
+      elements.viewerIdentity.textContent = identity.name
+        ? identity.name + '｜' + identity.email
+        : identity.email;
+      renderWatermark_(identity.email);
+      loadCases_(true);
+    }
+
+    function renderWatermark_(verifiedEmail) {
+      elements.watermark.replaceChildren();
+      var date = new Intl.DateTimeFormat('zh-TW', {
+        timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit',
+      }).format(new Date());
+      for (var index = 0; index < 16; index += 1) {
+        var item = document.createElement('span');
+        item.textContent = '授權檢視\n' + verifiedEmail + '\n' + date;
+        elements.watermark.append(item);
+      }
+    }
+
+    function loadCases_(refreshSalesOptions) {
+      elements.listMessage.hidden = false;
+      elements.listMessage.textContent = '載入案件中…';
+      var query = elements.caseSearch.value.trim();
+      var salesCode = elements.salesFilter.value;
+      server_()
+        .withSuccessHandler(function (cases) {
+          if (refreshSalesOptions) updateSalesOptions_(cases);
+          renderCaseList_(cases);
+        })
+        .withFailureHandler(handleAuthorizedFailure_)
+        .viewerListCases(sessionToken, query, salesCode);
+    }
+
+    function updateSalesOptions_(cases) {
+      var map = {};
+      cases.forEach(function (item) {
+        if (item.salesCode && item.salesName) map[item.salesCode] = item.salesName;
+      });
+      knownSalesOptions = Object.keys(map).sort(function (left, right) {
+        return map[left].localeCompare(map[right], 'zh-Hant');
+      }).map(function (code) { return { code: code, name: map[code] }; });
+      var selected = elements.salesFilter.value;
+      var all = document.createElement('option');
+      all.value = '';
+      all.textContent = '全部業務';
+      elements.salesFilter.replaceChildren(all);
+      knownSalesOptions.forEach(function (sales) {
+        var option = document.createElement('option');
+        option.value = sales.code;
+        option.textContent = sales.name;
+        elements.salesFilter.append(option);
+      });
+      if (knownSalesOptions.some(function (sales) { return sales.code === selected; })) {
+        elements.salesFilter.value = selected;
+      }
+    }
+
+    function renderCaseList_(cases) {
+      elements.caseList.replaceChildren();
+      elements.caseCount.textContent = cases.length + ' 筆';
+      elements.listMessage.hidden = cases.length > 0;
+      elements.listMessage.textContent = cases.length ? '' : '沒有符合條件的案件。';
+      cases.forEach(function (item) {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'case-card' + (item.serialNumber === selectedSerialNumber ? ' is-active' : '');
+        button.dataset.serialNumber = item.serialNumber;
+        button.setAttribute('role', 'listitem');
+
+        var serial = document.createElement('span');
+        serial.className = 'case-number';
+        serial.textContent = item.serialNumber;
+        var names = document.createElement('strong');
+        names.textContent = displayValue_(item.groomName) + '・' + displayValue_(item.brideName);
+        var meta = document.createElement('span');
+        meta.textContent = displayWeddingDate_(item) + '｜' + displayValue_(item.banquetSession) +
+          '｜' + displayValue_(item.estimatedTables) + ' 桌';
+        var sales = document.createElement('span');
+        sales.textContent = '接待業務：' + displayValue_(item.salesName);
+        button.append(serial, names, meta, sales);
+        button.addEventListener('click', function () { openCase_(item.serialNumber); });
+        elements.caseList.append(button);
+      });
+    }
+
+    function openCase_(serialNumber) {
+      selectedSerialNumber = serialNumber;
+      Array.from(elements.caseList.querySelectorAll('.case-card')).forEach(function (card) {
+        card.classList.toggle('is-active', card.dataset.serialNumber === serialNumber);
+      });
+      elements.viewerApp.classList.add('mobile-detail-open');
+      elements.emptyDetail.hidden = false;
+      elements.emptyDetail.querySelector('h2').textContent = '載入案件中…';
+      elements.detailContent.hidden = true;
+      server_()
+        .withSuccessHandler(renderCaseDetail_)
+        .withFailureHandler(handleAuthorizedFailure_)
+        .viewerGetCase(sessionToken, serialNumber);
+    }
+
+    function renderCaseDetail_(detail) {
+      if (detail.serialNumber !== selectedSerialNumber) return;
+      elements.emptyDetail.hidden = true;
+      elements.detailContent.hidden = false;
+      elements.detailSerial.textContent = detail.serialNumber;
+      elements.detailNames.textContent = displayValue_(detail.groomName) + '・' + displayValue_(detail.brideName);
+      elements.basicInformation.replaceChildren();
+      [
+        ['訪客編號', detail.serialNumber],
+        ['新郎姓名', detail.groomName],
+        ['新娘姓名', detail.brideName],
+        ['婚宴日期', displayWeddingDate_(detail)],
+        ['宴別', detail.banquetSession],
+        ['桌數', detail.estimatedTables ? detail.estimatedTables + ' 桌' : '—'],
+        ['接待業務', detail.salesName],
+        ['主要聯絡人姓名', detail.primaryContactName],
+        ['主要聯絡人電話', detail.primaryContactPhone],
+      ].forEach(function (entry) {
+        var wrapper = document.createElement('div');
+        wrapper.className = 'information-item';
+        var term = document.createElement('dt');
+        term.textContent = entry[0];
+        var value = document.createElement('dd');
+        value.textContent = displayValue_(entry[1]);
+        wrapper.append(term, value);
+        elements.basicInformation.append(wrapper);
+      });
+
+      elements.consultations.replaceChildren();
+      [
+        ['第一次洽談', detail.firstConsultation],
+        ['第二次洽談', detail.secondConsultation],
+        ['第三次洽談', detail.thirdConsultation],
+      ].forEach(function (entry) {
+        var card = document.createElement('section');
+        card.className = 'consultation-card';
+        var heading = document.createElement('h4');
+        heading.textContent = entry[0];
+        var text = document.createElement('p');
+        text.textContent = displayValue_(entry[1]);
+        card.append(heading, text);
+        elements.consultations.append(card);
+      });
+    }
+
+    function displayValue_(value) {
+      return value === undefined || value === null || String(value).trim() === '' ? '—' : String(value);
+    }
+
+    function displayWeddingDate_(item) {
+      return item.dateUndecided ? '日期未定' : displayValue_(item.weddingDate);
+    }
+
+    elements.loginForm.addEventListener('submit', requestMagicLink_);
+    elements.continueMagicLogin.addEventListener('click', redeemMagicLink_);
+    elements.returnToLogin.addEventListener('click', function () { returnToLogin_(''); });
+    elements.logoutViewer.addEventListener('click', function () { returnToLogin_(''); });
+    elements.backToList.addEventListener('click', function () {
+      elements.viewerApp.classList.remove('mobile-detail-open');
+    });
+    elements.caseSearch.addEventListener('input', function () {
+      if (searchTimer) window.clearTimeout(searchTimer);
+      searchTimer = window.setTimeout(function () { loadCases_(false); }, 300);
+    });
+    elements.salesFilter.addEventListener('change', function () {
+      selectedSerialNumber = '';
+      elements.viewerApp.classList.remove('mobile-detail-open');
+      elements.detailContent.hidden = true;
+      elements.emptyDetail.hidden = false;
+      loadCases_(false);
+    });
+
+    var mode = elements.boot.dataset.mode || 'LOGIN';
+    if (mode === 'MAGIC_CONFIRM') {
+      showOnly_(elements.magicView);
+      elements.magicEmail.textContent = elements.boot.dataset.viewerEmail || '';
+    } else if (mode === 'MAGIC_INVALID') {
+      showOnly_(elements.magicView);
+      elements.magicConfirmContent.hidden = true;
+      setMessage_(elements.magicMessage, '此登入連結無效或已過期。', true);
+    } else {
+      var stored = getStoredSession_();
+      if (stored) resumeSession_(stored);
+      else showOnly_(elements.loginView);
+    }
+  }());
+</script>
