@@ -10,13 +10,13 @@
 | --- | --- | --- | --- | --- |
 | 已啟用 USER | 可以 | 可以 | 不可以（FORBIDDEN） | 所有案件 |
 | 已啟用 ADMINISTRATOR | 可以 | 可以 | 可以 | 所有案件 |
-| `@weddingi.com` VIEWER | 不可以 | 不可以 | 不可以（FORBIDDEN） | 所有案件 |
+| `@wedding-i.com` VIEWER | 不可以 | 不可以 | 不可以（FORBIDDEN） | 所有案件 |
 | 未授權、停用或角色不合法 | 不可以 | 不可以 | 不可以 | 不可以 |
 
 登入者仍由 `Session.getActiveUser().getEmail()` 與 Workspace domain 驗證。
 denwell.com 帳號再查「業務資料」A:F：業務代碼、業務姓名、業務Email、LINE連結、啟用、Follow-up角色。
 E 必須為布林 TRUE 或文字 TRUE；業務資料角色只接受 ADMINISTRATOR／USER。重複 Email 或業務代碼拒絕存取。
-`@weddingi.com` 帳號不需寫入業務資料，會由 Server 依網域自動建立 VIEWER 唯讀身分。
+`@wedding-i.com` 帳號不需寫入業務資料，會由 Server 依網域自動建立 VIEWER 唯讀身分。
 
 ownership 只依「新人資料」N 業務代碼，不看 O 姓名。
 N 空白的案件仍可讀取、協作；USER 不可修改正式資料，ADMINISTRATOR 可修改。
@@ -25,9 +25,9 @@ N 空白的案件仍可讀取、協作；USER 不可修改正式資料，ADMINIS
 
 ## 角色 migration：人工切換
 
-業務資料角色 allowlist 為 `['ADMINISTRATOR', 'USER']`；runtime 另包含由 `weddingi.com` 網域產生的 `VIEWER`。舊值 `MANAGER`、`SALES` 均被拒絕，
+業務資料角色 allowlist 為 `['ADMINISTRATOR', 'USER']`；runtime 另包含由 `wedding-i.com` 網域產生的 `VIEWER`。舊值 `MANAGER`、`SALES` 均被拒絕，
 不自動轉換成新角色，也不將未知角色 fallback 為 USER。保留既有角色文字正規化；正式 Sheet 一律填大寫。
-UI 不回傳或信任瀏覽器提供的 runtime role。denwell.com 帳號權限仍由業務資料 F 欄決定；weddingi.com 帳號只顯示低干擾的「唯讀檢視模式」。
+UI 不回傳或信任瀏覽器提供的 runtime role。denwell.com 帳號權限仍由業務資料 F 欄決定；wedding-i.com 帳號只顯示低干擾的「唯讀檢視模式」。
 
 只人工修改「業務資料」F「Follow-up角色」的對應儲存格；先用既有 C 欄 Email／A 欄業務代碼確認正確資料列，
 不可因同名而改錯帳號。以下是正式設定目標，測試使用的 company.example 信箱與代碼僅為 fixture，不可抄入正式 Sheet。

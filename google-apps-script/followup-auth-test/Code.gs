@@ -23,7 +23,7 @@ const FOLLOWUP_MAX_CONSULTATION_LENGTH_ = 5000;
 const FOLLOWUP_LOCK_TIMEOUT_MS_ = 30000;
 const FOLLOWUP_ALLOWED_STATUSES_ = Object.freeze(['洽談中', '已訂', '退訂', '流失']);
 const FOLLOWUP_ALLOWED_ROLES_ = Object.freeze(['ADMINISTRATOR', 'USER']);
-const FOLLOWUP_VIEWER_DOMAIN_ = 'weddingi.com';
+const FOLLOWUP_VIEWER_DOMAIN_ = 'wedding-i.com';
 const FOLLOWUP_VIEWER_ROLE_ = 'VIEWER';
 const FOLLOWUP_UPDATE_FIELDS_ = Object.freeze([
   'serialNumber',
@@ -388,7 +388,7 @@ function updateCase_(payload) {
 
 /**
  * Resolves the active Workspace account. The configured internal domain uses
- * the formal sales sheet; weddingi.com accounts receive domain-based VIEWER
+ * the formal sales sheet; wedding-i.com accounts receive domain-based VIEWER
  * access without a sales-sheet row.
  *
  * @return {{salesCode: string, salesName: string, email: string, role: string}}

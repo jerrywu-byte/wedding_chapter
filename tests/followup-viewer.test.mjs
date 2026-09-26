@@ -3,7 +3,7 @@ import test from 'node:test';
 import { createState, runtime, updatePayload } from './helpers/followup-collaboration-runtime.mjs';
 import { clientRuntime, fixture } from './helpers/followup-client-runtime.mjs';
 
-for (const email of ['anyuser@weddingi.com', 'another@weddingi.com']) {
+for (const email of ['anyuser@wedding-i.com', 'another@wedding-i.com']) {
   test(`${email} 不需業務資料即可取得 VIEWER 身分`, () => {
     const { api, state } = runtime(createState({ sales: [] }), { email });
     const currentUser = api.requireAuthorizedUser_();
@@ -37,7 +37,7 @@ test('VIEWER 可列出、搜尋並查看所有案件與協作備註，但權限�
   const state = createState({
     notes: [['115DX2031', '2026-09-01T11:35:00.000Z', 'SEAN', 'Sean', '已說明停車']],
   });
-  const { api } = runtime(state, { email: 'reader@weddingi.com' });
+  const { api } = runtime(state, { email: 'reader@wedding-i.com' });
 
   const cases = api.listCases('');
   assert.equal(cases.length, 2);
@@ -57,7 +57,7 @@ test('VIEWER 可列出、搜尋並查看所有案件與協作備註，但權限�
 
 test('VIEWER 的所有 write API 均由 Server 立即回傳 FORBIDDEN，偽造 role 無效', () => {
   const state = createState({ notesExist: false });
-  const { api } = runtime(state, { email: 'reader@weddingi.com' });
+  const { api } = runtime(state, { email: 'reader@wedding-i.com' });
 
   assert.throws(() => api.addCollaborationNote({
     serialNumber: '115DX2031', note: '正常格式仍不得寫入',
@@ -74,14 +74,15 @@ test('VIEWER 的所有 write API 均由 Server 立即回傳 FORBIDDEN，偽造 r
 });
 
 test('VIEWER 即使取得有效案件 token，也不能 updateCase', () => {
-  const reader = runtime(createState(), { email: 'reader@weddingi.com' });
+  const reader = runtime(createState(), { email: 'reader@wedding-i.com' });
   const payload = updatePayload(reader.api);
   assert.throws(() => reader.api.updateCase(payload), /^Error: FORBIDDEN$/);
   assert.equal(reader.state.updates.length, 0);
 });
 
-test('非內部網域與非 weddingi.com 網域仍拒絕', () => {
-  for (const email of ['outsider@example.net', 'fake@weddingi.com.example', '', 'bad@@weddingi.com']) {
+test('非內部網域與非 wedding-i.com 網域仍拒絕', () => {
+  for (const email of ['outsider@example.net', 'reader@weddingi.com',
+    'fake@wedding-i.com.example', '', 'bad@@wedding-i.com']) {
     const { api } = runtime(createState(), { email });
     assert.throws(() => api.listCases(''), /^Error: UNAUTHORIZED$/);
   }
@@ -128,7 +129,7 @@ test('VIEWER UI 為完整唯讀、隱藏新增備註並保留業務／狀態／�
 });
 
 test('VIEWER 權限判斷不會增加案件摘要個資欄位', () => {
-  const { api } = runtime(createState(), { email: 'reader@weddingi.com' });
+  const { api } = runtime(createState(), { email: 'reader@wedding-i.com' });
   const summary = api.listCases('')[0];
   assert.equal(Object.keys(summary).some(key => /email|phone|role/i.test(key)), false);
   assert.deepEqual(Object.keys(summary).sort(), [
