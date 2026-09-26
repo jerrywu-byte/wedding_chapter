@@ -301,7 +301,9 @@
       const groomIsPrimary = isPrimaryContact_(caseData.primaryContactName, caseData.groomName);
       const brideIsPrimary = isPrimaryContact_(caseData.primaryContactName, caseData.brideName);
       elements.ownershipNotice.hidden = caseData.editable === true;
-      elements.ownershipNotice.textContent = '此案件由 ' + salesName + ' 負責，你可以查看案件內容並新增協作備註。';
+      elements.ownershipNotice.textContent = isViewerMode_()
+        ? '唯讀檢視模式：你可以查看與篩選案件，但無法修改正式資料或新增協作備註。'
+        : '此案件由 ' + salesName + ' 負責，你可以查看案件內容並新增協作備註。';
       renderCollaborationNotes_(caseData.collaborationNotes);
       elements.noteInput.value = noteDrafts[caseData.serialNumber] || '';
       elements.noteComposer.hidden = caseData.canAddCollaborationNote !== true;
@@ -326,7 +328,8 @@
       applyStatusVisual_(status);
       baseline = editableSnapshot_(caseData);
       setEditorDisabled_(false);
-      setSaveMessage_(canEditCase_() ? DEFAULT_SAVE_MESSAGE : '此案件正式資料為唯讀。', '');
+      setSaveMessage_(canEditCase_() ? DEFAULT_SAVE_MESSAGE
+        : isViewerMode_() ? '唯讀檢視模式' : '此案件正式資料為唯讀。', '');
       updateSaveButton_();
     }
 
@@ -426,6 +429,11 @@
 
     function canEditCase_() {
       return Boolean(currentCase && currentCase.editable === true);
+    }
+
+    function isViewerMode_() {
+      return Boolean(currentCase && currentCase.editable === false &&
+        currentCase.canAddCollaborationNote === false);
     }
 
     function hasNoteDraft_() {

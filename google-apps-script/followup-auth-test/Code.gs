@@ -23,6 +23,8 @@ const FOLLOWUP_MAX_CONSULTATION_LENGTH_ = 5000;
 const FOLLOWUP_LOCK_TIMEOUT_MS_ = 30000;
 const FOLLOWUP_ALLOWED_STATUSES_ = Object.freeze(['洽談中', '已訂', '退訂', '流失']);
 const FOLLOWUP_ALLOWED_ROLES_ = Object.freeze(['ADMINISTRATOR', 'USER']);
+const FOLLOWUP_VIEWER_DOMAIN_ = 'weddingi.com';
+const FOLLOWUP_VIEWER_ROLE_ = 'VIEWER';
 const FOLLOWUP_UPDATE_FIELDS_ = Object.freeze([
   'serialNumber',
   'identityToken',
@@ -147,6 +149,7 @@ function updateCase(payload) {
 function addCollaborationNote(payload) {
   return followupRequest_(function () {
     let currentUser = requireAuthorizedUser_();
+    assertWriteAllowed_(currentUser);
     if (!payload || Object.prototype.toString.call(payload) !== '[object Object]' ||
         Object.keys(payload).length !== 2 ||
         !Object.prototype.hasOwnProperty.call(payload, 'serialNumber') ||
@@ -166,6 +169,7 @@ function addCollaborationNote(payload) {
     try {
       // Recheck access after waiting: disabled users must not write with stale roles.
       currentUser = requireAuthorizedUser_();
+      assertWriteAllowed_(currentUser);
       if (!currentUser.salesName) throw new Error('DATA_INTEGRITY_ERROR');
       const rows = readDetailRows_();
       const located = locateCaseBySerial_(rows, serialNumber);
@@ -323,6 +327,7 @@ function getCase_(serialNumber) {
  */
 function updateCase_(payload) {
   let currentUser = requireAuthorizedUser_();
+  assertWriteAllowed_(currentUser);
   validateUpdatePayloadShape_(payload);
 
   const lock = LockService.getScriptLock();
@@ -334,6 +339,7 @@ function updateCase_(payload) {
 
   try {
     currentUser = requireAuthorizedUser_();
+    assertWriteAllowed_(currentUser);
     const identity = normalizeUpdateIdentity_(payload);
     const rows = readDetailRows_();
     const secret = requireIdentitySecret_();
@@ -381,22 +387,33 @@ function updateCase_(payload) {
 }
 
 /**
- * Resolves the active Workspace account against the formal sales sheet.
+ * Resolves the active Workspace account. The configured internal domain uses
+ * the formal sales sheet; weddingi.com accounts receive domain-based VIEWER
+ * access without a sales-sheet row.
  *
  * @return {{salesCode: string, salesName: string, email: string, role: string}}
  */
 function getCurrentFollowupUser_() {
+  const email = normalizeEmail_(Session.getActiveUser().getEmail());
+  if (!email) throw new Error('UNAUTHORIZED');
+
+  const emailDomain = emailDomainOf_(email);
+  if (!emailDomain) throw new Error('UNAUTHORIZED');
+
+  if (emailDomain === FOLLOWUP_VIEWER_DOMAIN_) {
+    return {
+      salesCode: '',
+      salesName: '',
+      email: email,
+      role: FOLLOWUP_VIEWER_ROLE_,
+    };
+  }
+
   const properties = PropertiesService.getScriptProperties();
   const allowedDomain = normalizeDomain_(
     properties.getProperty(AUTH_PROPERTY_KEYS_.allowedDomain)
   );
-
   if (!allowedDomain) throw new Error('AUTH_CONFIGURATION_MISSING');
-
-  const email = normalizeEmail_(Session.getActiveUser().getEmail());
-  if (!email) throw new Error('UNAUTHORIZED');
-
-  const emailDomain = email.split('@')[1] || '';
   if (emailDomain !== allowedDomain) throw new Error('UNAUTHORIZED');
 
   const rows = readFollowupUsers_();
@@ -432,6 +449,12 @@ function getCurrentFollowupUser_() {
 
 function requireAuthorizedUser_() {
   return getCurrentFollowupUser_();
+}
+
+function assertWriteAllowed_(currentUser) {
+  if (!currentUser || currentUser.role === FOLLOWUP_VIEWER_ROLE_) {
+    throw new Error('FORBIDDEN');
+  }
 }
 
 function include_(filename) {
@@ -600,11 +623,15 @@ function validateDuplicateKeyUniqueness_(rows, targetRow) {
 }
 
 function casePermissions_(currentUser, row) {
-  return { editable: canEditCase_(currentUser, row), canAddCollaborationNote: true };
+  return {
+    editable: canEditCase_(currentUser, row),
+    canAddCollaborationNote: currentUser.role !== FOLLOWUP_VIEWER_ROLE_,
+  };
 }
 
 function canEditCase_(currentUser, row) {
   if (currentUser.role === 'ADMINISTRATOR') return true;
+  if (currentUser.role !== 'USER') return false;
   const caseSalesCode = normalizeSalesCode_(row[FOLLOWUP_COLUMNS_.salesCode]);
   return Boolean(caseSalesCode) && caseSalesCode === currentUser.salesCode;
 }
@@ -874,6 +901,11 @@ function normalizeSerialNumber_(value) {
 
 function normalizeEmail_(value) {
   return cleanText_(value).toLowerCase();
+}
+
+function emailDomainOf_(email) {
+  const match = normalizeEmail_(email).match(/^[^@\s]+@([^@\s]+)$/);
+  return match ? match[1] : '';
 }
 
 function normalizeSalesCode_(value) {

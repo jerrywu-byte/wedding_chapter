@@ -34,7 +34,7 @@ export function createState(overrides = {}) {
 
 export function runtime(state = createState(), options = {}) {
   let beforeLock = options.beforeLock;
-  const identity = { email: options.email || 'sean@company.example' };
+  const identity = { email: options.email ?? 'sean@company.example' };
   class ServerDate extends Date {
     constructor(...args) { super(...(args.length ? args : [state.now])); }
   }
