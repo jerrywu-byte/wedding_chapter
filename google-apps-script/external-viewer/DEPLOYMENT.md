@@ -15,6 +15,8 @@ External Viewer 必須以獨立 Apps Script Web App 部署：
 - `EXTERNAL_VIEWER_MAGIC_SECRET`：至少 32 字元的隨機秘密字串
 - `EXTERNAL_VIEWER_SESSION_SECRET`：至少 32 字元、且不同於 Magic Secret 的隨機秘密字串
 
+完成 Magic Link 核銷後建立的 Viewer session 技術有效期為 360 天；每次讀取仍會重新檢查 Allowlist，因此 `SUSPENDED` 會在下一次 request 立即生效。
+
 `EXTERNAL_VIEWER_WEB_APP_URL` 格式必須是：
 
 ```text

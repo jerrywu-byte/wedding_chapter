@@ -446,10 +446,10 @@ test('SESSION 15：session 被修改拒絕', () => {
   assert.throws(() => runtime.api.resumeViewerSession(token + 'x'), /UNAUTHORIZED/);
 });
 
-test('SESSION 16：session technical expiry 為 90 天且過期後拒絕', () => {
+test('SESSION 16：session technical expiry 為 360 天且過期後拒絕', () => {
   const runtime = createRuntime();
   const token = approvedSession(runtime);
-  runtime.state.now += 90 * 24 * 60 * 60 * 1000 + 1000;
+  runtime.state.now += 360 * 24 * 60 * 60 * 1000 + 1000;
   assert.throws(() => runtime.api.resumeViewerSession(token), /SESSION_EXPIRED/);
 });
 
