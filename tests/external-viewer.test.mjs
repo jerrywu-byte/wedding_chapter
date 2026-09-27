@@ -12,6 +12,7 @@ const stylesHtml = read('google-apps-script/external-viewer/Styles.html');
 const manifest = JSON.parse(read('google-apps-script/external-viewer/appsscript.json'));
 
 const ACCESS_HEADERS = ['Email', '姓名', '狀態', '建立時間', '最後登入時間', '備註'];
+const WEB_APP_URL = 'https://script.google.com/macros/s/test-deployment/exec';
 const CASE_HEADERS = [
   '正式流水號', '提交時間', '防重複識別碼', '新郎姓名', '新郎電話', '新娘姓名', '新娘電話',
   '主要聯絡人姓名', '主要聯絡人電話', '婚宴日期', '日期未定', '婚宴時段', '預計桌數',
@@ -33,6 +34,7 @@ function createRuntime(options = {}) {
     now: options.now ?? Date.parse('2026-09-26T12:00:00.000Z'),
     properties: {
       EXTERNAL_VIEWER_SPREADSHEET_ID: 'viewer-spreadsheet',
+      EXTERNAL_VIEWER_WEB_APP_URL: WEB_APP_URL,
       EXTERNAL_VIEWER_MAGIC_SECRET: 'magic-secret-with-at-least-32-characters-12345',
       EXTERNAL_VIEWER_SESSION_SECRET: 'session-secret-with-at-least-32-characters-123',
       ...(options.properties || {}),
@@ -55,8 +57,10 @@ function createRuntime(options = {}) {
     activeEmail: options.activeEmail ?? '',
     effectiveEmail: options.effectiveEmail ?? 'deployer@denwell.com',
     quota: options.quota ?? 100,
+    lastLoginUpdateFails: options.lastLoginUpdateFails ?? false,
     uuid: 0,
     locks: 0,
+    logs: [],
     template: null,
   };
 
@@ -82,7 +86,10 @@ function createRuntime(options = {}) {
   }
 
   const context = vm.createContext({
-    console: { warn() {}, error() {} },
+    console: {
+      warn() {},
+      error(message) { state.logs.push(String(message)); },
+    },
     Date: MockDate,
     JSON, Math, Number, Object, Array, String, Boolean, RegExp,
     encodeURIComponent, decodeURIComponent,
@@ -113,7 +120,11 @@ function createRuntime(options = {}) {
       getRemainingDailyQuota: () => state.quota,
       sendEmail(message) { state.sent.push(message); },
     },
-    ScriptApp: { getService: () => ({ getUrl: () => 'https://script.google.com/macros/s/test/exec' }) },
+    ScriptApp: {
+      getService: () => ({
+        getUrl() { throw new Error('ScriptApp.getService().getUrl() must not be used'); },
+      }),
+    },
     Session: {
       getActiveUser: () => ({ getEmail: () => state.activeEmail }),
       getEffectiveUser: () => ({ getEmail: () => state.effectiveEmail }),
@@ -167,6 +178,9 @@ function createRuntime(options = {}) {
           },
           update(resource, spreadsheetId, range) {
             assert.equal(spreadsheetId, 'viewer-spreadsheet');
+            if (state.lastLoginUpdateFails && /'外部檢視權限'!E\d+$/.test(range)) {
+              throw new Error('simulated Sheets write failure');
+            }
             state.updates.push({ resource, range });
             const match = range.match(/'外部檢視權限'!E(\d+)$/);
             if (match) state.accessRows[Number(match[1]) - 2][4] = resource.values[0][0];
@@ -183,10 +197,25 @@ function createRuntime(options = {}) {
 
 function sentMagicToken(runtime) {
   runtime.api.requestViewerMagicLink('viewer@example.com');
-  const body = runtime.state.sent[0].body;
-  const match = body.match(/[?&]token=([^\s]+)/);
-  assert.ok(match, 'magic token should exist in mail body');
-  return decodeURIComponent(match[1]);
+  return new URL(plainTextMagicUrl(runtime.state.sent[0])).searchParams.get('token');
+}
+
+function plainTextMagicUrl(message) {
+  const match = message.body.match(/https:\/\/[^\s]+/);
+  assert.ok(match, 'plain text magic URL should exist');
+  return match[0];
+}
+
+function htmlMagicUrl(message) {
+  const match = message.htmlBody.match(/href="([^"]+)"/);
+  assert.ok(match, 'HTML magic href should exist');
+  return match[1].replace(/&amp;/g, '&').replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+}
+
+function appsScriptGetEvent(url) {
+  const parsed = new URL(url);
+  return { parameter: Object.fromEntries(parsed.searchParams.entries()) };
 }
 
 function approvedSession(runtime) {
@@ -210,7 +239,12 @@ test('AUTH 3：APPROVED 可寄 Magic Link', () => {
   const runtime = createRuntime();
   assert.deepEqual({ ...runtime.api.requestViewerMagicLink('viewer@example.com') }, { sent: true });
   assert.equal(runtime.state.sent.length, 1);
-  assert.match(runtime.state.sent[0].subject, /案件檢視登入/);
+  assert.equal(runtime.state.sent[0].subject, 'Wedding-i Viewer 存取連結');
+  assert.equal(runtime.state.sent[0].name, 'Wedding-i Viewer');
+  assert.match(runtime.state.sent[0].body, /Wedding-i Viewer/);
+  assert.match(runtime.state.sent[0].body, /案件檢視權限/);
+  assert.match(runtime.state.sent[0].htmlBody, /進入 Wedding-i Viewer/);
+  assert.doesNotMatch(runtime.state.sent[0].body, /Wedding Chapter|\bWC\b/);
   assert.doesNotMatch(runtime.state.sent[0].body, /王大明|林小美|洽談/);
 });
 
@@ -237,11 +271,60 @@ test('MAGIC 6：Magic Link 使用 HMAC 簽章且可驗證', () => {
   assert.equal(runtime.api.inspectMagicLink_(token).email, 'viewer@example.com');
 });
 
+test('MAGIC URL：正式 /exec URL 與 token encode/decode round-trip', () => {
+  const runtime = createRuntime();
+  const token = sentMagicToken(runtime);
+  const url = runtime.api.createMagicLinkUrl_(token);
+  assert.equal(url.startsWith(WEB_APP_URL + '?action=magic&token='), true);
+  assert.equal(new URL(url).pathname.endsWith('/exec'), true);
+  assert.equal(new URL(url).searchParams.get('token'), token);
+  assert.equal(decodeURIComponent(encodeURIComponent(token)), token);
+  assert.match(token, /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
+});
+
+test('MAGIC URL：email HTML href round-trip 後仍可驗證', () => {
+  const runtime = createRuntime();
+  runtime.api.requestViewerMagicLink('viewer@example.com');
+  const event = appsScriptGetEvent(htmlMagicUrl(runtime.state.sent[0]));
+  runtime.api.doGet(event);
+  assert.equal(runtime.state.template.bootMode, 'MAGIC_CONFIRM');
+  assert.equal(runtime.api.inspectMagicLink_(event.parameter.token).email, 'viewer@example.com');
+});
+
+test('MAGIC URL：plain text URL round-trip 後仍可驗證', () => {
+  const runtime = createRuntime();
+  runtime.api.requestViewerMagicLink('viewer@example.com');
+  const event = appsScriptGetEvent(plainTextMagicUrl(runtime.state.sent[0]));
+  runtime.api.doGet(event);
+  assert.equal(runtime.state.template.bootMode, 'MAGIC_CONFIRM');
+  assert.equal(runtime.api.inspectMagicLink_(event.parameter.token).email, 'viewer@example.com');
+});
+
+test('MAGIC URL：缺少正式 /exec 設定時拒絕寄信，且不使用 getUrl()', () => {
+  const runtime = createRuntime({ properties: { EXTERNAL_VIEWER_WEB_APP_URL: '' } });
+  assert.throws(() => runtime.api.requestViewerMagicLink('viewer@example.com'), /DATA_CONFIGURATION_ERROR/);
+  assert.equal(runtime.state.sent.length, 0);
+  assert.match(runtime.state.logs.at(-1), /MAGIC_LINK_CONFIGURATION_ERROR/);
+});
+
+test('MAGIC URL：拒絕 /dev、query string 與非 Google Apps Script URL', () => {
+  for (const value of [
+    'https://script.google.com/macros/s/test-deployment/dev',
+    WEB_APP_URL + '?source=test',
+    'https://example.com/macros/s/test-deployment/exec',
+  ]) {
+    const runtime = createRuntime({ properties: { EXTERNAL_VIEWER_WEB_APP_URL: value } });
+    assert.throws(() => runtime.api.requestViewerMagicLink('viewer@example.com'), /DATA_CONFIGURATION_ERROR/);
+  }
+});
+
 test('MAGIC 7：token 被修改會拒絕', () => {
   const runtime = createRuntime();
   const token = sentMagicToken(runtime);
   const tampered = token.slice(0, -1) + (token.endsWith('A') ? 'B' : 'A');
   assert.throws(() => runtime.api.redeemViewerMagicLink(tampered), /INVALID_MAGIC_LINK/);
+  assert.match(runtime.state.logs.at(-1), /MAGIC_LINK_INVALID_SIGNATURE/);
+  assert.doesNotMatch(runtime.state.logs.at(-1), new RegExp(token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 });
 
 test('MAGIC 8：15 分鐘過期後拒絕', () => {
@@ -249,6 +332,15 @@ test('MAGIC 8：15 分鐘過期後拒絕', () => {
   const token = sentMagicToken(runtime);
   runtime.state.now += 15 * 60 * 1000 + 1000;
   assert.throws(() => runtime.api.redeemViewerMagicLink(token), /INVALID_MAGIC_LINK/);
+  assert.match(runtime.state.logs.at(-1), /MAGIC_LINK_EXPIRED/);
+});
+
+test('MAGIC：15 分鐘有效期內可正常顯示確認頁', () => {
+  const runtime = createRuntime();
+  const token = sentMagicToken(runtime);
+  runtime.state.now += 15 * 60 * 1000 - 1000;
+  runtime.api.doGet({ parameter: { action: 'magic', token } });
+  assert.equal(runtime.state.template.bootMode, 'MAGIC_CONFIRM');
 });
 
 test('MAGIC 9：第一次 GET 只顯示確認頁、不核銷', () => {
@@ -268,11 +360,53 @@ test('MAGIC 10：按繼續登入時才核銷並建立 session', () => {
   assert.ok(runtime.state.updates.some(item => item.range === "'外部檢視權限'!E2"));
 });
 
+test('MAGIC：最後登入時間寫入失敗不會吃掉已成功建立的 session', () => {
+  const runtime = createRuntime({ lastLoginUpdateFails: true });
+  const result = runtime.api.redeemViewerMagicLink(sentMagicToken(runtime));
+  assert.match(result.sessionToken, /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
+  assert.deepEqual({ ...runtime.api.resumeViewerSession(result.sessionToken) }, {
+    email: 'viewer@example.com', name: '測試檢視者',
+  });
+  assert.match(runtime.state.logs.at(-1), /viewer-last-login-update/);
+  assert.doesNotMatch(runtime.state.logs.at(-1), /simulated Sheets write failure/);
+});
+
 test('MAGIC 11：相同 token 第二次核銷拒絕', () => {
   const runtime = createRuntime();
   const token = sentMagicToken(runtime);
   runtime.api.redeemViewerMagicLink(token);
   assert.throws(() => runtime.api.redeemViewerMagicLink(token), /INVALID_MAGIC_LINK/);
+  assert.match(runtime.state.logs.at(-1), /MAGIC_LINK_ALREADY_USED/);
+});
+
+test('MAGIC：Email 改為 SUSPENDED 後既有 token 不可 GET 或核銷', () => {
+  const runtime = createRuntime();
+  const token = sentMagicToken(runtime);
+  runtime.state.accessRows[0][2] = 'SUSPENDED';
+  runtime.api.doGet({ parameter: { action: 'magic', token } });
+  assert.equal(runtime.state.template.bootMode, 'MAGIC_INVALID');
+  assert.match(runtime.state.logs.at(-1), /MAGIC_LINK_EMAIL_NOT_APPROVED/);
+  assert.throws(() => runtime.api.redeemViewerMagicLink(token), /INVALID_MAGIC_LINK/);
+});
+
+test('MAGIC：Email 從 Allowlist 刪除後既有 token 不可使用', () => {
+  const runtime = createRuntime();
+  const token = sentMagicToken(runtime);
+  runtime.state.accessRows = runtime.state.accessRows.filter(row => row[0] !== 'viewer@example.com');
+  assert.throws(() => runtime.api.redeemViewerMagicLink(token), /INVALID_MAGIC_LINK/);
+  assert.match(runtime.state.logs.at(-1), /MAGIC_LINK_EMAIL_NOT_APPROVED/);
+});
+
+test('MAGIC：Allowlist schema 或重複資料錯誤會 fail closed 並安全記錄', () => {
+  const runtime = createRuntime({ accessRows: [
+    ['viewer@example.com', 'A', 'APPROVED', '', '', ''],
+    ['viewer@example.com', 'B', 'APPROVED', '', '', ''],
+  ] });
+  const token = runtime.api.createMagicToken_('viewer@example.com');
+  runtime.api.doGet({ parameter: { action: 'magic', token } });
+  assert.equal(runtime.state.template.bootMode, 'MAGIC_INVALID');
+  assert.match(runtime.state.logs.at(-1), /MAGIC_LINK_ALLOWLIST_ERROR/);
+  assert.doesNotMatch(runtime.state.logs.at(-1), /viewer@example\.com|viewer-spreadsheet/);
 });
 
 // RATE LIMIT
@@ -297,6 +431,13 @@ test('SESSION 14：有效 session 可恢復身分', () => {
   const runtime = createRuntime();
   const identity = runtime.api.resumeViewerSession(approvedSession(runtime));
   assert.deepEqual({ ...identity }, { email: 'viewer@example.com', name: '測試檢視者' });
+});
+
+test('SESSION：Client 將 session 存入 localStorage，重新整理後 resume', () => {
+  assert.match(clientHtml, /window\.localStorage\.setItem\(STORAGE_KEY, sessionToken\)/);
+  assert.match(clientHtml, /var stored = getStoredSession_\(\)/);
+  assert.match(clientHtml, /if \(stored\) resumeSession_\(stored\)/);
+  assert.match(clientHtml, /\.resumeViewerSession\(token\)/);
 });
 
 test('SESSION 15：session 被修改拒絕', () => {
@@ -448,12 +589,34 @@ test('UI 46：桌機版為左側列表與右側詳細雙欄', () => {
   assert.match(indexHtml, /class="case-detail"/);
 });
 
+test('UI 47：品牌統一且沒有 WC 或 logo 圖示', () => {
+  assert.match(indexHtml, /Wedding-i Viewer/);
+  assert.match(indexHtml, /外部唯讀檢視/);
+  assert.match(indexHtml, /案件檢視登入/);
+  assert.match(indexHtml, /請輸入已獲核准的 Email，我們會寄送登入連結給您。/);
+  assert.doesNotMatch(indexHtml, /Wedding Chapter|>\s*WC\s*<|brand-mark|placeholder-icon|viewer-logo/i);
+  assert.doesNotMatch(stylesHtml, /brand-mark|placeholder-icon|viewer-logo/i);
+});
+
 test('manifest 使用正式匿名入口與最小必要 scope', () => {
   assert.deepEqual(manifest.webapp, { executeAs: 'USER_DEPLOYING', access: 'ANYONE_ANONYMOUS' });
   assert.deepEqual(manifest.oauthScopes.sort(), [
     'https://www.googleapis.com/auth/script.send_mail',
     'https://www.googleapis.com/auth/spreadsheets',
+    'https://www.googleapis.com/auth/userinfo.email',
   ]);
+});
+
+test('Magic Link 使用固定正式 /exec Script Property，不依賴 getUrl()', () => {
+  assert.match(serverSource, /EXTERNAL_VIEWER_WEB_APP_URL/);
+  assert.match(serverSource, /requireWebAppUrl_\(\)/);
+  assert.doesNotMatch(serverSource, /ScriptApp\.getService\(\)\.getUrl\(\)/);
+});
+
+test('Magic Link Server log 只記錄安全 context 與錯誤代碼', () => {
+  assert.match(serverSource, /context: cleanText_\(context\)/);
+  assert.match(serverSource, /code: safeExternalViewerErrorCode_\(error\)/);
+  assert.doesNotMatch(serverSource, /console\.error\([^\n]*(?:token|secret|spreadsheetId|sessionToken)/i);
 });
 
 test('獨立 Viewer Client 只呼叫 External Viewer API', () => {

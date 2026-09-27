@@ -1,8 +1,9 @@
 /**
- * Wedding Chapter — External Viewer Phase 1
+ * Wedding-i Viewer — External Viewer Phase 1
  *
  * Required Script Properties:
  *   EXTERNAL_VIEWER_SPREADSHEET_ID
+ *   EXTERNAL_VIEWER_WEB_APP_URL        (current production /exec URL)
  *   EXTERNAL_VIEWER_MAGIC_SECRET       (at least 32 characters)
  *   EXTERNAL_VIEWER_SESSION_SECRET     (at least 32 characters)
  *
@@ -20,9 +21,20 @@ const EXTERNAL_VIEWER_LOCK_TIMEOUT_MS_ = 30000;
 
 const EXTERNAL_VIEWER_PROPERTY_KEYS_ = Object.freeze({
   spreadsheetId: 'EXTERNAL_VIEWER_SPREADSHEET_ID',
+  webAppUrl: 'EXTERNAL_VIEWER_WEB_APP_URL',
   magicSecret: 'EXTERNAL_VIEWER_MAGIC_SECRET',
   sessionSecret: 'EXTERNAL_VIEWER_SESSION_SECRET',
 });
+
+const EXTERNAL_VIEWER_INTERNAL_ERROR_CODES_ = Object.freeze([
+  'ACCESS_UNAVAILABLE', 'AUTH_CONFIGURATION_MISSING', 'DATA_CONFIGURATION_ERROR',
+  'DATA_INTEGRITY_ERROR', 'DATA_SCHEMA_ERROR', 'FORBIDDEN', 'INTERNAL_ERROR',
+  'INVALID_MAGIC_LINK', 'LOCK_TIMEOUT', 'MAGIC_LINK_ALREADY_USED',
+  'MAGIC_LINK_ALLOWLIST_ERROR', 'MAGIC_LINK_CONFIGURATION_ERROR',
+  'MAGIC_LINK_EMAIL_NOT_APPROVED', 'MAGIC_LINK_EXPIRED',
+  'MAGIC_LINK_INVALID_SIGNATURE', 'MAIL_QUOTA_EXCEEDED', 'NOT_FOUND',
+  'RATE_LIMITED', 'SESSION_EXPIRED', 'UNAUTHORIZED', 'VALIDATION_ERROR',
+]);
 
 const EXTERNAL_VIEWER_ACCESS_HEADERS_ = Object.freeze([
   'Email', '姓名', '狀態', '建立時間', '最後登入時間', '備註',
@@ -73,6 +85,7 @@ function doGet(event) {
       viewerEmail = inspected.email;
       magicToken = token;
     } catch (error) {
+      logExternalViewerError_('magic-link-inspection', error);
       mode = 'MAGIC_INVALID';
     }
   }
@@ -81,7 +94,7 @@ function doGet(event) {
   template.viewerEmail = viewerEmail;
   template.magicToken = magicToken;
   return template.evaluate()
-    .setTitle('Wedding Chapter｜案件檢視')
+    .setTitle('Wedding-i Viewer｜外部唯讀檢視')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
@@ -89,24 +102,40 @@ function include_(filename) {
   return HtmlService.createHtmlOutputFromFile(filename).getContent();
 }
 
-function externalViewerRequest_(operation) {
+function externalViewerRequest_(context, operation) {
   try {
     return operation();
   } catch (error) {
-    const code = error && error.message;
+    const code = safeExternalViewerErrorCode_(error);
+    logExternalViewerError_(context, error);
     const allowed = [
       'ACCESS_UNAVAILABLE', 'AUTH_CONFIGURATION_MISSING', 'DATA_CONFIGURATION_ERROR',
       'DATA_INTEGRITY_ERROR', 'DATA_SCHEMA_ERROR', 'FORBIDDEN', 'INTERNAL_ERROR',
       'INVALID_MAGIC_LINK', 'LOCK_TIMEOUT', 'MAIL_QUOTA_EXCEEDED', 'NOT_FOUND',
       'RATE_LIMITED', 'SESSION_EXPIRED', 'UNAUTHORIZED', 'VALIDATION_ERROR',
     ];
-    throw new Error(allowed.indexOf(code) !== -1 ? code : 'INTERNAL_ERROR');
+    const publicCode = code.indexOf('MAGIC_LINK_') === 0
+      ? (code === 'MAGIC_LINK_CONFIGURATION_ERROR' ? 'DATA_CONFIGURATION_ERROR' : 'INVALID_MAGIC_LINK')
+      : (allowed.indexOf(code) !== -1 ? code : 'INTERNAL_ERROR');
+    throw new Error(publicCode);
   }
+}
+
+function safeExternalViewerErrorCode_(error) {
+  const code = error && typeof error.message === 'string' ? error.message : '';
+  return EXTERNAL_VIEWER_INTERNAL_ERROR_CODES_.indexOf(code) !== -1 ? code : 'INTERNAL_ERROR';
+}
+
+function logExternalViewerError_(context, error) {
+  console.error(JSON.stringify({
+    context: cleanText_(context) || 'external-viewer',
+    code: safeExternalViewerErrorCode_(error),
+  }));
 }
 
 /** Sends a magic link only to a unique APPROVED allowlist entry. */
 function requestViewerMagicLink(email) {
-  return externalViewerRequest_(function () {
+  return externalViewerRequest_('magic-link-request', function () {
     const normalizedEmail = normalizeEmail_(email);
     if (!isValidEmail_(normalizedEmail)) throw new Error('ACCESS_UNAVAILABLE');
 
@@ -114,36 +143,43 @@ function requestViewerMagicLink(email) {
     if (!access || access.status !== 'APPROVED') throw new Error('ACCESS_UNAVAILABLE');
 
     if (MailApp.getRemainingDailyQuota() < 1) throw new Error('MAIL_QUOTA_EXCEEDED');
+    requireWebAppUrl_();
     reserveMagicLinkSend_(normalizedEmail);
 
     const token = createMagicToken_(normalizedEmail);
-    const serviceUrl = cleanText_(ScriptApp.getService().getUrl());
-    if (!/^https:\/\//.test(serviceUrl)) throw new Error('DATA_CONFIGURATION_ERROR');
-    const loginUrl = serviceUrl + '?action=magic&token=' + encodeURIComponent(token);
-    const subject = 'Wedding Chapter｜案件檢視登入';
+    const loginUrl = createMagicLinkUrl_(token);
+    const subject = 'Wedding-i Viewer 存取連結';
     const body = [
       '您好，',
       '',
-      '請使用以下連結登入 Wedding Chapter 案件檢視：',
+      '您已獲得 Wedding-i Viewer 的案件檢視權限。',
+      '',
+      '請使用下方連結進入唯讀案件檢視。',
+      '',
       loginUrl,
       '',
-      '此連結將於 15 分鐘後失效，且只能使用一次。',
-      '如果不是您本人操作，請忽略這封信。',
+      '此登入連結將於 15 分鐘後失效，且只能使用一次。',
+      '',
+      '如果您沒有要求存取 Wedding-i Viewer，請直接忽略此信。',
+      '',
+      'Wedding-i Viewer｜外部唯讀檢視',
     ].join('\n');
     const htmlBody = '<p>您好，</p>' +
-      '<p>請點擊下方按鈕登入 Wedding Chapter 案件檢視。</p>' +
+      '<p>您已獲得 Wedding-i Viewer 的案件檢視權限。</p>' +
+      '<p>請使用下方連結進入唯讀案件檢視。</p>' +
       '<p><a href="' + escapeHtml_(loginUrl) + '" style="display:inline-block;' +
       'padding:12px 22px;border-radius:999px;background:#82766b;color:#fff;' +
-      'text-decoration:none">登入案件檢視</a></p>' +
-      '<p>此連結將於 15 分鐘後失效，且只能使用一次。</p>' +
-      '<p style="color:#746d67">如果不是您本人操作，請忽略這封信。</p>';
+      'text-decoration:none">進入 Wedding-i Viewer</a></p>' +
+      '<p>此登入連結將於 15 分鐘後失效，且只能使用一次。</p>' +
+      '<p style="color:#746d67">如果您沒有要求存取 Wedding-i Viewer，請直接忽略此信。</p>' +
+      '<p style="color:#746d67">Wedding-i Viewer｜外部唯讀檢視</p>';
 
     MailApp.sendEmail({
       to: normalizedEmail,
       subject: subject,
       body: body,
       htmlBody: htmlBody,
-      name: 'Wedding Chapter',
+      name: 'Wedding-i Viewer',
     });
     return { sent: true };
   });
@@ -151,7 +187,7 @@ function requestViewerMagicLink(email) {
 
 /** Redeems a magic link once and returns a long-lived signed viewer session. */
 function redeemViewerMagicLink(magicToken) {
-  return externalViewerRequest_(function () {
+  return externalViewerRequest_('magic-link-redemption', function () {
     const payload = verifyMagicToken_(magicToken);
     const lock = LockService.getScriptLock();
     try {
@@ -162,14 +198,17 @@ function redeemViewerMagicLink(magicToken) {
 
     try {
       cleanupConsumedMagicTokens_();
-      if (isMagicTokenConsumed_(payload.jti)) throw new Error('INVALID_MAGIC_LINK');
+      requireUnusedMagicToken_(payload.jti);
 
-      const access = findViewerAccess_(payload.email);
-      if (!access || access.status !== 'APPROVED') throw new Error('FORBIDDEN');
-
+      const access = requireApprovedMagicLinkEmail_(payload.email);
+      const response = createViewerSessionResponse_(access);
       markMagicTokenConsumed_(payload.jti, payload.exp);
-      updateViewerLastLogin_(access.rowNumber);
-      return createViewerSessionResponse_(access);
+      try {
+        updateViewerLastLogin_(access.rowNumber);
+      } catch (error) {
+        logExternalViewerError_('viewer-last-login-update', error);
+      }
+      return response;
     } finally {
       lock.releaseLock();
     }
@@ -178,7 +217,7 @@ function redeemViewerMagicLink(magicToken) {
 
 /** Restores a browser session without returning any case data. */
 function resumeViewerSession(sessionToken) {
-  return externalViewerRequest_(function () {
+  return externalViewerRequest_('session-resume', function () {
     const authorized = authorizeViewerSession_(sessionToken);
     return {
       email: authorized.email,
@@ -189,7 +228,7 @@ function resumeViewerSession(sessionToken) {
 
 /** Returns only External Viewer summary fields after fresh allowlist authorization. */
 function viewerListCases(sessionToken, query, salesCode) {
-  return externalViewerRequest_(function () {
+  return externalViewerRequest_('viewer-list-cases', function () {
     authorizeViewerSession_(sessionToken);
     const normalizedQuery = normalizeSearchQuery_(query);
     const normalizedSalesCode = normalizeSalesCode_(salesCode);
@@ -221,7 +260,7 @@ function viewerListCases(sessionToken, query, salesCode) {
 
 /** Returns only explicitly approved External Viewer detail fields. */
 function viewerGetCase(sessionToken, serialNumber) {
-  return externalViewerRequest_(function () {
+  return externalViewerRequest_('viewer-get-case', function () {
     authorizeViewerSession_(sessionToken);
     const target = normalizeSerialNumber_(serialNumber);
     if (!target) throw new Error('NOT_FOUND');
@@ -240,8 +279,11 @@ function viewerGetCase(sessionToken, serialNumber) {
  * identity and are rejected before any spreadsheet call.
  */
 function setupExternalViewer() {
-  return externalViewerRequest_(function () {
+  return externalViewerRequest_('external-viewer-setup', function () {
     requireManualSetupAdministrator_();
+    requireWebAppUrl_();
+    requireMagicSecret_();
+    requireSecret_(EXTERNAL_VIEWER_PROPERTY_KEYS_.sessionSecret);
     const spreadsheetId = requireSpreadsheetId_();
     const metadata = Sheets.Spreadsheets.get(spreadsheetId, {
       fields: 'sheets.properties(sheetId,title)',
@@ -304,10 +346,52 @@ function requireManualSetupAdministrator_() {
 
 function inspectMagicLink_(token) {
   const payload = verifyMagicToken_(token);
-  if (isMagicTokenConsumed_(payload.jti)) throw new Error('INVALID_MAGIC_LINK');
-  const access = findViewerAccess_(payload.email);
-  if (!access || access.status !== 'APPROVED') throw new Error('FORBIDDEN');
+  requireUnusedMagicToken_(payload.jti);
+  requireApprovedMagicLinkEmail_(payload.email);
   return { email: payload.email };
+}
+
+function requireUnusedMagicToken_(jti) {
+  try {
+    if (isMagicTokenConsumed_(jti)) throw new Error('MAGIC_LINK_ALREADY_USED');
+  } catch (error) {
+    if (safeExternalViewerErrorCode_(error) === 'MAGIC_LINK_ALREADY_USED') throw error;
+    throw new Error('MAGIC_LINK_CONFIGURATION_ERROR');
+  }
+}
+
+function requireApprovedMagicLinkEmail_(email) {
+  let access;
+  try {
+    access = findViewerAccess_(email);
+  } catch (error) {
+    if (safeExternalViewerErrorCode_(error) === 'AUTH_CONFIGURATION_MISSING') {
+      throw new Error('MAGIC_LINK_CONFIGURATION_ERROR');
+    }
+    throw new Error('MAGIC_LINK_ALLOWLIST_ERROR');
+  }
+  if (!access || access.status !== 'APPROVED') {
+    throw new Error('MAGIC_LINK_EMAIL_NOT_APPROVED');
+  }
+  return access;
+}
+
+function createMagicLinkUrl_(token) {
+  const normalizedToken = cleanText_(token);
+  if (!/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(normalizedToken)) {
+    throw new Error('MAGIC_LINK_INVALID_SIGNATURE');
+  }
+  return requireWebAppUrl_() + '?action=magic&token=' + encodeURIComponent(normalizedToken);
+}
+
+function requireWebAppUrl_() {
+  const value = cleanText_(PropertiesService.getScriptProperties().getProperty(
+    EXTERNAL_VIEWER_PROPERTY_KEYS_.webAppUrl
+  ));
+  if (!/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(value)) {
+    throw new Error('MAGIC_LINK_CONFIGURATION_ERROR');
+  }
+  return value;
 }
 
 function createMagicToken_(email) {
@@ -319,23 +403,31 @@ function createMagicToken_(email) {
     iat: issuedAt,
     exp: issuedAt + EXTERNAL_VIEWER_MAGIC_TTL_SECONDS_,
     jti: Utilities.getUuid(),
-  }, requireSecret_(EXTERNAL_VIEWER_PROPERTY_KEYS_.magicSecret));
+  }, requireMagicSecret_());
 }
 
 function verifyMagicToken_(token) {
   const payload = parseSignedToken_(
     token,
-    requireSecret_(EXTERNAL_VIEWER_PROPERTY_KEYS_.magicSecret),
-    'INVALID_MAGIC_LINK'
+    requireMagicSecret_(),
+    'MAGIC_LINK_INVALID_SIGNATURE'
   );
   if (!hasExactKeys_(payload, ['email', 'exp', 'iat', 'jti', 'purpose', 'v']) ||
       payload.v !== 1 || payload.purpose !== 'external_viewer_magic_login' ||
       !isValidEmail_(normalizeEmail_(payload.email)) || payload.email !== normalizeEmail_(payload.email) ||
       typeof payload.jti !== 'string' || !/^[0-9a-f-]{20,80}$/i.test(payload.jti)) {
-    throw new Error('INVALID_MAGIC_LINK');
+    throw new Error('MAGIC_LINK_INVALID_SIGNATURE');
   }
-  validateTokenTimes_(payload, EXTERNAL_VIEWER_MAGIC_TTL_SECONDS_, 'INVALID_MAGIC_LINK');
+  validateTokenTimes_(payload, EXTERNAL_VIEWER_MAGIC_TTL_SECONDS_, 'MAGIC_LINK_EXPIRED');
   return payload;
+}
+
+function requireMagicSecret_() {
+  try {
+    return requireSecret_(EXTERNAL_VIEWER_PROPERTY_KEYS_.magicSecret);
+  } catch (error) {
+    throw new Error('MAGIC_LINK_CONFIGURATION_ERROR');
+  }
 }
 
 function createViewerSessionResponse_(access) {
@@ -533,7 +625,7 @@ function secureKeyHash_(value) {
   return stripBase64Padding_(Utilities.base64EncodeWebSafe(
     Utilities.computeHmacSha256Signature(
       String(value),
-      requireSecret_(EXTERNAL_VIEWER_PROPERTY_KEYS_.magicSecret),
+      requireMagicSecret_(),
       Utilities.Charset.UTF_8
     )
   )).slice(0, 32);

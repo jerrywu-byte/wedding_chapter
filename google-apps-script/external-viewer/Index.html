@@ -17,10 +17,12 @@
 
     <main class="viewer-shell">
       <section id="loginView" class="auth-card" aria-labelledby="loginTitle">
-        <div class="brand-mark" aria-hidden="true">WC</div>
-        <p class="eyebrow">Wedding Chapter</p>
-        <h1 id="loginTitle">案件檢視</h1>
-        <p class="auth-intro">請輸入已由管理員授權的 Email，我們會寄送一次性登入連結。</p>
+        <div class="brand-heading">
+          <h1 id="loginTitle">Wedding-i Viewer</h1>
+          <p class="brand-subtitle">外部唯讀檢視</p>
+        </div>
+        <h2 class="auth-section-title">案件檢視登入</h2>
+        <p class="auth-intro">請輸入已獲核准的 Email，我們會寄送登入連結給您。</p>
         <form id="loginForm" novalidate>
           <label for="viewerEmail">Email</label>
           <input id="viewerEmail" name="email" type="email" autocomplete="email" inputmode="email" required>
@@ -30,9 +32,11 @@
       </section>
 
       <section id="magicView" class="auth-card" hidden aria-labelledby="magicTitle">
-        <div class="brand-mark" aria-hidden="true">WC</div>
-        <p class="eyebrow">Wedding Chapter</p>
-        <h1 id="magicTitle">案件檢視登入</h1>
+        <div class="brand-heading">
+          <h1 id="magicTitle">Wedding-i Viewer</h1>
+          <p class="brand-subtitle">外部唯讀檢視</p>
+        </div>
+        <h2 class="auth-section-title">案件檢視登入</h2>
         <div id="magicConfirmContent">
           <p class="auth-intro">請確認使用下列帳號進入唯讀案件檢視。</p>
           <p class="account-card"><span>帳號</span><strong id="magicEmail"></strong></p>
@@ -44,9 +48,9 @@
 
       <section id="viewerApp" class="app-shell" hidden aria-label="唯讀案件檢視">
         <header class="app-header">
-          <div>
-            <p class="eyebrow">Wedding Chapter</p>
-            <h1>唯讀案件檢視</h1>
+          <div class="brand-heading">
+            <h1>Wedding-i Viewer</h1>
+            <p class="brand-subtitle">外部唯讀檢視</p>
           </div>
           <div class="viewer-identity">
             <span id="viewerIdentity"></span>
@@ -75,7 +79,6 @@
           <article id="caseDetail" class="case-detail" aria-live="polite">
             <button id="backToList" class="back-button" type="button">← 返回案件列表</button>
             <div id="emptyDetail" class="detail-placeholder">
-              <div class="placeholder-icon" aria-hidden="true">WC</div>
               <h2>選擇一筆案件</h2>
               <p>案件資料僅供授權檢視，無法在此頁修改。</p>
             </div>
