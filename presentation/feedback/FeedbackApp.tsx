@@ -1,4 +1,9 @@
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import {
+  loadFeedbackContext,
+  submitFeedback,
+  type FeedbackContext,
+} from "../../lib/feedbackSubmission";
 import {
   emptyFeedbackAnswers,
   feedbackQuestions,
@@ -73,18 +78,70 @@ function MultiChoiceGroup({
   );
 }
 
+function FeedbackUnavailable({ message }: { message: string }) {
+  return (
+    <main className="feedback-page feedback-page--success">
+      <section className="feedback-success-card" role="alert">
+        <div className="feedback-success-mark">!</div>
+        <p className="feedback-kicker">WEDDING CHAPTER</p>
+        <h1>這份回饋目前無法開啟</h1>
+        <p>{message}</p>
+        <span>新莊典華</span>
+      </section>
+    </main>
+  );
+}
+
 export default function FeedbackApp() {
+  const params = new URLSearchParams(globalThis.location?.search ?? "");
+  const token = params.get("t")?.trim() ?? "";
+  const previewMode = import.meta.env.DEV && !token;
+
   const [answers, setAnswers] = useState<FeedbackAnswers>(emptyFeedbackAnswers);
+  const [context, setContext] = useState<FeedbackContext | null>(null);
+  const [loading, setLoading] = useState(!previewMode);
+  const [loadError, setLoadError] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [attempted, setAttempted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+
+  useEffect(() => {
+    if (previewMode) return;
+    if (!token) {
+      setLoadError("這個連結缺少回饋識別資訊，請從官方 LINE 的活動訊息重新開啟。");
+      setLoading(false);
+      return;
+    }
+
+    let active = true;
+    loadFeedbackContext(token)
+      .then((result) => {
+        if (!active) return;
+        setContext(result);
+        if (result.status === "COMPLETED") setSubmitted(true);
+      })
+      .catch(() => {
+        if (active) {
+          setLoadError("這個回饋連結無效、已失效，或目前暫時無法使用。請從官方 LINE 聯繫您的宴會企劃。");
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [previewMode, token]);
 
   const errors = useMemo(
     () => ({
       q1: !answers.q1,
       q2: !answers.q2,
       q3: !answers.q3,
-      q4: answers.q4.length === 0,
-      q5: answers.q5.length === 0,
+      q4: answers.q4.length === 0 || (answers.q4.includes("其他") && !answers.q4Other.trim()),
+      q5: answers.q5.length === 0 || (answers.q5.includes("其他") && !answers.q5Other.trim()),
     }),
     [answers],
   );
@@ -114,9 +171,10 @@ export default function FeedbackApp() {
     });
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setAttempted(true);
+    setSubmitError("");
 
     if (!isComplete) {
       requestAnimationFrame(() => {
@@ -125,9 +183,39 @@ export default function FeedbackApp() {
       return;
     }
 
-    setSubmitted(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (previewMode) {
+      setSubmitted(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    if (!token || submitting) return;
+
+    setSubmitting(true);
+    try {
+      await submitFeedback(token, answers);
+      setSubmitted(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch {
+      setSubmitError("回饋暫時沒有成功送出，請確認網路後再試一次。您的答案仍保留在畫面上。");
+    } finally {
+      setSubmitting(false);
+    }
   }
+
+  if (loading) {
+    return (
+      <main className="feedback-page feedback-page--success">
+        <section className="feedback-success-card" aria-live="polite">
+          <p className="feedback-kicker">WEDDING CHAPTER</p>
+          <h1>正在準備您的回饋頁</h1>
+          <p>請稍候一下。</p>
+        </section>
+      </main>
+    );
+  }
+
+  if (loadError) return <FeedbackUnavailable message={loadError} />;
 
   if (submitted) {
     return (
@@ -154,12 +242,15 @@ export default function FeedbackApp() {
       <header className="feedback-hero">
         <p className="feedback-kicker">WEDDING CHAPTER</p>
         <h1>婚禮體驗日・活動回饋</h1>
+        {context?.coupleName ? <p className="feedback-couple">{context.coupleName}</p> : null}
         <p className="feedback-intro">
           感謝您蒞臨新莊典華參觀與洽談。
           <br />
           為提供更符合您期待的宴會服務，誠摯邀請您留下本次洽談後的感受與建議。
         </p>
-        <div className="feedback-time">約 1 分鐘即可完成</div>
+        <div className="feedback-time">
+          {previewMode ? "本機預覽模式・不會送出資料" : "約 1 分鐘即可完成"}
+        </div>
       </header>
 
       <form className="feedback-form" onSubmit={handleSubmit} noValidate>
@@ -319,10 +410,14 @@ export default function FeedbackApp() {
         <footer className="feedback-submit-area">
           {attempted && !isComplete ? (
             <p className="feedback-submit-warning">還有幾題尚未完成，請確認 Q1～Q5。</p>
+          ) : submitError ? (
+            <p className="feedback-submit-warning">{submitError}</p>
           ) : (
             <p>Q1～Q5 為必填，Q6～Q7 可自由填寫。</p>
           )}
-          <button type="submit">送出我的回饋</button>
+          <button type="submit" disabled={submitting}>
+            {submitting ? "正在送出…" : "送出我的回饋"}
+          </button>
           <small>您的意見僅供服務改善與後續洽談參考使用</small>
         </footer>
       </form>
