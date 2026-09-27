@@ -33,6 +33,8 @@
       statusBadge: document.getElementById('statusBadge'),
       basicInformation: document.getElementById('basicInformation'),
       consultations: document.getElementById('consultations'),
+      activityFeedbackCard: document.getElementById('activityFeedbackCard'),
+      activityFeedback: document.getElementById('activityFeedback'),
       closingGrid: document.getElementById('closingGrid'),
       closedDateField: document.getElementById('closedDateField'),
       closedDate: document.getElementById('closedDate'),
@@ -324,6 +326,7 @@
       ]);
 
       renderConsultations_(caseData);
+      renderActivityFeedback_(caseData.activityFeedback);
       elements.closedDate.value = normalizeDateForInput_(caseData.closedDate);
       applyStatusVisual_(status);
       baseline = editableSnapshot_(caseData);
@@ -425,6 +428,75 @@
         details.append(summary, fields);
         elements.consultations.append(details);
       });
+    }
+
+    function renderActivityFeedback_(feedback) {
+      elements.activityFeedback.replaceChildren();
+      elements.activityFeedbackCard.hidden = !feedback;
+      if (!feedback) return;
+
+      const summary = document.createElement('div');
+      summary.className = 'followup-feedback-summary';
+
+      const summaryText = document.createElement('div');
+      const eventDate = document.createElement('strong');
+      eventDate.textContent = displayValue_(feedback.eventDate);
+      const submittedAt = document.createElement('span');
+      submittedAt.textContent = feedback.status === 'COMPLETED' && feedback.submittedAt
+        ? '回填時間 ' + displayValue_(feedback.submittedAt)
+        : '等待新人回填';
+      summaryText.append(eventDate, submittedAt);
+
+      const badge = document.createElement('span');
+      badge.className = 'followup-feedback-status ' +
+        (feedback.status === 'COMPLETED' ? 'is-completed' : 'is-pending');
+      badge.textContent = feedback.status === 'COMPLETED' ? '已完成' : '尚未填寫';
+      summary.append(summaryText, badge);
+      elements.activityFeedback.append(summary);
+
+      if (feedback.status !== 'COMPLETED') return;
+
+      const details = document.createElement('details');
+      details.className = 'followup-feedback-details';
+
+      const detailsSummary = document.createElement('summary');
+      detailsSummary.textContent = '查看完整回饋';
+
+      const grid = document.createElement('dl');
+      grid.className = 'followup-feedback-grid';
+      [
+        ['服務感受', feedback.q1],
+        ['說明清楚度', feedback.q2],
+        ['需求理解', feedback.q3],
+        ['主要考量', Array.isArray(feedback.q4) ? feedback.q4.join('、') : ''],
+        ['留下好印象', Array.isArray(feedback.q5) ? feedback.q5.join('、') : ''],
+      ].forEach(function (item) {
+        const wrapper = document.createElement('div');
+        const term = document.createElement('dt');
+        const description = document.createElement('dd');
+        term.textContent = item[0];
+        description.textContent = displayValue_(item[1]);
+        wrapper.append(term, description);
+        grid.append(wrapper);
+      });
+
+      const textGroup = document.createElement('div');
+      textGroup.className = 'followup-feedback-texts';
+      [
+        ['其他建議或回饋', feedback.q6],
+        ['希望典華做得更好的地方', feedback.q7],
+      ].forEach(function (item) {
+        const section = document.createElement('section');
+        const heading = document.createElement('h4');
+        const text = document.createElement('p');
+        heading.textContent = item[0];
+        text.textContent = displayValue_(item[1]);
+        section.append(heading, text);
+        textGroup.append(section);
+      });
+
+      details.append(detailsSummary, grid, textGroup);
+      elements.activityFeedback.append(details);
     }
 
     function canEditCase_() {
