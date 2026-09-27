@@ -192,9 +192,12 @@
 
     function renderWatermark_(verifiedEmail) {
       elements.watermark.replaceChildren();
-      for (var index = 0; index < 6; index += 1) {
+      var date = new Intl.DateTimeFormat('zh-TW', {
+        timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit',
+      }).format(new Date());
+      for (var index = 0; index < 16; index += 1) {
         var item = document.createElement('span');
-        item.textContent = '授權檢視\n' + verifiedEmail;
+        item.textContent = '授權檢視\n' + verifiedEmail + '\n' + date;
         elements.watermark.append(item);
       }
     }

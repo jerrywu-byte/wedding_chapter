@@ -628,11 +628,11 @@ test('UI 40–43：沒有狀態篩選、統計、儲存或協作備註輸入', (
   assert.doesNotMatch(clientHtml, /\.updateCase\(|\.addCollaborationNote\(/);
 });
 
-test('UI 44：浮水印取自 Server verified identity，且不包含日期', () => {
+test('UI 44：浮水印維持原案並取自 Server verified identity', () => {
   assert.match(clientHtml, /renderWatermark_\(identity\.email\)/);
-  assert.match(clientHtml, /item\.textContent = '授權檢視\\n' \+ verifiedEmail/);
-  assert.match(clientHtml, /index < 6/);
-  assert.doesNotMatch(clientHtml, /Intl\.DateTimeFormat|verifiedEmail \+ '\\n' \+ date/);
+  assert.match(clientHtml, /Intl\.DateTimeFormat/);
+  assert.match(clientHtml, /index < 16/);
+  assert.match(clientHtml, /item\.textContent = '授權檢視\\n' \+ verifiedEmail \+ '\\n' \+ date/);
   assert.doesNotMatch(clientHtml, /renderWatermark_\(elements\.viewerEmail/);
 });
 
@@ -645,17 +645,10 @@ test('UI：detail loading 不隱藏既有內容，也不使用大型固定高度
   assert.match(stylesHtml, /\.detail-loading \{ position: absolute/);
 });
 
-test('UI：移除唯讀 badge，浮水印只位於洽談紀錄 section', () => {
-  assert.doesNotMatch(indexHtml, /readonly-badge|<span[^>]*>唯讀<\/span>/);
-  assert.doesNotMatch(stylesHtml, /\.readonly-badge/);
-  const consultationStart = indexHtml.indexOf('<section class="detail-section consultation-section"');
-  const consultationEnd = indexHtml.indexOf('</section>', consultationStart);
-  const watermarkPosition = indexHtml.indexOf('id="watermark"');
-  assert.ok(consultationStart >= 0);
-  assert.ok(watermarkPosition > consultationStart && watermarkPosition < consultationEnd);
-  assert.match(stylesHtml, /\.consultation-section \{ position: relative; overflow: hidden; \}/);
-  assert.match(stylesHtml, /\.watermark \{ position: absolute;[^}]*opacity: \.035;/);
-  assert.doesNotMatch(stylesHtml, /\.watermark \{ position: fixed/);
+test('UI：唯讀 badge 與整頁浮水印維持原案', () => {
+  assert.match(indexHtml, /<span class="readonly-badge">唯讀<\/span>/);
+  assert.match(stylesHtml, /\.readonly-badge/);
+  assert.match(stylesHtml, /\.watermark \{ position: fixed;[^}]*opacity: \.055;/);
 });
 
 test('UI 45：手機版提供列表進詳細及返回操作', () => {
