@@ -87,6 +87,7 @@ function createRuntime(options = {}) {
 
   const context = vm.createContext({
     console: {
+      log(message) { state.logs.push(String(message)); },
       warn() {},
       error(message) { state.logs.push(String(message)); },
     },
@@ -133,7 +134,10 @@ function createRuntime(options = {}) {
       Charset: { UTF_8: 'UTF_8' },
       getUuid() { state.uuid += 1; return `00000000-0000-4000-8000-${String(state.uuid).padStart(12, '0')}`; },
       computeHmacSha256Signature(value, secret) {
-        return Array.from(crypto.createHmac('sha256', secret).update(String(value)).digest());
+        return Array.from(
+          crypto.createHmac('sha256', secret).update(String(value)).digest(),
+          byte => byte > 127 ? byte - 256 : byte,
+        );
       },
       base64EncodeWebSafe(value) {
         return Buffer.from(typeof value === 'string' ? value : value).toString('base64url');
@@ -267,8 +271,57 @@ test('AUTH 5：normalized duplicate Email fail closed', () => {
 test('MAGIC 6：Magic Link 使用 HMAC 簽章且可驗證', () => {
   const runtime = createRuntime();
   const token = sentMagicToken(runtime);
-  assert.match(token, /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
+  assert.match(token, /^[A-Za-z0-9_-]+\.[0-9a-f]{64}$/);
   assert.equal(runtime.api.inspectMagicLink_(token).email, 'viewer@example.com');
+});
+
+test('TOKEN：createSignedToken / parseSignedToken 共用 HEX HMAC 可 round-trip', () => {
+  const runtime = createRuntime();
+  const secret = 'round-trip-secret-with-at-least-32-characters';
+  const payload = { purpose: 'direct-round-trip', value: '測試', count: 1 };
+  const token = runtime.api.createSignedToken_(payload, secret);
+  assert.match(token, /^[A-Za-z0-9_-]+\.[0-9a-f]{64}$/);
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(runtime.api.parseSignedToken_(token, secret, 'INVALID_SIGNATURE'))),
+    payload,
+  );
+  assert.equal(runtime.api.bytesToHex_([-128, -1, 0, 1, 127]), '80ff00017f');
+});
+
+test('TOKEN：payload、signature 竄改與不同 secret 均拒絕', () => {
+  const runtime = createRuntime();
+  const secret = 'round-trip-secret-with-at-least-32-characters';
+  const token = runtime.api.createSignedToken_({ purpose: 'tamper-test' }, secret);
+  const [payload, signature] = token.split('.');
+  const tamperedPayload = (payload.startsWith('A') ? 'B' : 'A') + payload.slice(1);
+  const tamperedSignature = (signature.startsWith('a') ? 'b' : 'a') + signature.slice(1);
+  assert.throws(
+    () => runtime.api.parseSignedToken_(tamperedPayload + '.' + signature, secret, 'INVALID_SIGNATURE'),
+    /INVALID_SIGNATURE/,
+  );
+  assert.throws(
+    () => runtime.api.parseSignedToken_(payload + '.' + tamperedSignature, secret, 'INVALID_SIGNATURE'),
+    /INVALID_SIGNATURE/,
+  );
+  assert.throws(
+    () => runtime.api.parseSignedToken_(token, 'different-secret-with-at-least-32-characters', 'INVALID_SIGNATURE'),
+    /INVALID_SIGNATURE/,
+  );
+});
+
+test('TOKEN：Apps Script 手動診斷函式驗證 Magic 與 Session round-trip', () => {
+  const runtime = createRuntime();
+  assert.deepEqual({ ...runtime.api.debugTokenRoundTrip() }, {
+    magicRoundTrip: 'PASS',
+    sessionRoundTrip: 'PASS',
+  });
+  assert.ok(runtime.state.logs.includes('Magic create: OK'));
+  assert.ok(runtime.state.logs.includes('Magic verify: OK'));
+  assert.ok(runtime.state.logs.includes('Session create: OK'));
+  assert.ok(runtime.state.logs.includes('Session verify: OK'));
+  assert.ok(runtime.state.logs.includes('Magic round-trip: PASS'));
+  assert.ok(runtime.state.logs.includes('Session round-trip: PASS'));
+  assert.doesNotMatch(runtime.state.logs.join('\n'), /magic-secret-with|session-secret-with|eyJ/);
 });
 
 test('MAGIC URL：正式 /exec URL 與 token encode/decode round-trip', () => {
@@ -279,7 +332,7 @@ test('MAGIC URL：正式 /exec URL 與 token encode/decode round-trip', () => {
   assert.equal(new URL(url).pathname.endsWith('/exec'), true);
   assert.equal(new URL(url).searchParams.get('token'), token);
   assert.equal(decodeURIComponent(encodeURIComponent(token)), token);
-  assert.match(token, /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
+  assert.match(token, /^[A-Za-z0-9_-]+\.[0-9a-f]{64}$/);
 });
 
 test('MAGIC URL：email HTML href round-trip 後仍可驗證', () => {
@@ -321,7 +374,7 @@ test('MAGIC URL：拒絕 /dev、query string 與非 Google Apps Script URL', () 
 test('MAGIC 7：token 被修改會拒絕', () => {
   const runtime = createRuntime();
   const token = sentMagicToken(runtime);
-  const tampered = token.slice(0, -1) + (token.endsWith('A') ? 'B' : 'A');
+  const tampered = token.slice(0, -1) + (token.endsWith('a') ? 'b' : 'a');
   assert.throws(() => runtime.api.redeemViewerMagicLink(tampered), /INVALID_MAGIC_LINK/);
   assert.match(runtime.state.logs.at(-1), /MAGIC_LINK_INVALID_SIGNATURE/);
   assert.doesNotMatch(runtime.state.logs.at(-1), new RegExp(token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
@@ -355,7 +408,7 @@ test('MAGIC 9：第一次 GET 只顯示確認頁、不核銷', () => {
 test('MAGIC 10：按繼續登入時才核銷並建立 session', () => {
   const runtime = createRuntime();
   const result = runtime.api.redeemViewerMagicLink(sentMagicToken(runtime));
-  assert.match(result.sessionToken, /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
+  assert.match(result.sessionToken, /^[A-Za-z0-9_-]+\.[0-9a-f]{64}$/);
   assert.equal(result.email, 'viewer@example.com');
   assert.ok(runtime.state.updates.some(item => item.range === "'外部檢視權限'!E2"));
 });
@@ -363,7 +416,7 @@ test('MAGIC 10：按繼續登入時才核銷並建立 session', () => {
 test('MAGIC：最後登入時間寫入失敗不會吃掉已成功建立的 session', () => {
   const runtime = createRuntime({ lastLoginUpdateFails: true });
   const result = runtime.api.redeemViewerMagicLink(sentMagicToken(runtime));
-  assert.match(result.sessionToken, /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
+  assert.match(result.sessionToken, /^[A-Za-z0-9_-]+\.[0-9a-f]{64}$/);
   assert.deepEqual({ ...runtime.api.resumeViewerSession(result.sessionToken) }, {
     email: 'viewer@example.com', name: '測試檢視者',
   });

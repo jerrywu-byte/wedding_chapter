@@ -474,9 +474,7 @@ function createSignedToken_(payload, secret) {
   const encodedPayload = stripBase64Padding_(
     Utilities.base64EncodeWebSafe(JSON.stringify(payload), Utilities.Charset.UTF_8)
   );
-  const signature = stripBase64Padding_(Utilities.base64EncodeWebSafe(
-    Utilities.computeHmacSha256Signature(encodedPayload, secret, Utilities.Charset.UTF_8)
-  ));
+  const signature = createHmacHexSignature_(encodedPayload, secret);
   return encodedPayload + '.' + signature;
 }
 
@@ -484,11 +482,9 @@ function parseSignedToken_(token, secret, errorCode) {
   const normalized = cleanText_(token);
   const parts = normalized.split('.');
   if (parts.length !== 2 || !/^[A-Za-z0-9_-]+$/.test(parts[0]) ||
-      !/^[A-Za-z0-9_-]+$/.test(parts[1])) throw new Error(errorCode);
+      !/^[0-9a-f]{64}$/.test(parts[1])) throw new Error(errorCode);
 
-  const expected = stripBase64Padding_(Utilities.base64EncodeWebSafe(
-    Utilities.computeHmacSha256Signature(parts[0], secret, Utilities.Charset.UTF_8)
-  ));
+  const expected = createHmacHexSignature_(parts[0], secret);
   if (!constantTimeEqual_(parts[1], expected)) throw new Error(errorCode);
 
   try {
@@ -502,6 +498,61 @@ function parseSignedToken_(token, secret, errorCode) {
   } catch (error) {
     throw new Error(errorCode);
   }
+}
+
+function createHmacHexSignature_(encodedPayload, secret) {
+  return bytesToHex_(Utilities.computeHmacSha256Signature(
+    encodedPayload,
+    secret,
+    Utilities.Charset.UTF_8
+  ));
+}
+
+function bytesToHex_(bytes) {
+  if (!bytes || typeof bytes.length !== 'number') throw new Error('INTERNAL_ERROR');
+  return Array.prototype.map.call(bytes, function (byte) {
+    return (byte & 0xff).toString(16).padStart(2, '0');
+  }).join('');
+}
+
+function debugTokenRoundTrip() {
+  let magicCreate = 'FAIL';
+  let magicVerify = 'FAIL';
+  let sessionCreate = 'FAIL';
+  let sessionVerify = 'FAIL';
+
+  try {
+    const magicToken = createMagicToken_('debug-token-roundtrip@example.com');
+    magicCreate = 'OK';
+    verifyMagicToken_(magicToken);
+    magicVerify = 'OK';
+  } catch (error) {
+    // The manual diagnostic intentionally reports only PASS/FAIL, never token or secret data.
+  }
+
+  try {
+    const session = createViewerSessionResponse_({
+      email: 'debug-token-roundtrip@example.com',
+      name: 'Token round-trip diagnostic',
+    });
+    sessionCreate = 'OK';
+    verifyViewerSessionToken_(session.sessionToken);
+    sessionVerify = 'OK';
+  } catch (error) {
+    // The manual diagnostic intentionally reports only PASS/FAIL, never token or secret data.
+  }
+
+  console.log('Magic create: ' + magicCreate);
+  console.log('Magic verify: ' + magicVerify);
+  console.log('Session create: ' + sessionCreate);
+  console.log('Session verify: ' + sessionVerify);
+  console.log('Magic round-trip: ' + (magicVerify === 'OK' ? 'PASS' : 'FAIL'));
+  console.log('Session round-trip: ' + (sessionVerify === 'OK' ? 'PASS' : 'FAIL'));
+
+  if (magicVerify !== 'OK' || sessionVerify !== 'OK') {
+    throw new Error('TOKEN_ROUND_TRIP_FAILED');
+  }
+  return { magicRoundTrip: 'PASS', sessionRoundTrip: 'PASS' };
 }
 
 function validateTokenTimes_(payload, maximumLifetime, errorCode) {
