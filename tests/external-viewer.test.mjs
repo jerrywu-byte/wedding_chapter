@@ -628,10 +628,34 @@ test('UI 40–43：沒有狀態篩選、統計、儲存或協作備註輸入', (
   assert.doesNotMatch(clientHtml, /\.updateCase\(|\.addCollaborationNote\(/);
 });
 
-test('UI 44：浮水印取自 Server verified identity', () => {
+test('UI 44：浮水印取自 Server verified identity，且不包含日期', () => {
   assert.match(clientHtml, /renderWatermark_\(identity\.email\)/);
-  assert.match(clientHtml, /授權檢視\\n/);
+  assert.match(clientHtml, /item\.textContent = '授權檢視\\n' \+ verifiedEmail/);
+  assert.match(clientHtml, /index < 6/);
+  assert.doesNotMatch(clientHtml, /Intl\.DateTimeFormat|verifiedEmail \+ '\\n' \+ date/);
   assert.doesNotMatch(clientHtml, /renderWatermark_\(elements\.viewerEmail/);
+});
+
+test('UI：detail loading 不隱藏既有內容，也不使用大型固定高度 placeholder', () => {
+  const openCaseSource = clientHtml.match(/function openCase_\([\s\S]+?function renderCaseDetail_/)[0];
+  assert.match(indexHtml, /id="detailLoading"[^>]*hidden>載入中…<\/p>/);
+  assert.match(openCaseSource, /elements\.detailLoading\.hidden = false/);
+  assert.doesNotMatch(openCaseSource, /detailContent\.hidden = true|載入案件中/);
+  assert.doesNotMatch(stylesHtml, /detail-placeholder[^\n{}]*\{[^}]*min-height/);
+  assert.match(stylesHtml, /\.detail-loading \{ position: absolute/);
+});
+
+test('UI：移除唯讀 badge，浮水印只位於洽談紀錄 section', () => {
+  assert.doesNotMatch(indexHtml, /readonly-badge|<span[^>]*>唯讀<\/span>/);
+  assert.doesNotMatch(stylesHtml, /\.readonly-badge/);
+  const consultationStart = indexHtml.indexOf('<section class="detail-section consultation-section"');
+  const consultationEnd = indexHtml.indexOf('</section>', consultationStart);
+  const watermarkPosition = indexHtml.indexOf('id="watermark"');
+  assert.ok(consultationStart >= 0);
+  assert.ok(watermarkPosition > consultationStart && watermarkPosition < consultationEnd);
+  assert.match(stylesHtml, /\.consultation-section \{ position: relative; overflow: hidden; \}/);
+  assert.match(stylesHtml, /\.watermark \{ position: absolute;[^}]*opacity: \.035;/);
+  assert.doesNotMatch(stylesHtml, /\.watermark \{ position: fixed/);
 });
 
 test('UI 45：手機版提供列表進詳細及返回操作', () => {

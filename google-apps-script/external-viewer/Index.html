@@ -78,6 +78,7 @@
 
           <article id="caseDetail" class="case-detail" aria-live="polite">
             <button id="backToList" class="back-button" type="button">← 返回案件列表</button>
+            <p id="detailLoading" class="detail-loading" hidden>載入中…</p>
             <div id="emptyDetail" class="detail-placeholder">
               <h2>選擇一筆案件</h2>
               <p>案件資料僅供授權檢視，無法在此頁修改。</p>
@@ -88,20 +89,19 @@
                   <p id="detailSerial" class="serial-number"></p>
                   <h2 id="detailNames"></h2>
                 </div>
-                <span class="readonly-badge">唯讀</span>
               </div>
               <section class="detail-section" aria-labelledby="basicTitle">
                 <h3 id="basicTitle">基本資料</h3>
                 <dl id="basicInformation" class="information-grid"></dl>
               </section>
-              <section class="detail-section" aria-labelledby="consultationTitle">
+              <section class="detail-section consultation-section" aria-labelledby="consultationTitle">
                 <h3 id="consultationTitle">洽談紀錄</h3>
                 <div id="consultations" class="consultation-list"></div>
+                <div id="watermark" class="watermark" aria-hidden="true"></div>
               </section>
             </div>
           </article>
         </div>
-        <div id="watermark" class="watermark" aria-hidden="true"></div>
         <div id="appMessage" class="toast" hidden role="status" aria-live="polite"></div>
       </section>
     </main>

@@ -31,6 +31,7 @@
       listMessage: document.getElementById('listMessage'),
       caseDetail: document.getElementById('caseDetail'),
       backToList: document.getElementById('backToList'),
+      detailLoading: document.getElementById('detailLoading'),
       emptyDetail: document.getElementById('emptyDetail'),
       detailContent: document.getElementById('detailContent'),
       detailSerial: document.getElementById('detailSerial'),
@@ -83,6 +84,7 @@
       elements.basicInformation.replaceChildren();
       elements.consultations.replaceChildren();
       elements.watermark.replaceChildren();
+      elements.detailLoading.hidden = true;
       elements.detailContent.hidden = true;
       elements.emptyDetail.hidden = false;
       elements.caseCount.textContent = '0 筆';
@@ -190,12 +192,9 @@
 
     function renderWatermark_(verifiedEmail) {
       elements.watermark.replaceChildren();
-      var date = new Intl.DateTimeFormat('zh-TW', {
-        timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit',
-      }).format(new Date());
-      for (var index = 0; index < 16; index += 1) {
+      for (var index = 0; index < 6; index += 1) {
         var item = document.createElement('span');
-        item.textContent = '授權檢視\n' + verifiedEmail + '\n' + date;
+        item.textContent = '授權檢視\n' + verifiedEmail;
         elements.watermark.append(item);
       }
     }
@@ -272,17 +271,22 @@
         card.classList.toggle('is-active', card.dataset.serialNumber === serialNumber);
       });
       elements.viewerApp.classList.add('mobile-detail-open');
-      elements.emptyDetail.hidden = false;
-      elements.emptyDetail.querySelector('h2').textContent = '載入案件中…';
-      elements.detailContent.hidden = true;
+      elements.detailLoading.hidden = false;
+      if (elements.detailContent.hidden) elements.emptyDetail.hidden = true;
       server_()
         .withSuccessHandler(renderCaseDetail_)
-        .withFailureHandler(handleAuthorizedFailure_)
+        .withFailureHandler(function (error) {
+          if (serialNumber !== selectedSerialNumber) return;
+          elements.detailLoading.hidden = true;
+          if (elements.detailContent.hidden) elements.emptyDetail.hidden = false;
+          handleAuthorizedFailure_(error);
+        })
         .viewerGetCase(sessionToken, serialNumber);
     }
 
     function renderCaseDetail_(detail) {
       if (detail.serialNumber !== selectedSerialNumber) return;
+      elements.detailLoading.hidden = true;
       elements.emptyDetail.hidden = true;
       elements.detailContent.hidden = false;
       elements.detailSerial.textContent = detail.serialNumber;
@@ -348,6 +352,7 @@
     elements.salesFilter.addEventListener('change', function () {
       selectedSerialNumber = '';
       elements.viewerApp.classList.remove('mobile-detail-open');
+      elements.detailLoading.hidden = true;
       elements.detailContent.hidden = true;
       elements.emptyDetail.hidden = false;
       loadCases_(false);
