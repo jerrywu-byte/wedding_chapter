@@ -68,6 +68,15 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   letter-spacing: .06em;
 }
 
+.feedback-couple {
+  margin: 14px 0 -4px;
+  color: var(--feedback-gold-deep);
+  font-family: "Noto Serif TC Variable", "Noto Serif TC", serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: .08em;
+}
+
 .feedback-intro {
   margin: 20px auto 0;
   color: #695f58;
@@ -325,6 +334,11 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 }
 
 .feedback-submit-area button:active { transform: translateY(1px); }
+.feedback-submit-area button:disabled {
+  opacity: .68;
+  cursor: wait;
+  transform: none;
+}
 
 .feedback-submit-area small {
   display: block;
