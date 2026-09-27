@@ -144,7 +144,12 @@ function createRuntime(options = {}) {
       },
       base64DecodeWebSafe(value) { return Array.from(Buffer.from(value, 'base64url')); },
       newBlob(bytes) {
-        return { getDataAsString: () => Buffer.from(bytes).toString('utf8') };
+        return {
+          getDataAsString(...args) {
+            assert.equal(args.length, 0, 'Blob.getDataAsString() must use its UTF-8 default');
+            return Buffer.from(bytes).toString('utf8');
+          },
+        };
       },
     },
     HtmlService: {

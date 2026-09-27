@@ -489,7 +489,7 @@ function parseSignedToken_(token, secret, errorCode) {
 
   try {
     const bytes = Utilities.base64DecodeWebSafe(addBase64Padding_(parts[0]));
-    const json = Utilities.newBlob(bytes).getDataAsString(Utilities.Charset.UTF_8);
+    const json = Utilities.newBlob(bytes).getDataAsString();
     const payload = JSON.parse(json);
     if (!payload || Object.prototype.toString.call(payload) !== '[object Object]') {
       throw new Error(errorCode);
