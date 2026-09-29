@@ -26,6 +26,32 @@
           >
         </label>
 
+        <details class="followup-mobile-filters">
+          <summary>篩選與統計</summary>
+          <div class="followup-mobile-filter-content">
+            <label class="followup-sales-filter">
+              <span>業務篩選</span>
+              <select data-sales-filter aria-label="依接待業務篩選案件">
+                <option value="">全部業務</option>
+                <option value="April">April</option>
+                <option value="Sean">Sean</option>
+                <option value="Jimmy">Jimmy</option>
+                <option value="Lisa">Lisa</option>
+                <option value="Nidia">Nidia</option>
+                <option value="Jerry">Jerry</option>
+                <option value="Elle">Elle</option>
+              </select>
+            </label>
+            <div class="followup-mobile-stat-grid" aria-label="案件狀態篩選">
+              <button type="button" data-case-status="" aria-pressed="true"><span>全部案件</span><strong data-stat-status="">0</strong></button>
+              <button type="button" data-case-status="已訂" aria-pressed="false"><span>已下訂</span><strong data-stat-status="已訂">0</strong></button>
+              <button type="button" data-case-status="洽談中" aria-pressed="false"><span>未下訂</span><strong data-stat-status="洽談中">0</strong></button>
+              <button type="button" data-case-status="退訂" aria-pressed="false"><span>退訂</span><strong data-stat-status="退訂">0</strong></button>
+              <button type="button" data-case-status="流失" aria-pressed="false"><span>流失</span><strong data-stat-status="流失">0</strong></button>
+            </div>
+          </div>
+        </details>
+
         <div class="followup-list-summary">
           <span>案件列表</span>
           <span id="caseCount">—</span>
@@ -41,19 +67,67 @@
             <span aria-hidden="true">←</span> 返回案件列表
           </button>
 
-          <p id="detailState" class="followup-state followup-detail-state" role="status">
-            正在載入新人案件…
-          </p>
-
-          <div id="detailContent" hidden>
-            <header class="followup-detail-header">
-              <div>
+          <header class="followup-detail-header">
+            <div class="followup-detail-heading-stack">
+              <div id="detailHeading" class="followup-detail-heading" hidden>
                 <p class="followup-eyebrow">CASE DETAIL</p>
                 <h2><span id="groomName"></span><i>×</i><span id="brideName"></span></h2>
                 <p id="caseNumber"></p>
               </div>
-              <span id="statusBadge" class="followup-status-badge"></span>
-            </header>
+              <p id="detailState" class="followup-state followup-detail-state" role="status">
+                正在載入新人案件…
+              </p>
+            </div>
+
+            <aside class="followup-filter-panel" aria-label="篩選與統計">
+              <div class="followup-filter-panel__inner">
+                <div class="followup-filter-toolbar">
+                  <div class="followup-filter-header">
+                    <p>FILTER &amp; SUMMARY</p>
+                    <h2>篩選與統計</h2>
+                  </div>
+
+                  <span id="statusBadge" class="followup-status-badge" hidden></span>
+
+                  <label class="followup-sales-filter">
+                    <span>業務篩選</span>
+                    <select data-sales-filter aria-label="依接待業務篩選案件">
+                      <option value="">全部業務</option>
+                      <option value="April">April</option>
+                      <option value="Sean">Sean</option>
+                      <option value="Jimmy">Jimmy</option>
+                      <option value="Lisa">Lisa</option>
+                      <option value="Nidia">Nidia</option>
+                      <option value="Jerry">Jerry</option>
+                      <option value="Elle">Elle</option>
+                    </select>
+                  </label>
+                </div>
+
+                <p class="followup-stat-heading">案件狀態</p>
+                <div class="followup-stat-list" aria-label="案件狀態統計與篩選">
+                  <button type="button" data-case-status="" aria-pressed="true">
+                    <span>全部案件</span><strong data-stat-status="">0</strong>
+                  </button>
+                  <button type="button" data-case-status="已訂" aria-pressed="false">
+                    <span>已下訂</span><strong data-stat-status="已訂">0</strong>
+                  </button>
+                  <button type="button" data-case-status="洽談中" aria-pressed="false">
+                    <span>未下訂</span><strong data-stat-status="洽談中">0</strong>
+                  </button>
+                  <button type="button" data-case-status="退訂" aria-pressed="false">
+                    <span>退訂</span><strong data-stat-status="退訂">0</strong>
+                  </button>
+                  <button type="button" data-case-status="流失" aria-pressed="false">
+                    <span>流失</span><strong data-stat-status="流失">0</strong>
+                  </button>
+                </div>
+                <p class="followup-filter-note">統計依目前業務篩選結果計算。</p>
+              </div>
+            </aside>
+          </header>
+
+          <div id="detailContent" hidden>
             <p id="ownershipNotice" class="followup-ownership-notice" hidden></p>
 
             <section class="followup-card followup-basic-card">
@@ -70,6 +144,14 @@
                 <div><p>CONSULTATION NOTES</p><h3>三次洽談紀錄</h3></div>
               </div>
               <div id="consultations" class="followup-consultations"></div>
+            </section>
+
+            <section id="activityFeedbackCard" class="followup-card followup-feedback-card" hidden>
+              <div class="followup-section-heading">
+                <span>FB</span>
+                <div><p>EVENT FEEDBACK</p><h3>活動回饋</h3></div>
+              </div>
+              <div id="activityFeedback"></div>
             </section>
 
             <section class="followup-card followup-collaboration-card">

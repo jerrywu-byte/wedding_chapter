@@ -311,7 +311,7 @@ test("UI 統一顯示訪客編號且不出現舊稱", () => {
 test("可編輯 UI 保留 loading、empty、error 與洽談狀態", () => {
   assert.match(indexHtml, /正在載入新人案件…/);
   assert.match(clientHtml, /目前沒有新人案件/);
-  assert.match(clientHtml, /找不到符合條件的新人/);
+  assert.match(clientHtml, /目前篩選條件下沒有案件/);
   assert.match(clientHtml, /找不到這筆新人資料/);
   assert.match(clientHtml, /案件資料異常，請聯絡管理人員/);
   assert.match(clientHtml, /尚未建立洽談紀錄/);

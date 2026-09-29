@@ -113,6 +113,12 @@ function doPost(e) {
         salesOptions: getSalesOptions_(),
       });
     }
+    if (payload && payload.action === 'getFeedbackContext') {
+      return jsonResponse_(getFeedbackContext_(payload));
+    }
+    if (payload && payload.action === 'saveFeedback') {
+      return jsonResponse_(saveFeedback_(payload));
+    }
     const result = saveSubmission_(payload);
     return jsonResponse_(result);
   } catch (error) {

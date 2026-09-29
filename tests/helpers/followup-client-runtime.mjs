@@ -63,6 +63,14 @@ export function clientRuntime() {
   const statuses = Array.from(index.matchAll(/<button\b[^>]*data-status="([^"]+)"[^>]*>/g), match => {
     const button = new Element('button'); button.dataset.status = match[1]; return button;
   });
+  const salesFilters = Array.from(index.matchAll(/<select\b[^>]*data-sales-filter[^>]*>/g), () =>
+    new Element('select'));
+  const caseStatusFilters = Array.from(index.matchAll(/<button\b[^>]*data-case-status="([^"]*)"[^>]*>/g), match => {
+    const button = new Element('button'); button.dataset.caseStatus = match[1]; return button;
+  });
+  const statisticCounts = Array.from(index.matchAll(/<strong\b[^>]*data-stat-status="([^"]*)"[^>]*>/g), match => {
+    const count = new Element('strong'); count.dataset.statStatus = match[1]; return count;
+  });
   const pending = []; const calls = []; const windowEvents = {}; const timers = new Map();
   let nextTimer = 1;
   const state = { confirm: false, confirmations: 0 };
@@ -81,7 +89,11 @@ export function clientRuntime() {
   const context = vm.createContext({
     document: { getElementById: id => { assert.ok(elements[id], id); return elements[id]; },
       createElement: tag => new Element(tag), querySelectorAll: selector => {
-        assert.equal(selector, '[data-status]'); return statuses;
+        if (selector === '[data-status]') return statuses;
+        if (selector === '[data-sales-filter]') return salesFilters;
+        if (selector === '[data-case-status]') return caseStatusFilters;
+        if (selector === '[data-stat-status]') return statisticCounts;
+        assert.fail('Unexpected selector ' + selector);
       } },
     window: {
       setTimeout(fn) { const id = nextTimer++; timers.set(id, fn); return id; },
@@ -102,7 +114,8 @@ export function clientRuntime() {
     respond('listCases', [detail, fixture({ serialNumber: '115DX2032' })]);
     respond('getCase', detail);
   }
-  return { elements, statuses, pending, calls, state, windowEvents, respond, open,
+  return { elements, statuses, salesFilters, caseStatusFilters, statisticCounts,
+    pending, calls, state, windowEvents, respond, open,
     flushTimers() { for (const [id, fn] of timers) { timers.delete(id); fn(); } },
     input(id, text) { elements[id].value = text; elements[id].emit('input'); },
     tables: () => elements.basicInformation.querySelector('input'),
