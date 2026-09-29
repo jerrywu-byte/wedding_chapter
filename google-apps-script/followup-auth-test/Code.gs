@@ -139,7 +139,16 @@ function listCases(query) {
 }
 
 function getCase(serialNumber) {
-  return followupRequest_(function () { return getCase_(serialNumber); });
+  return followupRequest_(function () {
+    const result = getCase_(serialNumber);
+    const target = normalizeSerialNumber_(
+      result && result.serialNumber ? result.serialNumber : serialNumber
+    );
+
+    return Object.assign({}, result, {
+      activityFeedback: feedbackForSerial_(readFeedbackRows_(), target),
+    });
+  });
 }
 
 function updateCase(payload) {
@@ -315,7 +324,6 @@ function getCase_(serialNumber) {
   const secret = requireIdentitySecret_();
   validateDuplicateKeyUniqueness_(rows, located.row);
   return Object.assign(mapCaseDetail_(located.row, secret), casePermissions_(currentUser, located.row), {
-    activityFeedback: feedbackForSerial_(readFeedbackRows_(), target),
     collaborationNotes: collaborationNotesFor_(readCollaborationRows_(), target),
   });
 }
