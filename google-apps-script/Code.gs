@@ -120,6 +120,18 @@ function doPost(e) {
       return jsonResponse_(saveFeedback_(payload));
     }
     const result = saveSubmission_(payload);
+
+    // Feedback link generation is secondary to the core newcomer save flow.
+    // If it ever fails, keep the newcomer submission successful and repair later.
+    try {
+      if (result && result.success && result.serialNumber &&
+          typeof ensureFeedbackInviteForSubmission === 'function') {
+        ensureFeedbackInviteForSubmission(result.serialNumber);
+      }
+    } catch (feedbackError) {
+      console.error('ensureFeedbackInviteForSubmission failed', feedbackError);
+    }
+
     return jsonResponse_(result);
   } catch (error) {
     const errorCode = error && error.message === 'VALIDATION_ERROR'
