@@ -40,6 +40,7 @@ export default defineConfig(() => {
           main: resolve(process.cwd(), "github-pages/index.html"),
           followup: resolve(process.cwd(), "github-pages/followup/index.html"),
           feedback: resolve(process.cwd(), "github-pages/feedback/index.html"),
+          feedbackShort: resolve(process.cwd(), "github-pages/f/index.html"),
         },
       },
     },
