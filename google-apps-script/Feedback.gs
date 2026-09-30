@@ -100,8 +100,7 @@ function createFeedbackInvite(serialNumber, eventDate) {
       };
     }
 
-    const token = Utilities.getUuid().replace(/-/g, '') +
-      Utilities.getUuid().replace(/-/g, '');
+    const token = feedbackGenerateToken_();
 
     feedback.appendRow([
       serial,
@@ -279,10 +278,28 @@ function feedbackSerializeMulti_(values, other) {
 
 function feedbackNormalizeToken_(value) {
   const token = feedbackClean_(value);
-  if (!/^[A-Za-z0-9_-]{40,160}$/.test(token)) {
+  // New tokens are 22 URL-safe characters. Keep accepting legacy 64-char tokens.
+  if (!/^[A-Za-z0-9_-]{16,160}$/.test(token)) {
     throw new Error('INVALID_FEEDBACK_TOKEN');
   }
   return token;
+}
+
+function feedbackGenerateToken_() {
+  const seed = [
+    Utilities.getUuid(),
+    Utilities.getUuid(),
+    String(new Date().getTime()),
+  ].join('|');
+
+  const digest = Utilities.computeDigest(
+    Utilities.DigestAlgorithm.SHA_256,
+    seed
+  );
+
+  return Utilities.base64EncodeWebSafe(digest)
+    .replace(/=+$/g, '')
+    .slice(0, 22);
 }
 
 function feedbackFindByToken_(sheet, token) {
@@ -404,6 +421,8 @@ const FEEDBACK_BATCH_HEADERS_ = Object.freeze([
   '回填時間',
 ]);
 const FEEDBACK_PUBLIC_FORM_URL_DEFAULT_ =
+  'https://jerrywu-byte.github.io/wedding_chapter/f/';
+const FEEDBACK_PUBLIC_FORM_URL_LEGACY_ =
   'https://jerrywu-byte.github.io/wedding_chapter/feedback/index.html';
 
 /**
@@ -557,8 +576,7 @@ function generateFeedbackLinksBatch() {
       let invite = feedbackMap[serial];
 
       if (!invite) {
-        const token = Utilities.getUuid().replace(/-/g, '') +
-          Utilities.getUuid().replace(/-/g, '');
+        const token = feedbackGenerateToken_();
         invite = {
           serialNumber: serial,
           eventDate: date,
@@ -772,7 +790,13 @@ function feedbackPublicFormUrl_() {
   const configured = feedbackClean_(
     PropertiesService.getScriptProperties().getProperty('FEEDBACK_PUBLIC_FORM_URL')
   );
-  return (configured || FEEDBACK_PUBLIC_FORM_URL_DEFAULT_).replace(/\/+$/, '');
+
+  // If the old default was saved as a property, transparently upgrade it.
+  const url = !configured || configured === FEEDBACK_PUBLIC_FORM_URL_LEGACY_
+    ? FEEDBACK_PUBLIC_FORM_URL_DEFAULT_
+    : configured;
+
+  return url.replace(/\/+$/, '');
 }
 
 function feedbackNormalizeBatchDate_(value) {
