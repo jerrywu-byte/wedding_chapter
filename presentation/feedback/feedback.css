@@ -243,6 +243,60 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   background: var(--feedback-gold-deep);
 }
 
+
+.feedback-score-grid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.feedback-score {
+  min-height: 58px;
+  padding: 8px 4px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 1px;
+  border: 1px solid rgba(112, 91, 65, .16);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .72);
+  color: var(--feedback-text);
+  cursor: pointer;
+  transition: border-color .18s ease, background .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.feedback-score strong {
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.feedback-score span {
+  color: var(--feedback-muted);
+  font-size: 10px;
+}
+
+.feedback-score:hover {
+  border-color: rgba(155, 128, 88, .38);
+  background: #fffdf8;
+}
+
+.feedback-score.is-selected {
+  border-color: rgba(128, 103, 70, .62);
+  background: #f5ecdd;
+  box-shadow: 0 9px 22px rgba(103, 78, 48, .08);
+}
+
+.feedback-score-caption {
+  margin-top: 7px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--feedback-muted);
+  font-size: 10px;
+}
+
 .feedback-multi {
   padding: 12px 14px;
   display: flex;

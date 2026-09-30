@@ -465,9 +465,9 @@
       const grid = document.createElement('dl');
       grid.className = 'followup-feedback-grid';
       [
-        ['服務感受', feedback.q1],
-        ['說明清楚度', feedback.q2],
-        ['需求理解', feedback.q3],
+        ['服務感受', feedbackScoreDisplay_(feedback.q1)],
+        ['說明清楚度', feedbackScoreDisplay_(feedback.q2)],
+        ['需求理解', feedbackScoreDisplay_(feedback.q3)],
         ['主要考量', Array.isArray(feedback.q4) ? feedback.q4.join('、') : ''],
         ['留下好印象', Array.isArray(feedback.q5) ? feedback.q5.join('、') : ''],
       ].forEach(function (item) {
@@ -497,6 +497,11 @@
 
       details.append(detailsSummary, grid, textGroup);
       elements.activityFeedback.append(details);
+    }
+
+    function feedbackScoreDisplay_(value) {
+      const text = String(value || '').trim();
+      return /^[1-5]$/.test(text) ? text + ' 分' : text;
     }
 
     function canEditCase_() {
