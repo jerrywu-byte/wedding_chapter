@@ -40,6 +40,8 @@ const FEEDBACK_MODULE_LEGACY_HEADERS_ = Object.freeze([
 
 const FEEDBACK_MODULE_SCORE_MIN_ = 1;
 const FEEDBACK_MODULE_SCORE_MAX_ = 5;
+const FEEDBACK_MODULE_LEGACY_Q1_Q3_ = Object.freeze(['非常同意', '同意', '普通', '不同意']);
+const FEEDBACK_MODULE_LEGACY_Q2_ = Object.freeze(['非常清楚', '清楚', '略有疑問', '不清楚']);
 const FEEDBACK_MODULE_ALLOWED_Q4_ = Object.freeze([
   '菜色口味',
   '交通／停車',
@@ -256,9 +258,9 @@ function feedbackValidatePayload_(payload) {
 
   const data = {
     token: feedbackNormalizeToken_(payload.token),
-    q1: feedbackNormalizeScore_(payload.q1, 'Q1'),
-    q2: feedbackNormalizeScore_(payload.q2, 'Q2'),
-    q3: feedbackNormalizeScore_(payload.q3, 'Q3'),
+    q1: feedbackNormalizeScoreOrLegacy_(payload.q1, 'Q1'),
+    q2: feedbackNormalizeScoreOrLegacy_(payload.q2, 'Q2'),
+    q3: feedbackNormalizeScoreOrLegacy_(payload.q3, 'Q3'),
     q4: feedbackNormalizeMulti_(payload.q4),
     q4Other: feedbackClean_(payload.q4Other),
     q5: feedbackNormalizeMulti_(payload.q5),
@@ -293,16 +295,27 @@ function feedbackValidatePayload_(payload) {
   return data;
 }
 
-function feedbackNormalizeScore_(value, field) {
-  const score = Number(value);
+function feedbackNormalizeScoreOrLegacy_(value, field) {
+  const text = feedbackClean_(value);
+  const score = Number(text);
+
   if (
-    !Number.isInteger(score) ||
-    score < FEEDBACK_MODULE_SCORE_MIN_ ||
-    score > FEEDBACK_MODULE_SCORE_MAX_
+    Number.isInteger(score) &&
+    score >= FEEDBACK_MODULE_SCORE_MIN_ &&
+    score <= FEEDBACK_MODULE_SCORE_MAX_
   ) {
-    throw new Error('INVALID_FEEDBACK_' + field);
+    return score;
   }
-  return score;
+
+  const legacyAllowed = field === 'Q2'
+    ? FEEDBACK_MODULE_LEGACY_Q2_
+    : FEEDBACK_MODULE_LEGACY_Q1_Q3_;
+
+  if (legacyAllowed.indexOf(text) !== -1) {
+    return text;
+  }
+
+  throw new Error('INVALID_FEEDBACK_' + field);
 }
 
 function feedbackNormalizeMulti_(value) {
