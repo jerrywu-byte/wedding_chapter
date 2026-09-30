@@ -5,9 +5,25 @@
  * Keeps feedback storage isolated from the original submission flow.
  */
 
-const FEEDBACK_MODULE_SHEET_ = 'Feedback';
+const FEEDBACK_MODULE_SHEET_ = '回饋總表';
+const FEEDBACK_MODULE_LEGACY_SHEET_ = 'Feedback';
 const FEEDBACK_MODULE_SUBMISSIONS_SHEET_ = '新人資料';
 const FEEDBACK_MODULE_HEADERS_ = Object.freeze([
+  '訪客編號',
+  '發送日期',
+  '回填時間',
+  '業務姓名',
+  'Q1',
+  'Q2',
+  'Q3',
+  'Q4',
+  'Q5',
+  'Q6',
+  'Q7',
+  '回饋Token',
+  '回饋狀態',
+]);
+const FEEDBACK_MODULE_LEGACY_HEADERS_ = Object.freeze([
   '訪客編號',
   '活動日期',
   '回填時間',
@@ -22,8 +38,8 @@ const FEEDBACK_MODULE_HEADERS_ = Object.freeze([
   '回饋狀態',
 ]);
 
-const FEEDBACK_MODULE_ALLOWED_Q1_Q3_ = Object.freeze(['非常同意', '同意', '普通', '不同意']);
-const FEEDBACK_MODULE_ALLOWED_Q2_ = Object.freeze(['非常清楚', '清楚', '略有疑問', '不清楚']);
+const FEEDBACK_MODULE_SCORE_MIN_ = 1;
+const FEEDBACK_MODULE_SCORE_MAX_ = 5;
 const FEEDBACK_MODULE_ALLOWED_Q4_ = Object.freeze([
   '菜色口味',
   '交通／停車',
@@ -51,19 +67,41 @@ const FEEDBACK_MODULE_ALLOWED_Q5_ = Object.freeze([
 function setupFeedbackSheet() {
   const spreadsheet = feedbackSpreadsheet_();
   let sheet = spreadsheet.getSheetByName(FEEDBACK_MODULE_SHEET_);
+  const legacySheet = spreadsheet.getSheetByName(FEEDBACK_MODULE_LEGACY_SHEET_);
+
+  if (!sheet && legacySheet) {
+    legacySheet.setName(FEEDBACK_MODULE_SHEET_);
+    sheet = legacySheet;
+  }
   if (!sheet) sheet = spreadsheet.insertSheet(FEEDBACK_MODULE_SHEET_);
 
   if (sheet.getLastRow() === 0) {
     sheet.getRange(1, 1, 1, FEEDBACK_MODULE_HEADERS_.length)
       .setValues([FEEDBACK_MODULE_HEADERS_]);
   } else {
-    const current = sheet.getRange(1, 1, 1, FEEDBACK_MODULE_HEADERS_.length).getValues()[0];
-    if (!feedbackHeadersMatch_(current)) {
-      throw new Error('FEEDBACK_HEADER_MISMATCH');
+    const currentV2 = sheet.getRange(1, 1, 1, FEEDBACK_MODULE_HEADERS_.length).getValues()[0];
+    if (!feedbackHeadersMatch_(currentV2)) {
+      const currentLegacy = sheet
+        .getRange(1, 1, 1, FEEDBACK_MODULE_LEGACY_HEADERS_.length)
+        .getValues()[0];
+
+      if (feedbackLegacyHeadersMatch_(currentLegacy)) {
+        sheet.insertColumnBefore(4);
+        sheet.getRange(1, 1, 1, FEEDBACK_MODULE_HEADERS_.length)
+          .setValues([FEEDBACK_MODULE_HEADERS_]);
+        feedbackBackfillSalesNames_(sheet);
+      } else {
+        throw new Error('FEEDBACK_HEADER_MISMATCH');
+      }
     }
   }
 
   sheet.setFrozenRows(1);
+  if (!sheet.getFilter()) {
+    sheet.getRange(1, 1, sheet.getMaxRows(), FEEDBACK_MODULE_HEADERS_.length)
+      .createFilter();
+  }
+
   return { success: true, sheet: FEEDBACK_MODULE_SHEET_ };
 }
 
@@ -86,7 +124,8 @@ function createFeedbackInvite(serialNumber, eventDate) {
     const submissions = feedbackRequireSheet_(spreadsheet, FEEDBACK_MODULE_SUBMISSIONS_SHEET_);
     const feedback = feedbackRequireSheet_(spreadsheet, FEEDBACK_MODULE_SHEET_);
 
-    if (!feedbackFindSubmission_(submissions, serial)) {
+    const submission = feedbackFindSubmission_(submissions, serial);
+    if (!submission) {
       throw new Error('SERIAL_NOT_FOUND');
     }
 
@@ -106,6 +145,8 @@ function createFeedbackInvite(serialNumber, eventDate) {
       serial,
       date,
       '',
+      '',
+      submission.salesName,
       '',
       '',
       '',
@@ -173,14 +214,16 @@ function saveFeedback_(payload) {
     }
 
     const submissions = feedbackRequireSheet_(spreadsheet, FEEDBACK_MODULE_SUBMISSIONS_SHEET_);
-    if (!feedbackFindSubmission_(submissions, invite.serialNumber)) {
+    const submission = feedbackFindSubmission_(submissions, invite.serialNumber);
+    if (!submission) {
       throw new Error('SERIAL_NOT_FOUND');
     }
 
     const submittedAt = new Date();
 
-    feedback.getRange(invite.rowNumber, 3, 1, 10).setValues([[
+    feedback.getRange(invite.rowNumber, 3, 1, 11).setValues([[
       submittedAt,
+      submission.salesName,
       normalized.q1,
       normalized.q2,
       normalized.q3,
@@ -211,9 +254,9 @@ function feedbackValidatePayload_(payload) {
 
   const data = {
     token: feedbackNormalizeToken_(payload.token),
-    q1: feedbackClean_(payload.q1),
-    q2: feedbackClean_(payload.q2),
-    q3: feedbackClean_(payload.q3),
+    q1: feedbackNormalizeScore_(payload.q1, 'Q1'),
+    q2: feedbackNormalizeScore_(payload.q2, 'Q2'),
+    q3: feedbackNormalizeScore_(payload.q3, 'Q3'),
     q4: feedbackNormalizeMulti_(payload.q4),
     q4Other: feedbackClean_(payload.q4Other),
     q5: feedbackNormalizeMulti_(payload.q5),
@@ -221,16 +264,6 @@ function feedbackValidatePayload_(payload) {
     q6: feedbackClean_(payload.q6),
     q7: feedbackClean_(payload.q7),
   };
-
-  if (FEEDBACK_MODULE_ALLOWED_Q1_Q3_.indexOf(data.q1) === -1) {
-    throw new Error('INVALID_FEEDBACK_Q1');
-  }
-  if (FEEDBACK_MODULE_ALLOWED_Q2_.indexOf(data.q2) === -1) {
-    throw new Error('INVALID_FEEDBACK_Q2');
-  }
-  if (FEEDBACK_MODULE_ALLOWED_Q1_Q3_.indexOf(data.q3) === -1) {
-    throw new Error('INVALID_FEEDBACK_Q3');
-  }
 
   feedbackValidateMulti_(data.q4, FEEDBACK_MODULE_ALLOWED_Q4_, 'Q4');
   feedbackValidateMulti_(data.q5, FEEDBACK_MODULE_ALLOWED_Q5_, 'Q5');
@@ -256,6 +289,18 @@ function feedbackValidatePayload_(payload) {
   }
 
   return data;
+}
+
+function feedbackNormalizeScore_(value, field) {
+  const score = Number(value);
+  if (
+    !Number.isInteger(score) ||
+    score < FEEDBACK_MODULE_SCORE_MIN_ ||
+    score > FEEDBACK_MODULE_SCORE_MAX_
+  ) {
+    throw new Error('INVALID_FEEDBACK_' + field);
+  }
+  return score;
 }
 
 function feedbackNormalizeMulti_(value) {
@@ -310,14 +355,14 @@ function feedbackFindByToken_(sheet, token) {
     .getValues();
 
   for (let i = 0; i < values.length; i += 1) {
-    if (feedbackClean_(values[i][10]) === token) {
+    if (feedbackClean_(values[i][11]) === token) {
       return {
         rowNumber: i + 2,
         serialNumber: feedbackClean_(values[i][0]),
         eventDate: values[i][1],
         submittedAt: values[i][2],
         token: token,
-        status: feedbackClean_(values[i][11]) || 'PENDING',
+        status: feedbackClean_(values[i][12]) || 'PENDING',
       };
     }
   }
@@ -339,8 +384,8 @@ function feedbackFindBySerial_(sheet, serialNumber) {
         serialNumber: serialNumber,
         eventDate: values[i][1],
         submittedAt: values[i][2],
-        token: feedbackClean_(values[i][10]),
-        status: feedbackClean_(values[i][11]) || 'PENDING',
+        token: feedbackClean_(values[i][11]),
+        status: feedbackClean_(values[i][12]) || 'PENDING',
       };
     }
   }
@@ -351,7 +396,7 @@ function feedbackFindBySerial_(sheet, serialNumber) {
 function feedbackFindSubmission_(sheet, serialNumber) {
   if (sheet.getLastRow() < 2) return null;
 
-  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 6).getValues();
+  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 15).getValues();
 
   for (let i = 0; i < values.length; i += 1) {
     if (feedbackClean_(values[i][0]) === serialNumber) {
@@ -359,6 +404,7 @@ function feedbackFindSubmission_(sheet, serialNumber) {
         serialNumber: serialNumber,
         partner1Name: feedbackClean_(values[i][3]),
         partner2Name: feedbackClean_(values[i][5]),
+        salesName: feedbackClean_(values[i][14]),
       };
     }
   }
@@ -384,6 +430,30 @@ function feedbackHeadersMatch_(current) {
   });
 }
 
+function feedbackLegacyHeadersMatch_(current) {
+  return FEEDBACK_MODULE_LEGACY_HEADERS_.every(function (header, index) {
+    return feedbackClean_(current[index]) === header;
+  });
+}
+
+function feedbackBackfillSalesNames_(sheet) {
+  if (sheet.getLastRow() < 2) return;
+
+  const submissions = feedbackRequireSheet_(
+    feedbackSpreadsheet_(),
+    FEEDBACK_MODULE_SUBMISSIONS_SHEET_
+  );
+  const submissionMap = feedbackSubmissionMap_(submissions);
+  const serials = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues();
+  const values = serials.map(function (row) {
+    const serial = feedbackClean_(row[0]).toUpperCase();
+    const submission = submissionMap[serial];
+    return [submission ? submission.salesName : ''];
+  });
+
+  sheet.getRange(2, 4, values.length, 1).setValues(values);
+}
+
 function feedbackFormatDate_(value) {
   if (!value) return '';
   if (Object.prototype.toString.call(value) === '[object Date]') {
@@ -405,12 +475,29 @@ function feedbackClean_(value) {
 }
 
 
+
+function migrateFeedbackV2() {
+  const feedbackResult = setupFeedbackSheet();
+  const batchResult = setupFeedbackBatchSheet();
+  SpreadsheetApp.getActive().toast(
+    '回饋系統已升級：分頁名稱、業務姓名與發送日期欄位已完成。',
+    'Wedding Chapter',
+    8
+  );
+  return {
+    success: true,
+    feedbackSheet: feedbackResult.sheet,
+    batchSheet: batchResult.sheet,
+  };
+}
+
 /**
  * Internal batch-link workspace used by banquet staff.
  * Input columns: A visitor number, B event date.
  * Output columns: C:G are generated by the script.
  */
-const FEEDBACK_BATCH_SHEET_ = '活動回饋發送';
+const FEEDBACK_BATCH_SHEET_ = '回饋發送';
+const FEEDBACK_BATCH_LEGACY_SHEET_ = '活動回饋發送';
 const FEEDBACK_BATCH_HEADERS_ = Object.freeze([
   '訪客編號',
   '活動日期',
@@ -459,7 +546,12 @@ function installFeedbackMenu() {
 function setupFeedbackBatchSheet() {
   const spreadsheet = feedbackSpreadsheet_();
   let sheet = spreadsheet.getSheetByName(FEEDBACK_BATCH_SHEET_);
+  const legacySheet = spreadsheet.getSheetByName(FEEDBACK_BATCH_LEGACY_SHEET_);
 
+  if (!sheet && legacySheet) {
+    legacySheet.setName(FEEDBACK_BATCH_SHEET_);
+    sheet = legacySheet;
+  }
   if (!sheet) {
     sheet = spreadsheet.insertSheet(FEEDBACK_BATCH_SHEET_);
   }
@@ -479,7 +571,16 @@ function setupFeedbackBatchSheet() {
   } else if (!FEEDBACK_BATCH_HEADERS_.every(function (header, index) {
     return feedbackClean_(currentHeaders[index]) === header;
   })) {
-    throw new Error('FEEDBACK_BATCH_HEADER_MISMATCH');
+    const legacyHeaders = currentHeaders.slice();
+    legacyHeaders[1] = '發送日期';
+    if (FEEDBACK_BATCH_HEADERS_.every(function (header, index) {
+      return feedbackClean_(legacyHeaders[index]) === header;
+    })) {
+      sheet.getRange(1, 1, 1, FEEDBACK_BATCH_HEADERS_.length)
+        .setValues([FEEDBACK_BATCH_HEADERS_]);
+    } else {
+      throw new Error('FEEDBACK_BATCH_HEADER_MISMATCH');
+    }
   }
 
   sheet.setFrozenRows(1);
@@ -489,7 +590,7 @@ function setupFeedbackBatchSheet() {
     .setVerticalAlignment('middle');
 
   sheet.getRange('A1').setNote('貼上 Wedding Chapter 訪客編號，例如 115DX2024');
-  sheet.getRange('B1').setNote('輸入活動日期，例如 2026-10-04');
+  sheet.getRange('B1').setNote('輸入發送日期，例如 2026-10-04');
   sheet.getRange('B2:B').setNumberFormat('yyyy-mm-dd');
   sheet.getRange('G2:G').setNumberFormat('yyyy-mm-dd hh:mm');
 
@@ -524,7 +625,7 @@ function generateFeedbackLinksBatch() {
 
   if (lastRow < 2) {
     SpreadsheetApp.getActive().toast(
-      '請先在「活動回饋發送」A 欄貼上訪客編號，B 欄填活動日期。',
+      '請先在「回饋發送」A 欄貼上訪客編號，B 欄填發送日期。',
       'Wedding Chapter',
       6
     );
@@ -562,7 +663,7 @@ function generateFeedbackLinksBatch() {
 
       if (!date) {
         errors += 1;
-        outputs.push(['', '活動日期格式錯誤', '', '', '']);
+        outputs.push(['', '發送日期格式錯誤', '', '', '']);
         return;
       }
 
@@ -589,6 +690,8 @@ function generateFeedbackLinksBatch() {
           serial,
           feedbackDateFromYmd_(date),
           '',
+          '',
+          submission.salesName,
           '',
           '',
           '',
@@ -626,7 +729,7 @@ function generateFeedbackLinksBatch() {
 
       if (!rawSerial && !row[1]) return ['', '', '', '', ''];
       if (!/^\d{3}[A-Z]{2,4}\d{4,}$/.test(serial)) return ['', '訪客編號格式錯誤', '', '', ''];
-      if (!date) return ['', '活動日期格式錯誤', '', '', ''];
+      if (!date) return ['', '發送日期格式錯誤', '', '', ''];
 
       const submission = submissionMap[serial];
       if (!submission) return ['', '找不到新人資料', '', '', ''];
@@ -724,7 +827,7 @@ function feedbackSubmissionMap_(sheet) {
   const map = Object.create(null);
   if (sheet.getLastRow() < 2) return map;
 
-  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 6).getValues();
+  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 15).getValues();
 
   values.forEach(function (row) {
     const serial = feedbackClean_(row[0]).toUpperCase();
@@ -734,6 +837,7 @@ function feedbackSubmissionMap_(sheet) {
       serialNumber: serial,
       partner1Name: feedbackClean_(row[3]),
       partner2Name: feedbackClean_(row[5]),
+      salesName: feedbackClean_(row[14]),
     };
   });
 
@@ -756,8 +860,8 @@ function feedbackInviteMap_(sheet) {
       serialNumber: serial,
       eventDate: feedbackFormatDate_(row[1]),
       submittedAt: row[2],
-      token: feedbackClean_(row[10]),
-      status: feedbackClean_(row[11]) || 'PENDING',
+      token: feedbackClean_(row[11]),
+      status: feedbackClean_(row[12]) || 'PENDING',
     };
   });
 
