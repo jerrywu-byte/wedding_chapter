@@ -775,9 +775,6 @@ function feedbackEnsureSendColumns_(sheet) {
 }
 
 function feedbackFormatSendSheet_(sheet) {
-  const filter = sheet.getFilter();
-  if (filter) filter.remove();
-
   sheet.setFrozenRows(1);
   sheet.getRange('A1:I1')
     .setBackground('#d9d9d9')
@@ -804,8 +801,10 @@ function feedbackFormatSendSheet_(sheet) {
     sheet.setColumnWidth(index + 1, width);
   });
 
-  sheet.getRange(1, 1, sheet.getMaxRows(), FEEDBACK_SEND_HEADERS_.length)
-    .createFilter();
+  if (!sheet.getFilter()) {
+    sheet.getRange(1, 1, sheet.getMaxRows(), FEEDBACK_SEND_HEADERS_.length)
+      .createFilter();
+  }
 }
 
 function feedbackHeadersEqual_(current, expected) {
