@@ -46,6 +46,45 @@ function ChoiceGroup({
   );
 }
 
+function ScoreGroup({
+  name,
+  value,
+  options,
+  onChange,
+}: {
+  name: string;
+  value: string;
+  options: readonly string[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div>
+      <div className="feedback-score-grid" role="radiogroup" aria-label={name}>
+        {options.map((option) => {
+          const selected = value === option;
+          return (
+            <button
+              key={option}
+              type="button"
+              className={`feedback-score ${selected ? "is-selected" : ""}`}
+              role="radio"
+              aria-checked={selected}
+              onClick={() => onChange(option)}
+            >
+              <strong>{option}</strong>
+              <span>分</span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="feedback-score-caption" aria-hidden="true">
+        <span>1 分・最不滿意</span>
+        <span>5 分・最滿意</span>
+      </div>
+    </div>
+  );
+}
+
 function MultiChoiceGroup({
   name,
   values,
@@ -273,7 +312,7 @@ export default function FeedbackApp() {
                 <span>Q{index + 1}</span>
                 <h3>{feedbackQuestions[key].title}</h3>
               </div>
-              <ChoiceGroup
+              <ScoreGroup
                 name={`Q${index + 1}`}
                 value={answers[key]}
                 options={feedbackQuestions[key].options}
