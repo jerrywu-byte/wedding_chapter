@@ -10,7 +10,7 @@ const FEEDBACK_MODULE_LEGACY_SHEET_ = 'Feedback';
 const FEEDBACK_MODULE_SUBMISSIONS_SHEET_ = '新人資料';
 const FEEDBACK_MODULE_HEADERS_ = Object.freeze([
   '訪客編號',
-  '發送日期',
+  '活動日期',
   '回填時間',
   '業務姓名',
   'Q1',
@@ -106,6 +106,7 @@ function setupFeedbackSheet() {
 }
 
 function createFeedbackInvite(serialNumber, eventDate) {
+  setupFeedbackSheet();
   const serial = feedbackClean_(serialNumber);
   const date = feedbackClean_(eventDate);
 
@@ -145,7 +146,6 @@ function createFeedbackInvite(serialNumber, eventDate) {
       serial,
       date,
       '',
-      '',
       submission.salesName,
       '',
       '',
@@ -172,6 +172,7 @@ function createFeedbackInvite(serialNumber, eventDate) {
 }
 
 function getFeedbackContext_(payload) {
+  setupFeedbackSheet();
   const token = feedbackNormalizeToken_(payload && payload.token);
   const spreadsheet = feedbackSpreadsheet_();
   const feedback = feedbackRequireSheet_(spreadsheet, FEEDBACK_MODULE_SHEET_);
@@ -194,6 +195,7 @@ function getFeedbackContext_(payload) {
 }
 
 function saveFeedback_(payload) {
+  setupFeedbackSheet();
   const normalized = feedbackValidatePayload_(payload);
   const lock = LockService.getScriptLock();
   lock.waitLock(30000);
@@ -500,7 +502,7 @@ const FEEDBACK_BATCH_SHEET_ = '回饋發送';
 const FEEDBACK_BATCH_LEGACY_SHEET_ = '活動回饋發送';
 const FEEDBACK_BATCH_HEADERS_ = Object.freeze([
   '訪客編號',
-  '活動日期',
+  '發送日期',
   '新人姓名',
   '產生狀態',
   '專屬回饋連結',
@@ -615,6 +617,7 @@ function setupFeedbackBatchSheet() {
  * Staff only fill columns A:B. Columns C:G are refreshed in one batch.
  */
 function generateFeedbackLinksBatch() {
+  setupFeedbackSheet();
   setupFeedbackBatchSheet();
 
   const spreadsheet = feedbackSpreadsheet_();
@@ -690,7 +693,6 @@ function generateFeedbackLinksBatch() {
           serial,
           feedbackDateFromYmd_(date),
           '',
-          '',
           submission.salesName,
           '',
           '',
@@ -765,6 +767,7 @@ function generateFeedbackLinksBatch() {
  * Refreshes names, links and completion status without creating new invites.
  */
 function syncFeedbackBatchStatus() {
+  setupFeedbackSheet();
   setupFeedbackBatchSheet();
 
   const spreadsheet = feedbackSpreadsheet_();
