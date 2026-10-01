@@ -22,8 +22,8 @@ const SUBMISSION_HEADERS = [
   '新郎電話',
   '新娘姓名',
   '新娘電話',
-  '緊急聯絡人姓名',
-  '緊急聯絡人電話',
+  '主要聯絡人姓名',
+  '主要聯絡人電話',
   '婚宴日期',
   '日期未定',
   '婚宴時段',
@@ -62,6 +62,12 @@ const LEGACY_HEADERS = {
   '業務資料': ['salesCode', 'salesName', 'salesEmail'],
   '系統設定': ['key', 'value'],
 };
+
+function onOpen() {
+  if (typeof feedbackAddMenu_ === 'function') {
+    feedbackAddMenu_();
+  }
+}
 
 /**
  * Run once from the Apps Script editor after setting SPREADSHEET_ID.
