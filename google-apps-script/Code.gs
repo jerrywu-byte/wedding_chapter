@@ -22,8 +22,8 @@ const SUBMISSION_HEADERS = [
   '新郎電話',
   '新娘姓名',
   '新娘電話',
-  '緊急聯絡人姓名',
-  '緊急聯絡人電話',
+  '主要聯絡人姓名',
+  '主要聯絡人電話',
   '婚宴日期',
   '日期未定',
   '婚宴時段',
@@ -62,6 +62,12 @@ const LEGACY_HEADERS = {
   '業務資料': ['salesCode', 'salesName', 'salesEmail'],
   '系統設定': ['key', 'value'],
 };
+
+function onOpen() {
+  if (typeof feedbackAddMenu_ === 'function') {
+    feedbackAddMenu_();
+  }
+}
 
 /**
  * Run once from the Apps Script editor after setting SPREADSHEET_ID.
@@ -120,6 +126,18 @@ function doPost(e) {
       return jsonResponse_(saveFeedback_(payload));
     }
     const result = saveSubmission_(payload);
+
+    // Feedback link generation is secondary to the core newcomer save flow.
+    // If it ever fails, keep the newcomer submission successful and repair later.
+    try {
+      if (result && result.success && result.serialNumber &&
+          typeof ensureFeedbackInviteForSubmission === 'function') {
+        ensureFeedbackInviteForSubmission(result.serialNumber);
+      }
+    } catch (feedbackError) {
+      console.error('ensureFeedbackInviteForSubmission failed', feedbackError);
+    }
+
     return jsonResponse_(result);
   } catch (error) {
     const errorCode = error && error.message === 'VALIDATION_ERROR'
