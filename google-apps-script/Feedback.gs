@@ -10,6 +10,22 @@ const FEEDBACK_MODULE_LEGACY_SHEET_ = 'Feedback';
 const FEEDBACK_MODULE_SUBMISSIONS_SHEET_ = '新人資料';
 const FEEDBACK_MODULE_HEADERS_ = Object.freeze([
   '訪客編號',
+  '到訪日期',
+  '回填時間',
+  '業務姓名',
+  'Q1',
+  'Q2',
+  'Q3',
+  'Q4',
+  'Q5',
+  'Q6',
+  'Q7',
+  '回饋Token',
+  '回饋狀態',
+]);
+
+const FEEDBACK_MODULE_PREVIOUS_HEADERS_ = Object.freeze([
+  '訪客編號',
   '活動日期',
   '回填時間',
   '業務姓名',
@@ -83,17 +99,26 @@ function setupFeedbackSheet() {
   } else {
     const currentV2 = sheet.getRange(1, 1, 1, FEEDBACK_MODULE_HEADERS_.length).getValues()[0];
     if (!feedbackHeadersMatch_(currentV2)) {
-      const currentLegacy = sheet
-        .getRange(1, 1, 1, FEEDBACK_MODULE_LEGACY_HEADERS_.length)
-        .getValues()[0];
+      const matchesPrevious = FEEDBACK_MODULE_PREVIOUS_HEADERS_.every(function (header, index) {
+        return feedbackClean_(currentV2[index]) === header;
+      });
 
-      if (feedbackLegacyHeadersMatch_(currentLegacy)) {
-        sheet.insertColumnBefore(4);
+      if (matchesPrevious) {
         sheet.getRange(1, 1, 1, FEEDBACK_MODULE_HEADERS_.length)
           .setValues([FEEDBACK_MODULE_HEADERS_]);
-        feedbackBackfillSalesNames_(sheet);
       } else {
-        throw new Error('FEEDBACK_HEADER_MISMATCH');
+        const currentLegacy = sheet
+          .getRange(1, 1, 1, FEEDBACK_MODULE_LEGACY_HEADERS_.length)
+          .getValues()[0];
+
+        if (feedbackLegacyHeadersMatch_(currentLegacy)) {
+          sheet.insertColumnBefore(4);
+          sheet.getRange(1, 1, 1, FEEDBACK_MODULE_HEADERS_.length)
+            .setValues([FEEDBACK_MODULE_HEADERS_]);
+          feedbackBackfillSalesNames_(sheet);
+        } else {
+          throw new Error('FEEDBACK_HEADER_MISMATCH');
+        }
       }
     }
   }
