@@ -224,7 +224,7 @@
         topLine.className = 'followup-case__topline';
 
         const names = document.createElement('strong');
-        names.textContent = displayValue_(item.groomName) + ' × ' + displayValue_(item.brideName);
+        names.textContent = displayValue_(item.groomName) + ' ' + displayValue_(item.brideName);
 
         const status = document.createElement('span');
         status.className = 'followup-status-dot ' + statusClass_(item.status);

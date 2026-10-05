@@ -327,6 +327,19 @@ test("公開 Follow-up route 已停用 mock 並只導向受保護 Web App", () =
   assert.match(publicGateway, /window\.location\.replace/);
 });
 
+test("Follow-up 左側列表與右側標題以單一半形空格分隔新人姓名", () => {
+  assert.match(
+    clientHtml,
+    /names\.textContent = displayValue_\(item\.groomName\) \+ ' ' \+ displayValue_\(item\.brideName\);/,
+  );
+  assert.match(
+    indexHtml,
+    /<h2><span id="groomName"><\/span> <span id="brideName"><\/span><\/h2>/,
+  );
+  assert.doesNotMatch(clientHtml, /groomName\) \+ ' × ' \+ displayValue_\(item\.brideName\)/);
+  assert.doesNotMatch(indexHtml, /<i>×<\/i>/);
+});
+
 test("基本資料卡依三行規格排列且只顯示 M 欄桌數", () => {
   const start = clientHtml.indexOf("renderBasicInformation_([");
   const end = clientHtml.indexOf("]);", start);
