@@ -46,16 +46,12 @@
       noteState: document.getElementById('noteState'),
       statusButtons: Array.from(document.querySelectorAll('[data-status]')),
       salesFilters: Array.from(document.querySelectorAll('[data-sales-filter]')),
-      caseStatusFilters: Array.from(document.querySelectorAll('[data-case-status]')),
-      statisticCounts: Array.from(document.querySelectorAll('[data-stat-status]')),
     };
 
-    let allCases = [];
     let cases = [];
     let visibleCases = [];
     let selectedSerialNumber = '';
     let selectedSalesName = '';
-    let selectedCaseStatus = '';
     let currentCase = null;
     let baseline = null;
     let estimatedTablesInput = null;
@@ -120,21 +116,11 @@
         const nextSalesName = String(select.value || '').trim();
         if (nextSalesName === selectedSalesName) return;
         if (!confirmDiscardChanges_()) {
-          syncFilterControls_();
+          syncSalesFilterControl_();
           return;
         }
         selectedSalesName = nextSalesName;
-        renderCaseList(lastLoadedQuery);
-      });
-    });
-
-    elements.caseStatusFilters.forEach(function (button) {
-      button.addEventListener('click', function () {
-        const nextStatus = String(button.dataset.caseStatus || '').trim();
-        if (nextStatus === selectedCaseStatus) return;
-        if (!confirmDiscardChanges_()) return;
-        selectedCaseStatus = nextStatus;
-        renderCaseList(lastLoadedQuery);
+        renderCaseList(lastLoadedQuery, false, true);
       });
     });
 
@@ -156,33 +142,31 @@
         .withSuccessHandler(function (result) {
           if (requestId !== listRequestId) return;
           cases = Array.isArray(result) ? result : [];
-          if (!String(query || '').trim()) allCases = cases.slice();
           renderCaseList(query);
         })
         .withFailureHandler(function (error) {
           if (requestId !== listRequestId) return;
-          allCases = [];
           cases = [];
           visibleCases = [];
           currentCase = null;
           baseline = null;
           elements.list.replaceChildren();
           elements.count.textContent = '0 筆';
-          renderFilterSummary_();
+          syncSalesFilterControl_();
           setListState(messageForFailure_(error, '無法載入新人案件，請稍後再試。'));
           showDetailState(messageForFailure_(error, '無法載入新人案件，請稍後再試。'));
         })
         .listCases(query);
     }
 
-    function renderCaseList(query, skipDetailLoad) {
+    function renderCaseList(query, skipDetailLoad, clearExcludedSelection) {
       visibleCases = filteredCases_();
-      renderFilterSummary_();
+      syncSalesFilterControl_();
       elements.list.replaceChildren();
       elements.count.textContent = visibleCases.length + ' 筆';
 
       if (visibleCases.length === 0) {
-        const hasFilter = Boolean(selectedSalesName || selectedCaseStatus);
+        const hasFilter = Boolean(selectedSalesName);
         const emptyMessage = String(query || '').trim() || hasFilter
           ? '目前篩選條件下沒有案件'
           : '目前沒有新人案件';
@@ -199,7 +183,15 @@
       const selectedStillVisible = visibleCases.some(function (item) {
         return item.serialNumber === selectedSerialNumber;
       });
-      if (!selectedStillVisible) selectedSerialNumber = visibleCases[0].serialNumber;
+      if (!selectedStillVisible && selectedSerialNumber && clearExcludedSelection) {
+        detailRequestId += 1;
+        selectedSerialNumber = '';
+        currentCase = null;
+        baseline = null;
+        showDetailState('請從左側案件列表選擇案件');
+      } else if (!selectedStillVisible) {
+        selectedSerialNumber = visibleCases[0].serialNumber;
+      }
 
       visibleCases.forEach(function (item) {
         const button = document.createElement('button');
@@ -245,7 +237,7 @@
         elements.list.append(button);
       });
 
-      if (!skipDetailLoad) loadCase(selectedSerialNumber);
+      if (!skipDetailLoad && selectedSerialNumber) loadCase(selectedSerialNumber);
     }
 
     function renderCaseListSelection() {
@@ -600,7 +592,7 @@
         .withSuccessHandler(function (result) {
           currentCase = Object.assign({}, currentCase, result);
           isSaving = false;
-          const remainsVisible = caseMatchesFilters_(currentCase);
+          const remainsVisible = caseMatchesSalesFilter_(currentCase);
           updateCaseSummary_(result, remainsVisible);
           if (remainsVisible) {
             renderCaseDetail(currentCase);
@@ -628,47 +620,18 @@
         });
       }
 
-      allCases = allCases.map(updateSummary);
       cases = cases.map(updateSummary);
 
       renderCaseList(lastLoadedQuery, skipDetailLoad);
     }
 
     function filteredCases_() {
-      return cases.filter(caseMatchesFilters_);
+      return cases.filter(caseMatchesSalesFilter_);
     }
 
-    function caseMatchesFilters_(item) {
-      const salesMatches = caseMatchesSalesFilter_(item);
-      const statusMatches = !selectedCaseStatus || normalizeCaseStatus_(item.status) === selectedCaseStatus;
-      return salesMatches && statusMatches;
-    }
-
-    function renderFilterSummary_() {
-      const salesCases = allCases.filter(function (item) {
-        return caseMatchesSalesFilter_(item);
-      });
-      const counts = { '': salesCases.length, '已訂': 0, '洽談中': 0, '退訂': 0, '流失': 0 };
-      salesCases.forEach(function (item) {
-        const status = normalizeCaseStatus_(item.status);
-        if (Object.prototype.hasOwnProperty.call(counts, status)) counts[status] += 1;
-      });
-
-      elements.statisticCounts.forEach(function (element) {
-        const status = String(element.dataset.statStatus || '').trim();
-        element.textContent = String(counts[status] || 0);
-      });
-      syncFilterControls_();
-    }
-
-    function syncFilterControls_() {
+    function syncSalesFilterControl_() {
       elements.salesFilters.forEach(function (select) {
         select.value = selectedSalesName;
-      });
-      elements.caseStatusFilters.forEach(function (button) {
-        const active = String(button.dataset.caseStatus || '').trim() === selectedCaseStatus;
-        button.classList.toggle('is-active', active);
-        button.setAttribute('aria-pressed', active ? 'true' : 'false');
       });
     }
 
@@ -681,11 +644,6 @@
       const selected = normalizeFilterValue_(selectedSalesName);
       return normalizeFilterValue_(item.salesName) === selected ||
         normalizeFilterValue_(item.salesCode) === selected;
-    }
-
-    function normalizeCaseStatus_(value) {
-      const status = String(value || '').trim();
-      return status || '洽談中';
     }
 
     function handleEditorInput_() {

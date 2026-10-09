@@ -88,7 +88,7 @@ test('非內部網域與非 wedding-i.com 網域仍拒絕', () => {
   }
 });
 
-test('VIEWER UI 為完整唯讀、隱藏新增備註並保留業務／狀態／搜尋篩選', () => {
+test('VIEWER UI 為完整唯讀、隱藏新增備註並保留業務與搜尋篩選', () => {
   const app = clientRuntime();
   const viewerPermission = { editable: false, canAddCollaborationNote: false };
   const lisa = fixture({ ...viewerPermission, salesName: 'Lisa', salesCode: 'LISA', status: '洽談中' });
@@ -115,11 +115,10 @@ test('VIEWER UI 為完整唯讀、隱藏新增備註並保留業務／狀態／�
 
   app.salesFilters[0].value = 'Jerry';
   app.salesFilters[0].emit('change');
+  assert.equal(app.elements.detailContent.hidden, true);
+  assert.equal(app.pending.filter(call => call.method === 'getCase').length, 0);
+  app.elements.caseList.children[0].emit('click');
   app.respond('getCase', jerry);
-  assert.equal(app.elements.caseCount.textContent, '1 筆');
-
-  const booked = app.caseStatusFilters.find(button => button.dataset.caseStatus === '已訂');
-  booked.emit('click');
   assert.equal(app.elements.caseCount.textContent, '1 筆');
 
   app.input('caseSearch', '115DX2032');
